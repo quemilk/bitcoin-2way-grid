@@ -65,3 +65,18 @@ std::string Command::makeLoginReq(const std::string& api_key, const std::string&
 
     return toString(doc);
 }
+
+std::string Command::makeSubscribeAccountChannel() {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    doc.AddMember("op", "subscribe", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+    rapidjson::Value arg(rapidjson::kObjectType);
+
+    arg.AddMember("channel", "account", doc.GetAllocator());
+
+    args.PushBack(arg, doc.GetAllocator());
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    return toString(doc);
+}

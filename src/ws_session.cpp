@@ -227,11 +227,8 @@ bool WSSession::waitUtilConnected(std::chrono::seconds sec) {
 
 void WSSession::send(const std::string& data) {
     // Send the message
-    ws_.async_write(
-        net::buffer(data),
-        beast::bind_front_handler(
-            &WSSession::on_write,
-            shared_from_this()));
+    ws_.write(
+        net::buffer(data));
 }
 
 void WSSession::read(std::string* out_data) {

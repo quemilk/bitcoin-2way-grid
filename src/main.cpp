@@ -42,6 +42,15 @@ int main(int argc, char** argv) {
     ws_session->read(&resp);
     LOG(debug) << "resp: " << resp;
 
+    cmd = Command::makeSubscribeAccountChannel();
+    ws_session->send(cmd);
+    LOG(debug) << "send subscribe: " << cmd;
+
+    ws_session->read(&resp);
+    LOG(debug) << "resp: " << resp;
+
+    ws_session->read(&resp);
+    LOG(debug) << "resp: " << resp;
     thread.join();
 
 
