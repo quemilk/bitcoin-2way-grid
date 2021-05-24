@@ -216,9 +216,6 @@ int main(int argc, char** argv) {
     // The SSL context is required, and holds certificates
     ssl::context ctx{ ssl::context::tlsv12_client };
 
-    // This holds the root certificate used for verification
-    load_root_certificates(ctx);
-
     // Launch the asynchronous operation
     std::make_shared<session>(ioc, ctx)->run(host, port, text);
 

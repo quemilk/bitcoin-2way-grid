@@ -9,5 +9,5 @@ endif (MSVC)
 add_executable(ibitcoin2waygrid WIN32 MACOSX_BUNDLE
 	${DIR_SRC})
 	
-
+target_link_libraries(ibitcoin2waygrid PUBLIC libcrypto libssl)
 install(TARGETS ibitcoin2waygrid RUNTIME DESTINATION ibitcoin2waygrid)

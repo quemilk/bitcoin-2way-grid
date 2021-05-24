@@ -10,6 +10,20 @@ if (MSVC_VERSION GREATER_EQUAL "1900")
 	add_link_options("/ignore:4099")
 endif()
 
+if (MSVC)
+    # Use the static C library for all build types
+    foreach(var 
+        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+        CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
+        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+        )
+        if(${var} MATCHES "/MD")
+        string(REGEX REPLACE "/MD" "/MT" ${var} "${${var}}")
+        endif()
+    endforeach()
+endif()
+
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(platform x64)
 else()
