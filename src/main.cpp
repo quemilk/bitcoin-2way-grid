@@ -36,10 +36,11 @@ int main(int argc, char** argv) {
     auto cmd = Command::makeLoginReq(api_key, passphrase, secret);
 
     ws_session->send(cmd);
+    LOG(debug) << "send login: " << cmd;
 
     std::string resp;
     ws_session->read(&resp);
-    LOG(debug) << resp;
+    LOG(debug) << "resp: " << resp;
 
     thread.join();
 
