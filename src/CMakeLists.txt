@@ -10,10 +10,10 @@ file(GLOB_RECURSE DIR_SRC
 
 message(${CMAKE_CURRENT_LIST_DIR})
 if (MSVC)
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup") 
+#	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup") 
 endif (MSVC)
 
-add_executable(ibitcoin2waygrid WIN32 MACOSX_BUNDLE
+add_executable(ibitcoin2waygrid
 	${DIR_SRC})
 	
 target_link_libraries(ibitcoin2waygrid PUBLIC libcrypto libssl)

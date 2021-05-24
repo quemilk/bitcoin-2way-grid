@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
 
     std::string resp;
     ws_session->read(&resp);
+    LOG(debug) << resp;
 
     thread.join();
 
