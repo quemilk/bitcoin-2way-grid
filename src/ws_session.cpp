@@ -10,19 +10,17 @@ void fail(beast::error_code ec, char const* what) {
 }
 
 
-
 WSSession::WSSession(net::io_context& ioc, ssl::context& ctx)
     : resolver_(net::make_strand(ioc))
     , ws_(net::make_strand(ioc), ctx) {
 }
 
 // Start the asynchronous operation
-void WSSession::run(char const* host, char const* port, char const* path, char const* text) {
+void WSSession::run(char const* host, char const* port, char const* path) {
     // Save these for later
     host_ = host;
     port_ = port;
     path_ = path;
-    text_ = text;
 
     if (!socks_server_.empty()) {
         if (!socks_url_.parse(socks_server_)) {
@@ -174,12 +172,12 @@ void WSSession::on_handshake(beast::error_code ec) {
     if (ec)
         return fail(ec, "handshake");
 
-    // Send the message
-    ws_.async_write(
-        net::buffer(text_),
-        beast::bind_front_handler(
-            &WSSession::on_write,
-            shared_from_this()));
+    //// Send the message
+    //ws_.async_write(
+    //    net::buffer(text_),
+    //    beast::bind_front_handler(
+    //        &WSSession::on_write,
+    //        shared_from_this()));
 }
 
 void WSSession::on_write(
@@ -220,5 +218,5 @@ void WSSession::on_close(beast::error_code ec) {
     // If we get here then the connection is closed gracefully
 
     // The make_printable() function helps print a ConstBufferSequence
-    std::cout << beast::make_printable(buffer_.data()) << std::endl;
+    // std::cout << beast::make_printable(buffer_.data()) << std::endl;
 }
