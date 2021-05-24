@@ -1,4 +1,5 @@
 #include "ws_session.h"
+#include "logger.h"
 #include "socks/handshake.hpp"
 #include <iostream>
 
@@ -6,7 +7,7 @@
 // Report a failure
 void fail(beast::error_code ec, char const* what) {
     auto msg = ec.message();
-    std::cerr << what << ": " << msg << "\n";
+    LOG(error) << what << ": " << msg;
 }
 
 

@@ -1,10 +1,13 @@
 #include "ws_session.h"
+#include "logger.h"
 #include "global.h"
 #include <cstdlib>
 #include <functional>
 #include <iostream>
 
 int main(int argc, char** argv) {
+    init_logger();
+
     auto const host = SIMU_WSS_HOST;
     auto const port = SIMU_WSS_PORT;
     auto const path = SIMU_WSS_PUBLIC_CHANNEL;
