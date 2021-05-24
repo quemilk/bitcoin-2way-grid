@@ -1,17 +1,23 @@
-#pragma once
+ï»¿#pragma once
 
-//ÊµÅÌAPI½»Ò×µØÖ·ÈçÏÂ£º
+//å®ç›˜APIäº¤æ˜“åœ°å€å¦‚ä¸‹ï¼š
 
 #define REST_API_HOST               "https://www.okex.com"
-#define WS_PUBLIC_CHANNEL           "wss://ws.okex.com:8443/ws/v5/public"
-#define WS_PRIVATE_CHANNEL          "wss://ws.okex.com:8443/ws/v5/private"
+#define WSS_HOST                    "ws.okex.com"
+#define WSS_PORT                    "8443"
+#define WSS_PUBLIC_CHANNEL          "/ws/v5/public"
+#define WSS_PRIVATE_CHANNEL         "/ws/v5/private"
 
-// AWS µØÖ·ÈçÏÂ£º
+// AWS åœ°å€å¦‚ä¸‹ï¼š
 #define AWS_REST_API_HOST           "https://aws.okex.com"
-#define AWS_WS_PUBLIC_CHANNEL       "wss://wsaws.okex.com:8443/ws/v5/public"
-#define AWS_WS_PRIVATE_CHANNEL      "wss://wsaws.okex.com:8443/ws/v5/private"
+#define AWS_WSS_HOST                "wsaws.okex.com"
+#define AWS_WSS_PORT                "8443"
+#define AWS_WSS_PUBLIC_CHANNEL      "/ws/v5/public"
+#define AWS_WSS_PRIVATE_CHANNEL     "/ws/v5/private"
 
-// Ä£ÄâÅÌAPI½»Ò×µØÖ·ÈçÏÂ£º
+// æ¨¡æ‹Ÿç›˜APIäº¤æ˜“åœ°å€å¦‚ä¸‹ï¼š
 #define SIMU_REST_API_HOST          "https://www.okex.com"
-#define SIMU_WS_PUBLIC_CHANNEL      "wss://wspap.okex.com:8443/ws/v5/public?brokerId=9999"
-#define SIMU_WS_PRIVATE_CHANNEL     "wss://wspap.okex.com:8443/ws/v5/private?brokerId=9999"
+#define SIMU_WSS_HOST               "wspap.okex.com"
+#define SIMU_WSS_PORT               "8443"
+#define SIMU_WSS_PUBLIC_CHANNEL     "/ws/v5/public?brokerId=9999"
+#define SIMU_WSS_PRIVATE_CHANNEL    "/ws/v5/private?brokerId=9999"
