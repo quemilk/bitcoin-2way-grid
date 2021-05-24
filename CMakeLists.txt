@@ -31,7 +31,7 @@ endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "Release")
     #git revision
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
     include(GetGitRevisionDescription)
     get_git_head_revision(GIT_REFSPEC GIT_SHA1)
     string(SUBSTRING ${GIT_SHA1} 0 8 GIT_SHA1_SHORT)
