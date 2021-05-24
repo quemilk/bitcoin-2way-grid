@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
     auto const host = SIMU_WSS_HOST;
     auto const port = SIMU_WSS_PORT;
     auto const text = "aaa";
-    auto const socks5 = "socks5://127.0.0.1:1080";
+    auto const socks5 = "socks5://127.0.0.1:9980";
 
     // The io_context is required for all I/O
     net::io_context ioc;

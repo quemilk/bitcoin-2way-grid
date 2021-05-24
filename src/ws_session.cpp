@@ -5,7 +5,8 @@
 
 // Report a failure
 void fail(beast::error_code ec, char const* what) {
-    std::cerr << what << ": " << ec.message() << "\n";
+    auto msg = ec.message();
+    std::cerr << what << ": " << msg << "\n";
 }
 
 
@@ -92,13 +93,7 @@ void WSSession::on_socks_proxy_handshake(beast::error_code ec) {
     if (ec)
         return fail(ec, "resolve");
 
-    // Look up the domain name
-    resolver_.async_resolve(
-        host_,
-        port_,
-        beast::bind_front_handler(
-            &WSSession::on_resolve,
-            shared_from_this()));
+    on_connect(ec, tcp::resolver::results_type::endpoint_type());
 }
 
 void WSSession::on_resolve(beast::error_code ec, tcp::resolver::results_type results) {
@@ -123,7 +118,7 @@ void  WSSession::on_connect(beast::error_code ec, tcp::resolver::results_type::e
     // Update the host_ string. This will provide the value of the
     // Host HTTP header during the WebSocket handshake.
     // See https://tools.ietf.org/html/rfc7230#section-5.4
-    host_ += ':' + std::to_string(ep.port());
+    host_ += ':' + port_;
 
     // Set a timeout on the operation
     beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
