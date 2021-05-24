@@ -1,4 +1,6 @@
 #include "ws_session.h"
+#include "socks/handshake.hpp"
+#include "socks/uri.hpp"
 #include <iostream>
 
 

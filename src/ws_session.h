@@ -21,6 +21,10 @@ public:
     // Resolver and socket require an io_context
     explicit WSSession(net::io_context& ioc, ssl::context& ctx);
 
+    void setSocksProxy(char const* socks_server) {
+        socks_server_ = socks_server;
+    }
+
     void run(char const* host, char const* port, char const* text);
 
     void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
@@ -43,5 +47,6 @@ private:
     beast::flat_buffer buffer_;
     std::string host_;
     std::string text_;
+    std::string socks_server_;
 
 };
