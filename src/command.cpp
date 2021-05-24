@@ -4,7 +4,6 @@
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
 #include <string>
-#include <string_view>
 #include <array>
 
 static std::string toString(rapidjson::Value& v) {
@@ -14,14 +13,14 @@ static std::string toString(rapidjson::Value& v) {
     return strbuf.GetString();
 }
 
-static std::string calcHmacSHA256(std::string_view decodedKey, std::string_view msg) {
+static std::string calcHmacSHA256(const std::string& msg, const std::string& decoded_key) {
     std::array<unsigned char, EVP_MAX_MD_SIZE> hash;
     unsigned int hashLen;
 
     HMAC(
         EVP_sha256(),
-        decodedKey.data(),
-        static_cast<int>(decodedKey.size()),
+        decoded_key.data(),
+        static_cast<int>(decoded_key.size()),
         reinterpret_cast<unsigned char const*>(msg.data()),
         static_cast<int>(msg.size()),
         hash.data(),
@@ -48,18 +47,21 @@ sign=CryptoJS.enc.Base64.Stringify(CryptoJS.HmacSHA256(timestamp +'GET'+ '/users
 */
 std::string Command::makeLoginReq(const std::string& api_key, const std::string& passphrase, const std::string& secret) {
     rapidjson::Document doc(rapidjson::kObjectType);
-    doc["op"] = "login";
+    doc.AddMember("op", "login", doc.GetAllocator());
 
-    rapidjson::Value arg;
-    doc["args"].PushBack(arg, doc.GetAllocator());
+    rapidjson::Value args(rapidjson::kArrayType);
+    rapidjson::Value arg(rapidjson::kObjectType);
 
     auto timestamp = std::to_string(time(nullptr));
     auto sign = BASE64Encode(calcHmacSHA256(timestamp + "GET" + "/users/self/verify", secret));
 
-    arg["apiKey"].SetString(rapidjson::StringRef(api_key), doc.GetAllocator());
-    arg["passphrase"].SetString(rapidjson::StringRef(passphrase), doc.GetAllocator());
-    arg["timestamp"].SetString(rapidjson::StringRef(timestamp), doc.GetAllocator());
-    arg["sign"].SetString(rapidjson::StringRef(sign), doc.GetAllocator());
+    arg.AddMember("apiKey", rapidjson::StringRef(api_key), doc.GetAllocator());
+    arg.AddMember("passphrase", rapidjson::StringRef(passphrase), doc.GetAllocator());
+    arg.AddMember("timestamp", rapidjson::StringRef(timestamp), doc.GetAllocator());
+    arg.AddMember("sign", rapidjson::StringRef(sign), doc.GetAllocator());
+
+    args.PushBack(arg, doc.GetAllocator());
+    doc.AddMember("args", args, doc.GetAllocator());
 
     return toString(doc);
 }

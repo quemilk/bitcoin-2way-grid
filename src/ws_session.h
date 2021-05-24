@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/ssl.hpp>
@@ -8,6 +8,7 @@
 #include "socks/uri.hpp"
 #include <string>
 #include <memory>
+#include <condition_variable>
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -28,6 +29,12 @@ public:
 
     void run(char const* host, char const* port, char const* path);
 
+    bool waitUtilConnected(std::chrono::seconds sec);
+
+    void send(const std::string& data);
+    void read(std::string* out_data);
+
+private:
     void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
 
     void on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep);
@@ -58,5 +65,9 @@ private:
     std::string socks_server_;
     socks::uri socks_url_;
     int socks_version_;
+
+    std::mutex cond_mutex_;
+    bool connected_ = false;
+    std::condition_variable conn_condition_;
 
 };

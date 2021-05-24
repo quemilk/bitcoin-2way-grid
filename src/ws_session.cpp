@@ -1,4 +1,4 @@
-#include "ws_session.h"
+﻿#include "ws_session.h"
 #include "logger.h"
 #include "socks/handshake.hpp"
 #include <iostream>
@@ -173,12 +173,9 @@ void WSSession::on_handshake(beast::error_code ec) {
     if (ec)
         return fail(ec, "handshake");
 
-    //// Send the message
-    //ws_.async_write(
-    //    net::buffer(text_),
-    //    beast::bind_front_handler(
-    //        &WSSession::on_write,
-    //        shared_from_this()));
+    std::unique_lock lock(cond_mutex_);
+    connected_ = true;
+    conn_condition_.notify_one();
 }
 
 void WSSession::on_write(
@@ -189,12 +186,12 @@ void WSSession::on_write(
     if (ec)
         return fail(ec, "write");
 
-    // Read a message into our buffer
-    ws_.async_read(
-        buffer_,
-        beast::bind_front_handler(
-            &WSSession::on_read,
-            shared_from_this()));
+    //// Read a message into our buffer
+    //ws_.async_read(
+    //    buffer_,
+    //    beast::bind_front_handler(
+    //        &WSSession::on_read,
+    //        shared_from_this()));
 }
 
 void WSSession::on_read(
@@ -220,4 +217,25 @@ void WSSession::on_close(beast::error_code ec) {
 
     // The make_printable() function helps print a ConstBufferSequence
     // std::cout << beast::make_printable(buffer_.data()) << std::endl;
+}
+
+bool WSSession::waitUtilConnected(std::chrono::seconds sec) {
+    std::unique_lock lock(cond_mutex_);
+    conn_condition_.wait_for(lock, sec);
+    return connected_;
+}
+
+void WSSession::send(const std::string& data) {
+    // Send the message
+    ws_.async_write(
+        net::buffer(data),
+        beast::bind_front_handler(
+            &WSSession::on_write,
+            shared_from_this()));
+}
+
+void WSSession::read(std::string* out_data) {
+    beast::flat_buffer buffer;
+    ws_.read(buffer);
+    *out_data = beast::buffers_to_string(buffer.data());
 }
