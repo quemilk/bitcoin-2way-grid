@@ -10,8 +10,8 @@
 #ifndef SOCKS_URI_HPP
 #define SOCKS_URI_HPP
 
-#include <socks/config.hpp>
-#include <socks/query.hpp>
+#include "config.hpp"
+#include "query.hpp"
 #include <string>
 #include <stdexcept>
 #include <iterator>
@@ -130,6 +130,6 @@ private:
 
 } // socks
 
-#include <socks/impl/uri.ipp>
+#include "impl/uri.ipp"
 
 #endif

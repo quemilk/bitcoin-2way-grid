@@ -10,7 +10,7 @@
 #ifndef SOCKS_DETAIL_CHAR_TYPE_HPP
 #define SOCKS_DETAIL_CHAR_TYPE_HPP
 
-#include <socks/config.hpp>
+#include "../config.hpp"
 #include <string>
 #include <stdexcept>
 #include <iterator>

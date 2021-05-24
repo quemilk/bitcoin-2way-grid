@@ -10,7 +10,7 @@
 #ifndef SOCKS_DETAIL_PROTOCOL_HPP
 #define SOCKS_DETAIL_PROTOCOL_HPP
 
-#include <socks/config.hpp>
+#include "../config.hpp"
 
 namespace socks {
 namespace detail {

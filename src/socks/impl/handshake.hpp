@@ -10,7 +10,7 @@
 #ifndef SOCKS_IMPL_HANDSHAKE_HPP
 #define SOCKS_IMPL_HANDSHAKE_HPP
 
-#include <socks/detail/protocol.hpp>
+#include "../detail/protocol.hpp"
 #include <boost/beast/core/async_base.hpp>
 #include <boost/beast/core/detail/is_invocable.hpp>
 #include <boost/config.hpp> // for BOOST_FALLTHROUGH

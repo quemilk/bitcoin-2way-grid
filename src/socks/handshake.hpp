@@ -10,8 +10,8 @@
 #ifndef SOCKS_HANDSHAKE_HPP
 #define SOCKS_HANDSHAKE_HPP
 
-#include <socks/config.hpp>
-#include <socks/error.hpp>
+#include "config.hpp"
+#include "error.hpp"
 #include <boost/asio/async_result.hpp>
 #include <string>
 
@@ -48,6 +48,6 @@ async_handshake_v5(
 
 } // socks
 
-#include <socks/impl/handshake.hpp>
+#include "impl/handshake.hpp"
 
 #endif

@@ -10,7 +10,7 @@
 #ifndef SOCKS_QUERY_HPP
 #define SOCKS_QUERY_HPP
 
-#include <socks/config.hpp>
+#include "config.hpp"
 #include <iterator>
 #include <utility>
 
@@ -136,6 +136,6 @@ private:
 
 } // socks
 
-#include <socks/impl/query.ipp>
+#include "impl/query.ipp"
 
 #endif

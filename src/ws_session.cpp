@@ -1,6 +1,5 @@
 #include "ws_session.h"
 #include "socks/handshake.hpp"
-#include "socks/uri.hpp"
 #include <iostream>
 
 
@@ -20,12 +19,83 @@ WSSession::WSSession(net::io_context& ioc, ssl::context& ctx)
 void WSSession::run(char const* host, char const* port, char const* text) {
     // Save these for later
     host_ = host;
+    port_ = port;
     text_ = text;
+
+    if (!socks_server_.empty()) {
+        if (!socks_url_.parse(socks_server_)) {
+            std::cerr << "parse socks url error\n";
+            return;
+        }
+        // socks handshake.
+        socks_version_ = socks_url_.scheme() == "socks4" ? 4 : 0;
+        socks_version_ = socks_url_.scheme() == "socks5" ? 5 : socks_version_;
+        if (socks_version_ == 0) {
+            std::cerr << "incorrect socks version\n";
+            return;
+        }
+        // Look up the domain name
+        resolver_.async_resolve(
+            std::string(socks_url_.host()),
+            std::string(socks_url_.port()),
+            beast::bind_front_handler(
+                &WSSession::on_socks_proxy_resolve,
+                shared_from_this()));
+        return;
+    }
 
     // Look up the domain name
     resolver_.async_resolve(
         host,
         port,
+        beast::bind_front_handler(
+            &WSSession::on_resolve,
+            shared_from_this()));
+}
+
+void WSSession::on_socks_proxy_resolve(beast::error_code ec, tcp::resolver::results_type results) {
+    if (ec)
+        return fail(ec, "resolve");
+
+    beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+    beast::get_lowest_layer(ws_).async_connect(
+        results,
+        beast::bind_front_handler(
+            &WSSession::on_socks_proxy_connect,
+            shared_from_this()));
+}
+
+void WSSession::on_socks_proxy_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
+     if (socks_version_ == 4)
+        socks::async_handshake_v4(
+            beast::get_lowest_layer(ws_),
+            host_,
+            static_cast<unsigned short>(std::atoi(port_.c_str())),
+            std::string(socks_url_.username()),
+            beast::bind_front_handler(
+                &WSSession::on_socks_proxy_handshake,
+                shared_from_this()));
+    else
+        socks::async_handshake_v5(
+            beast::get_lowest_layer(ws_),
+            host_,
+            static_cast<unsigned short>(std::atoi(port_.c_str())),
+            std::string(socks_url_.username()),
+            std::string(socks_url_.password()),
+            true,
+            beast::bind_front_handler(
+                &WSSession::on_socks_proxy_handshake,
+                shared_from_this()));
+}
+
+void WSSession::on_socks_proxy_handshake(beast::error_code ec) {
+    if (ec)
+        return fail(ec, "resolve");
+
+    // Look up the domain name
+    resolver_.async_resolve(
+        host_,
+        port_,
         beast::bind_front_handler(
             &WSSession::on_resolve,
             shared_from_this()));

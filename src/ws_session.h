@@ -5,6 +5,7 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 #include <boost/asio/strand.hpp>
+#include "socks/uri.hpp"
 #include <string>
 #include <memory>
 
@@ -41,12 +42,21 @@ public:
 
     void on_close(beast::error_code ec);
 
+    void on_socks_proxy_resolve(beast::error_code ec, tcp::resolver::results_type results);
+
+    void on_socks_proxy_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep);
+
+    void on_socks_proxy_handshake(beast::error_code ec);
+
 private:
     tcp::resolver resolver_;
     websocket::stream<beast::ssl_stream<beast::tcp_stream>> ws_;
     beast::flat_buffer buffer_;
     std::string host_;
+    std::string port_;
     std::string text_;
     std::string socks_server_;
+    socks::uri socks_url_;
+    int socks_version_;
 
 };

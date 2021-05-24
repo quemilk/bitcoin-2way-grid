@@ -10,7 +10,7 @@
 #ifndef SOCKS_ERROR_HPP
 #define SOCKS_ERROR_HPP
 
-#include <socks/config.hpp>
+#include "config.hpp"
 #include <boost/beast/core/error.hpp>
 
 namespace socks {
@@ -82,7 +82,7 @@ enum class error
 
 } // socks
 
-#include <socks/impl/error.hpp>
-#include <socks/impl/error.ipp>
+#include "impl/error.hpp"
+#include "impl/error.ipp"
 
 #endif

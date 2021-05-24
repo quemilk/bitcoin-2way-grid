@@ -10,7 +10,7 @@
 #ifndef SOCKS_IMPL_ERROR_IPP
 #define SOCKS_IMPL_ERROR_IPP
 
-#include <socks/error.hpp>
+#include "../error.hpp"
 
 namespace socks {
 

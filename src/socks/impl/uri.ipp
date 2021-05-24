@@ -10,8 +10,8 @@
 #ifndef SOCKS_IMPL_URI_IPP
 #define SOCKS_IMPL_URI_IPP
 
-#include <socks/detail/char_type.hpp>
-#include <socks/detail/host.hpp>
+#include "../detail/char_type.hpp"
+#include "../detail/host.hpp"
 #include <string>
 #include <stdexcept>
 #include <iterator>
