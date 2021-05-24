@@ -26,7 +26,7 @@ public:
         socks_server_ = socks_server;
     }
 
-    void run(char const* host, char const* port, char const* text);
+    void run(char const* host, char const* port, char const* path, char const* text);
 
     void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
 
@@ -54,6 +54,7 @@ private:
     beast::flat_buffer buffer_;
     std::string host_;
     std::string port_;
+    std::string path_;
     std::string text_;
     std::string socks_server_;
     socks::uri socks_url_;

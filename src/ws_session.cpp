@@ -17,10 +17,11 @@ WSSession::WSSession(net::io_context& ioc, ssl::context& ctx)
 }
 
 // Start the asynchronous operation
-void WSSession::run(char const* host, char const* port, char const* text) {
+void WSSession::run(char const* host, char const* port, char const* path, char const* text) {
     // Save these for later
     host_ = host;
     port_ = port;
+    path_ = path;
     text_ = text;
 
     if (!socks_server_.empty()) {
@@ -67,6 +68,9 @@ void WSSession::on_socks_proxy_resolve(beast::error_code ec, tcp::resolver::resu
 }
 
 void WSSession::on_socks_proxy_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
+    if (ec)
+        return fail(ec, "proxy_connect");
+
      if (socks_version_ == 4)
         socks::async_handshake_v4(
             beast::get_lowest_layer(ws_),
@@ -91,7 +95,7 @@ void WSSession::on_socks_proxy_connect(beast::error_code ec, tcp::resolver::resu
 
 void WSSession::on_socks_proxy_handshake(beast::error_code ec) {
     if (ec)
-        return fail(ec, "resolve");
+        return fail(ec, "proxy_handshake");
 
     on_connect(ec, tcp::resolver::results_type::endpoint_type());
 }
@@ -160,7 +164,7 @@ void WSSession::on_ssl_handshake(beast::error_code ec) {
         }));
 
     // Perform the websocket handshake
-    ws_.async_handshake(host_, "/",
+    ws_.async_handshake(host_, path_,
         beast::bind_front_handler(
             &WSSession::on_handshake,
             shared_from_this()));
