@@ -21,8 +21,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-get_filename_component(RootPath ${PROJECT_SOURCE_DIR} DIRECTORY)
-set(OutPath ${RootPath}/out)
+set(OutPath ${PROJECT_SOURCE_DIR}/out)
 
 
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -47,5 +46,7 @@ else()
 endif()
 
 
-include_directories("${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "${OutPath}/include")
+include_directories("${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "${OutPath}/include" "${OutPath}/include/boost-1_76")
 link_directories("${OutPath}/lib")
+
+add_subdirectory ("src")
