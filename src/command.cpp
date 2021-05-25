@@ -170,16 +170,23 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         std::string event_type = (*itr)["eventType"].GetString();
 
                         if (itr->HasMember("balData")) {
+                            std::ostringstream o;
+                            o << "=====Balance=====" << std::endl;
+
                             auto& bal_data = (*itr)["balData"];
                             for (auto balitr = bal_data.Begin(); balitr != bal_data.End(); ++balitr) {
                                 std::string ccy = (*balitr)["ccy"].GetString();
                                 int cash_bal = std::strtol((*balitr)["cashBal"].GetString(), nullptr, 0);
 
-                                LOG(debug) << "CCY: " << ccy << "\tcash:" << cash_bal;
+                                o << "  " << ccy << "\tcash:" << cash_bal << std::endl;
                             }
+                            LOG(debug) << o.str();
                         } 
 
                         if (itr->HasMember("posData")) {
+                            std::ostringstream o;
+                            o << "=====Position=====" << std::endl;
+
                             auto& pos_data = (*itr)["posData"];
                             for (auto positr = pos_data.Begin(); positr != pos_data.End(); ++positr) {
                                 std::string pos_id = (*positr)["posId"].GetString();
@@ -190,20 +197,42 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 int pos = std::strtol((*positr)["pos"].GetString(), nullptr, 0);
                                 std::string ccy = (*positr)["ccy"].GetString();
 
-                                LOG(debug) << "POS: " << pos_id << "\ttrade_id:" << trade_id 
-                                    << "\tinst_id:" << inst_id << "\tinst_type:" << inst_type
-                                    << "\tside:" << pos_side << "\tpos:" << pos << "\tccy:" << ccy;
+                                o << "  - " << pos_id  << " " << inst_id << "  " << inst_type << std::endl
+                                    << "    trade_id:" << trade_id << "\t" << pos_side << "\t" << pos << " " << ccy << std::endl;
                             }
+                            LOG(debug) << o.str();
                         }
                     }
                 } else if (channel == "orders") {
+                    std::ostringstream o;
+                    o << "=====Orders=====" << std::endl;
+
                     for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
                         std::string inst_type = (*itr)["instType"].GetString();
                         std::string inst_id = (*itr)["instId"].GetString();
                         std::string ord_id = (*itr)["ordId"].GetString();
+                        std::string side = (*itr)["side"].GetString(); // buy sell
+                        std::string posSide = (*itr)["posSide"].GetString(); // 持仓方向 long short net
+                        std::string px = (*itr)["px"].GetString(); // 委托价格
+                        std::string sz = (*itr)["sz"].GetString(); // 原始委托数量
+                        std::string fill_px = (*itr)["fillPx"].GetString(); // 最新成交价格
+                        std::string fill_sz = (*itr)["fillSz"].GetString(); // 最新成交数量
+                        std::string avg_px = (*itr)["avgPx"].GetString(); // 成交均价
+                        std::string acc_fill_sz = (*itr)["accFillSz"].GetString(); // 累计成交数量
 
-                        LOG(debug) << "Order: " << ord_id << "\tinst_id:" << inst_id << "\tinst_type:" << inst_type;
+                        std::string state = (*itr)["state"].GetString(); // 订单状态 canceled：撤单成功 live：等待成交 partially_filled： 部分成交 filled：完全成交
+                        std::string category = (*itr)["category"].GetString(); // 订单种类分类 normal：普通委托订单种类 twap：TWAP订单种类 adl：ADL订单种类 full_liquidation：爆仓订单种类 partial_liquidation：减仓订单种类
+
+                        std::string lever = (*itr)["lever"].GetString(); // 杠杆倍数
+                        std::string fee = (*itr)["fee"].GetString(); // 订单交易手续费
+                        std::string pnl = (*itr)["pnl"].GetString(); // 收益
+
+                        int utime = std::strtol((*itr)["uTime"].GetString(), nullptr, 0); // 订单更新时间
+                        int ctime = std::strtol((*itr)["cTime"].GetString(), nullptr, 0); // 订单更新时间
+    
+                        o << "  " << ord_id << "  inst_id:" << inst_id << "  inst_type:" << inst_type << std::endl;
                     }
+                    LOG(debug) << o.str();
                 }
             }
         }
