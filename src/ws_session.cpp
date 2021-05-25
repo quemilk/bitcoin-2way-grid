@@ -178,47 +178,6 @@ void WSSession::on_handshake(beast::error_code ec) {
     conn_condition_.notify_one();
 }
 
-void WSSession::on_write(
-    beast::error_code ec,
-    std::size_t bytes_transferred) {
-    boost::ignore_unused(bytes_transferred);
-
-    if (ec)
-        return on_fail(ec, "write");
-
-    //// Read a message into our buffer
-    //ws_.async_read(
-    //    buffer_,
-    //    beast::bind_front_handler(
-    //        &WSSession::on_read,
-    //        shared_from_this()));
-}
-
-void WSSession::on_read(
-    beast::error_code ec,
-    std::size_t bytes_transferred) {
-    boost::ignore_unused(bytes_transferred);
-
-    if (ec)
-        return on_fail(ec, "read");
-
-    // Close the WebSocket connection
-    ws_.async_close(websocket::close_code::normal,
-        beast::bind_front_handler(
-            &WSSession::on_close,
-            shared_from_this()));
-}
-
-void WSSession::on_close(beast::error_code ec) {
-    if (ec)
-        return on_fail(ec, "close");
-
-    // If we get here then the connection is closed gracefully
-
-    // The make_printable() function helps print a ConstBufferSequence
-    // std::cout << beast::make_printable(buffer_.data()) << std::endl;
-}
-
 bool WSSession::waitUtilConnected(std::chrono::seconds sec) {
     std::unique_lock lock(cond_mutex_);
     if (ec_)

@@ -14,6 +14,7 @@ public:
 
 private:
     void run();
+    void parseIncomeData(const std::string& data);
 
     virtual void onConnected() = 0;
 

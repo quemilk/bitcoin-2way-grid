@@ -30,7 +30,7 @@ void Channel::run() {
                     std::string data;
                     ws_session_->read(&data);
 
-                    // TODO
+                    parseIncomeData(data);
                 }
                 Sleep(100000);
             } else {
@@ -42,4 +42,8 @@ void Channel::run() {
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+}
+
+void Channel::parseIncomeData(const std::string& data) {
+
 }

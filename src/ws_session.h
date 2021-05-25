@@ -47,12 +47,6 @@ private:
 
     void on_handshake(beast::error_code ec);
 
-    void on_write(beast::error_code ec, std::size_t bytes_transferred);
-
-    void on_read(beast::error_code ec, std::size_t bytes_transferred);
-
-    void on_close(beast::error_code ec);
-
     void on_socks_proxy_resolve(beast::error_code ec, tcp::resolver::results_type results);
 
     void on_socks_proxy_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep);
