@@ -194,11 +194,13 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 std::string inst_id = (*positr)["instId"].GetString();
                                 std::string inst_type = (*positr)["instType"].GetString();
                                 std::string pos_side = (*positr)["posSide"].GetString();
+                                std::string avg_px = (*positr)["avgPx"].GetString();
                                 int pos = std::strtol((*positr)["pos"].GetString(), nullptr, 0);
                                 std::string ccy = (*positr)["ccy"].GetString();
+                                int utime = std::strtol((*positr)["uTime"].GetString(), nullptr, 0); // 仓位信息更新时间
 
                                 o << "  - " << pos_id  << " " << inst_id << "  " << inst_type << std::endl
-                                    << "    trade_id:" << trade_id << "\t" << pos_side << "\t" << pos << " " << ccy << std::endl;
+                                    << "    trade_id:" << trade_id << "\t" << pos_side << "\t" << pos << "\t" << avg_px << "\t" << ccy << std::endl;
                             }
                             LOG(debug) << o.str();
                         }
