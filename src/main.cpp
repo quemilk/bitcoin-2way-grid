@@ -81,28 +81,6 @@ int main(int argc, char** argv) {
     auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, path, socks_proxy);
 
 
-    /*
-
-    auto cmd = Command::makeLoginReq(api_key, passphrase, secret);
-
-    ws_session->send(cmd);
-    LOG(debug) << "send login: " << cmd;
-
-    std::string resp;
-    ws_session->read(&resp);
-    LOG(debug) << "resp: " << resp;
-
-    cmd = Command::makeSubscribeAccountChannel();
-    ws_session->send(cmd);
-    LOG(debug) << "send subscribe: " << cmd;
-
-    ws_session->read(&resp);
-    LOG(debug) << "resp: " << resp;
-
-    ws_session->read(&resp);
-    LOG(debug) << "resp: " << resp;
-    */
-
     t.join();
     return EXIT_SUCCESS;
 }

@@ -4,14 +4,12 @@
 
 Channel::Channel(net::io_context& ioc,
     const std::string& host, const std::string& port, const std::string& path,
-    const std::string socks_proxy) {
-    // The SSL context is required, and holds certificates
-    ssl::context ctx{ ssl::context::tlsv12_client };
-
-    ws_session_ = std::make_shared<WSSession>(ioc, ctx, host, port, path);
-    if (!socks_proxy.empty())
-        ws_session_->setSocksProxy(socks_proxy.c_str());
-
+    const std::string socks_proxy) :
+ioc_(ioc),
+host_(host),
+port_(port),
+path_(path),
+socks_proxy_(socks_proxy) {
     thread_.reset(new std::thread(std::bind(&Channel::run, this)));
 }
 
@@ -21,6 +19,11 @@ Channel::~Channel() {
 void Channel::run() {
     for (;;) {
         try {
+            ssl::context ctx{ ssl::context::tlsv12_client };
+            auto ws_session_ = std::make_shared<WSSession>(ioc_, ctx, host_, port_, path_);
+            if (!socks_proxy_.empty())
+                ws_session_->setSocksProxy(socks_proxy_.c_str());
+
             ws_session_->start();
             if (ws_session_->waitUtilConnected(std::chrono::seconds(10))) {
                 this->onConnected();

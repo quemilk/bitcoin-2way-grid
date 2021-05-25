@@ -10,7 +10,7 @@ public:
 protected:
     void onConnected() override;
 
-
+    void onLogined();
 
 
 

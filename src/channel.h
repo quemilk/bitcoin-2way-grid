@@ -26,7 +26,12 @@ private:
     virtual void onConnected() = 0;
 
 private:
-    std::shared_ptr<WSSession> ws_session_;
+    net::io_context& ioc_;
+    std::string host_;
+    std::string port_;
+    std::string path_;
+    std::string socks_proxy_;
+
     std::unique_ptr<std::thread> thread_;
 
     struct Cmd {

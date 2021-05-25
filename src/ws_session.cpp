@@ -14,15 +14,6 @@ WSSession::WSSession(net::io_context& ioc, ssl::context& ctx,
 }
 
 void WSSession::start() {
-    try {
-        ws_.close(websocket::close_code::normal);
-    } catch (...) {
-    }
-    {
-        std::unique_lock lock(cond_mutex_);
-        ec_.clear();
-    }
-
     if (!socks_server_.empty()) {
         if (!socks_url_.parse(socks_server_)) {
             std::cerr << "parse socks url error\n";
@@ -114,14 +105,14 @@ void WSSession::on_resolve(beast::error_code ec, tcp::resolver::results_type res
             shared_from_this()));
 }
 
-void  WSSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
+void WSSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
     if (ec)
         return on_fail(ec, "connect");
 
     // Update the host_ string. This will provide the value of the
     // Host HTTP header during the WebSocket handshake.
     // See https://tools.ietf.org/html/rfc7230#section-5.4
-    host_ += ':' + port_;
+    auto host = host_ + ':' + port_;
 
     // Set a timeout on the operation
     beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
@@ -129,7 +120,7 @@ void  WSSession::on_connect(beast::error_code ec, tcp::resolver::results_type::e
     // Set SNI Hostname (many hosts need this to handshake successfully)
     if (!SSL_set_tlsext_host_name(
         ws_.next_layer().native_handle(),
-        host_.c_str())) {
+        host.c_str())) {
         ec = beast::error_code(static_cast<int>(::ERR_get_error()),
             net::error::get_ssl_category());
         return on_fail(ec, "connect");
@@ -162,8 +153,10 @@ void WSSession::on_ssl_handshake(beast::error_code ec) {
             req.set(http::field::user_agent, "ibitcoin2waygrid");
         }));
 
+    auto host = host_ + ':' + port_;
+
     // Perform the websocket handshake
-    ws_.async_handshake(host_, path_,
+    ws_.async_handshake(host, path_,
         beast::bind_front_handler(
             &WSSession::on_handshake,
             shared_from_this()));
