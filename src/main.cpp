@@ -72,7 +72,12 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    auto public_channel = std::make_shared<PublicChannel>(host, port, path, socks_proxy);
+    net::io_context ioc;
+    net::io_context::work worker(ioc);
+    std::thread t([&ioc]() { ioc.run(); });
+
+    auto public_channel = std::make_shared<PublicChannel>(ioc, host, port, path, socks_proxy);
+    auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, path, socks_proxy);
 
 
     /*
@@ -98,6 +103,6 @@ int main(int argc, char** argv) {
     LOG(debug) << "resp: " << resp;
     */
 
-    getchar();
+    t.join();
     return EXIT_SUCCESS;
 }
