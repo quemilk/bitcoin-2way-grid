@@ -11,12 +11,13 @@
 #include <fstream>
 #include <boost/dll.hpp>
 
+std::string g_api_key;
+std::string g_passphrase;
+std::string g_secret;
+
 int main(int argc, char** argv) {
     init_logger();
 
-    std::string api_key;
-    std::string passphrase;
-    std::string secret;
     std::string enviorment;
 
     std::string socks_proxy;
@@ -38,11 +39,11 @@ int main(int argc, char** argv) {
         doc.Parse<0>(json_content.data(), json_content.size());
 
         enviorment = doc["enviorment"].GetString();
-        api_key = doc["api_key"].GetString();
-        passphrase = doc["passphrase"].GetString();
-        secret = doc["secret"].GetString();
+        g_api_key = doc["api_key"].GetString();
+        g_passphrase = doc["passphrase"].GetString();
+        g_secret = doc["secret"].GetString();
 
-        if (enviorment.empty() || api_key.empty() || secret.empty()) {
+        if (enviorment.empty() || g_api_key.empty() || g_secret.empty()) {
             LOG(error) << "missing api_key or secret!";
             return -1;
         }
@@ -81,7 +82,6 @@ int main(int argc, char** argv) {
 
 
     /*
-    ws_session->waitUtilConnected(std::chrono::seconds(10));
 
     auto cmd = Command::makeLoginReq(api_key, passphrase, secret);
 

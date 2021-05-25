@@ -21,13 +21,14 @@ using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 class WSSession : public std::enable_shared_from_this<WSSession> {
 public:
     // Resolver and socket require an io_context
-    explicit WSSession(net::io_context& ioc, ssl::context& ctx);
+    explicit WSSession(net::io_context& ioc, ssl::context& ctx,
+        const std::string& host, const std::string& port, const std::string& path);
 
     void setSocksProxy(char const* socks_server) {
         socks_server_ = socks_server;
     }
 
-    void run(char const* host, char const* port, char const* path);
+    void start();
 
     bool waitUtilConnected(std::chrono::seconds sec);
 
@@ -72,5 +73,4 @@ private:
     beast::error_code ec_;
     bool connected_ = false;
     std::condition_variable conn_condition_;
-
 };

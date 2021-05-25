@@ -4,17 +4,24 @@
 #include <iostream>
 
 
-WSSession::WSSession(net::io_context& ioc, ssl::context& ctx)
-    : resolver_(net::make_strand(ioc))
-    , ws_(net::make_strand(ioc), ctx) {
+WSSession::WSSession(net::io_context& ioc, ssl::context& ctx,
+    const std::string& host, const std::string& port, const std::string& path)
+    : resolver_(net::make_strand(ioc)),
+    ws_(net::make_strand(ioc), ctx),
+    host_(host),
+    port_(port),
+    path_(path) {
 }
 
-// Start the asynchronous operation
-void WSSession::run(char const* host, char const* port, char const* path) {
-    // Save these for later
-    host_ = host;
-    port_ = port;
-    path_ = path;
+void WSSession::start() {
+    try {
+        ws_.close(websocket::close_code::normal);
+    } catch (...) {
+    }
+    {
+        std::unique_lock lock(cond_mutex_);
+        ec_.clear();
+    }
 
     if (!socks_server_.empty()) {
         if (!socks_url_.parse(socks_server_)) {
@@ -40,8 +47,8 @@ void WSSession::run(char const* host, char const* port, char const* path) {
 
     // Look up the domain name
     resolver_.async_resolve(
-        host,
-        port,
+        host_,
+        port_,
         beast::bind_front_handler(
             &WSSession::on_resolve,
             shared_from_this()));

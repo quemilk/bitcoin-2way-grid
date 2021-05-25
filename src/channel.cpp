@@ -1,4 +1,6 @@
 ﻿#include "channel.h"
+#include "logger.h"
+#include <thread>
 
 
 Channel::Channel(net::io_context& ioc,
@@ -7,10 +9,9 @@ Channel::Channel(net::io_context& ioc,
     // The SSL context is required, and holds certificates
     ssl::context ctx{ ssl::context::tlsv12_client };
 
-    ws_session_ = std::make_shared<WSSession>(ioc, ctx);
+    ws_session_ = std::make_shared<WSSession>(ioc, ctx, host, port, path);
     if (!socks_proxy.empty())
         ws_session_->setSocksProxy(socks_proxy.c_str());
-    ws_session_->run(host.c_str(), port.c_str(), path.c_str());
 
     thread_.reset(new std::thread(std::bind(&Channel::run, this)));
 }
@@ -19,8 +20,21 @@ Channel::~Channel() {
 }
 
 void Channel::run() {
-    if (ws_session_->waitUtilConnected(std::chrono::seconds(10))) {
+    for (;;) {
+        try {
+            ws_session_->start();
+            if (ws_session_->waitUtilConnected(std::chrono::seconds(10))) {
+                this->onConnected();
 
+
+                Sleep(100000);
+            } else {
+                LOG(error) << "connect failed!";
+            }
+        } catch (const std::exception& e) {
+            LOG(error) << "exception: " << e.what();
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-
 }

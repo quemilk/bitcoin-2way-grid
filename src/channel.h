@@ -15,6 +15,8 @@ public:
 private:
     void run();
 
+    virtual void onConnected() = 0;
+
 private:
     std::shared_ptr<WSSession> ws_session_;
     std::unique_ptr<std::thread> thread_;
