@@ -28,7 +28,7 @@ void Channel::run() {
                 for (;;) {
                     Cmd cmd;
                     while (outq_.pop(&cmd, std::chrono::milliseconds(100))) {
-                        ws_session_->send(cmd.data);
+                        ws_session_->send(cmd.req.data);
                         waiting_resp_q_.emplace_back(std::move(cmd));
                     }
 
@@ -54,9 +54,9 @@ void Channel::parseIncomeData(const std::string& data) {
     
 }
 
-void Channel::sendCmd(std::string data, std::function<void(const std::string&)> callback) {
+void Channel::sendCmd(Command::Request&& req, std::function<void(const std::string&)> callback) {
     Cmd cmd;
-    cmd.data = data;
+    cmd.req = std::move(req);
     cmd.cb = callback;
     outq_.push(std::move(cmd));
 }

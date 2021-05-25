@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
         if (doc.HasMember("socks_proxy"))
             socks_proxy = doc["socks_proxy"].GetString();
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         LOG(error) << "pase " << setting_filename << " failed!" << e.what();
         return -1;
     }

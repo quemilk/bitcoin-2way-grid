@@ -45,7 +45,7 @@ static std::string calcHmacSHA256(const std::string& msg, const std::string& dec
 }
 sign=CryptoJS.enc.Base64.Stringify(CryptoJS.HmacSHA256(timestamp +'GET'+ '/users/self/verify', secret))
 */
-std::string Command::makeLoginReq(const std::string& api_key, const std::string& passphrase, const std::string& secret) {
+Command::Request Command::makeLoginReq(const std::string& api_key, const std::string& passphrase, const std::string& secret) {
     rapidjson::Document doc(rapidjson::kObjectType);
     doc.AddMember("op", "login", doc.GetAllocator());
 
@@ -63,10 +63,13 @@ std::string Command::makeLoginReq(const std::string& api_key, const std::string&
     args.PushBack(arg, doc.GetAllocator());
     doc.AddMember("args", args, doc.GetAllocator());
 
-    return toString(doc);
+    Request req;
+    req.op = "login";
+    req.data = toString(doc);
+    return req;
 }
 
-std::string Command::makeSubscribeAccountChannel() {
+Command::Request Command::makeSubscribeAccountChannel() {
     rapidjson::Document doc(rapidjson::kObjectType);
     doc.AddMember("op", "subscribe", doc.GetAllocator());
 
@@ -78,5 +81,30 @@ std::string Command::makeSubscribeAccountChannel() {
     args.PushBack(arg, doc.GetAllocator());
     doc.AddMember("args", args, doc.GetAllocator());
 
-    return toString(doc);
+    Request req;
+    req.op = "subscribe";
+    req.data = toString(doc);
+    return req;
+}
+
+void Command::parseReceivedData(const std::string& data, bool* is_resp) {
+    try {
+        rapidjson::Document doc(rapidjson::kObjectType);
+        doc.Parse<0>(data);
+
+        if (doc.HasMember("event")) {
+            std::string event = doc["event"].GetString();
+            if (event == "error") {
+                auto code = doc["code"].GetString();
+                auto msg = doc["msg"].GetString();
+
+            }
+
+        }
+
+
+    } catch (const std::exception& e) {
+        LOG(error) << "pase failed! " << e.what() << "\ndata=" << data;
+    }
+    
 }

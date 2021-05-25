@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "ws_session.h"
+#include "command.h"
 #include "concurrent_queue.h"
 #include <thread>
 #include <functional>
@@ -14,7 +15,7 @@ public:
 
     virtual ~Channel();
 
-    void sendCmd(std::string data, std::function<void(const std::string&)> callback);
+    void sendCmd(Command::Request&& req, std::function<void(const std::string&)> callback);
 
 private:
     void run();
@@ -27,7 +28,7 @@ private:
     std::unique_ptr<std::thread> thread_;
 
     struct Cmd {
-        std::string data;
+        Command::Request req;
         std::function<void(const std::string&)> cb;
     };
 
