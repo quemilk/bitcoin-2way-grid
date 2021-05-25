@@ -35,6 +35,7 @@ public:
     void send(const std::string& data);
     void read(std::string* out_data);
     void async_read(std::function<void(std::string&)> func);
+    void ping();
 
 private:
     void on_resolve(beast::error_code ec, tcp::resolver::results_type results);

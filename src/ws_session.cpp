@@ -206,3 +206,7 @@ void WSSession::on_fail(beast::error_code ec, char const* what) {
     ec_ = ec;
     conn_condition_.notify_one();
 }
+
+void WSSession::ping() {
+    ws_.ping({});
+}

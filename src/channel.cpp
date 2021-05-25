@@ -1,5 +1,6 @@
 ﻿#include "channel.h"
 #include "logger.h"
+#include <chrono>
 
 
 Channel::Channel(net::io_context& ioc,
@@ -34,6 +35,7 @@ void Channel::run() {
                     }
                 );
 
+                auto last_read = std::chrono::steady_clock::now();
                 for (;;) {
                     Cmd cmd;
                     while (outq_.pop(&cmd, std::chrono::milliseconds(100))) {
@@ -43,6 +45,7 @@ void Channel::run() {
 
                     std::string indata;
                     if (inq_.tryPop(&indata)) {
+                        last_read = std::chrono::steady_clock::now();
                         if (indata.empty())
                             throw std::runtime_error("connection closed!");
 
@@ -53,6 +56,11 @@ void Channel::run() {
                                 inq_.push(std::move(data));
                             }
                         );
+                    }
+
+                    if (std::chrono::steady_clock::now() - last_read > std::chrono::seconds(15)) {
+                        ws_session_->ping();
+                        // TODO check pong
                     }
                 }
             } else {
