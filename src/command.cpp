@@ -196,8 +196,16 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                             }
                         }
                     }
+                } else if (channel == "orders") {
+                    for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
+                        std::string inst_type = (*itr)["instType"].GetString();
+                        std::string inst_id = (*itr)["instId"].GetString();
+                        std::string ord_id = (*itr)["ordId"].GetString();
+
+                        LOG(debug) << "Order: " << ord_id << "\tinst_id:" << inst_id << "\tinst_type:" << inst_type;
+                    }
                 }
-            }            
+            }
         }
     } catch (const std::exception& e) {
         LOG(error) << "pase failed! " << e.what() << "\ndata=" << data;
