@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     std::thread t([&ioc]() { ioc.run(); });
 
     auto public_channel = std::make_shared<PublicChannel>(ioc, host, port, path, socks_proxy);
-    auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, path, socks_proxy);
+   // auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, path, socks_proxy);
 
 
     t.join();
