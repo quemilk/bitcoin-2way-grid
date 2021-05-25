@@ -87,6 +87,24 @@ Command::Request Command::makeSubscribeAccountChannel() {
     return req;
 }
 
+Command::Request Command::makeSubscriBebalanceAndPositionChannel() {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    doc.AddMember("op", "subscribe", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+    rapidjson::Value arg(rapidjson::kObjectType);
+
+    arg.AddMember("channel", "balance_and_position", doc.GetAllocator());
+
+    args.PushBack(arg, doc.GetAllocator());
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    Request req;
+    req.op = "subscribe";
+    req.data = toString(doc);
+    return req;
+}
+
 bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
     try {
         rapidjson::Document doc(rapidjson::kObjectType);
@@ -122,9 +140,16 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                 resp.code = std::strtol(doc["code"].GetString(), nullptr, 0);
             *out_resp = std::move(resp);
             return true;
-        } else {
+        } else if (doc.HasMember("data")) {
+            if (doc.HasMember("arg")) {
+                std::string channel = doc["arg"]["channel"].GetString();
+                if (channel == "balance_and_position") {
 
+                }
+            }
             // TODO
+
+            LOG(debug) << "-- " << data;
         }
     } catch (const std::exception& e) {
         LOG(error) << "pase failed! " << e.what() << "\ndata=" << data;

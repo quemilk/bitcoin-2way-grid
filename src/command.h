@@ -23,6 +23,9 @@ public:
 
     static Request makeSubscribeAccountChannel();
 
+    // 账户余额和持仓频道
+    static Request makeSubscriBebalanceAndPositionChannel();
+
     static bool parseReceivedData(const std::string& data, Response* out_resp);
 
 };
