@@ -55,6 +55,8 @@ private:
 
     void on_socks_proxy_handshake(beast::error_code ec);
 
+    void on_fail(beast::error_code ec, char const* what);
+
 private:
     tcp::resolver resolver_;
     websocket::stream<beast::ssl_stream<beast::tcp_stream>> ws_;
@@ -67,6 +69,7 @@ private:
     int socks_version_;
 
     std::mutex cond_mutex_;
+    beast::error_code ec_;
     bool connected_ = false;
     std::condition_variable conn_condition_;
 

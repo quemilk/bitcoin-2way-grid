@@ -4,13 +4,6 @@
 #include <iostream>
 
 
-// Report a failure
-void fail(beast::error_code ec, char const* what) {
-    auto msg = ec.message();
-    LOG(error) << what << ": " << msg;
-}
-
-
 WSSession::WSSession(net::io_context& ioc, ssl::context& ctx)
     : resolver_(net::make_strand(ioc))
     , ws_(net::make_strand(ioc), ctx) {
@@ -56,7 +49,7 @@ void WSSession::run(char const* host, char const* port, char const* path) {
 
 void WSSession::on_socks_proxy_resolve(beast::error_code ec, tcp::resolver::results_type results) {
     if (ec)
-        return fail(ec, "resolve");
+        return on_fail(ec, "resolve");
 
     beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
     beast::get_lowest_layer(ws_).async_connect(
@@ -68,7 +61,7 @@ void WSSession::on_socks_proxy_resolve(beast::error_code ec, tcp::resolver::resu
 
 void WSSession::on_socks_proxy_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
     if (ec)
-        return fail(ec, "proxy_connect");
+        return on_fail(ec, "proxy_connect");
 
      if (socks_version_ == 4)
         socks::async_handshake_v4(
@@ -94,14 +87,14 @@ void WSSession::on_socks_proxy_connect(beast::error_code ec, tcp::resolver::resu
 
 void WSSession::on_socks_proxy_handshake(beast::error_code ec) {
     if (ec)
-        return fail(ec, "proxy_handshake");
+        return on_fail(ec, "proxy_handshake");
 
     on_connect(ec, tcp::resolver::results_type::endpoint_type());
 }
 
 void WSSession::on_resolve(beast::error_code ec, tcp::resolver::results_type results) {
     if (ec)
-        return fail(ec, "resolve");
+        return on_fail(ec, "resolve");
 
     // Set a timeout on the operation
     beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
@@ -116,7 +109,7 @@ void WSSession::on_resolve(beast::error_code ec, tcp::resolver::results_type res
 
 void  WSSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
     if (ec)
-        return fail(ec, "connect");
+        return on_fail(ec, "connect");
 
     // Update the host_ string. This will provide the value of the
     // Host HTTP header during the WebSocket handshake.
@@ -132,7 +125,7 @@ void  WSSession::on_connect(beast::error_code ec, tcp::resolver::results_type::e
         host_.c_str())) {
         ec = beast::error_code(static_cast<int>(::ERR_get_error()),
             net::error::get_ssl_category());
-        return fail(ec, "connect");
+        return on_fail(ec, "connect");
     }
 
     // Perform the SSL handshake
@@ -145,7 +138,7 @@ void  WSSession::on_connect(beast::error_code ec, tcp::resolver::results_type::e
 
 void WSSession::on_ssl_handshake(beast::error_code ec) {
     if (ec)
-        return fail(ec, "ssl_handshake");
+        return on_fail(ec, "ssl_handshake");
 
     // Turn off the timeout on the tcp_stream, because
     // the websocket stream has its own timeout system.
@@ -171,7 +164,7 @@ void WSSession::on_ssl_handshake(beast::error_code ec) {
 
 void WSSession::on_handshake(beast::error_code ec) {
     if (ec)
-        return fail(ec, "handshake");
+        return on_fail(ec, "handshake");
 
     std::unique_lock lock(cond_mutex_);
     connected_ = true;
@@ -184,7 +177,7 @@ void WSSession::on_write(
     boost::ignore_unused(bytes_transferred);
 
     if (ec)
-        return fail(ec, "write");
+        return on_fail(ec, "write");
 
     //// Read a message into our buffer
     //ws_.async_read(
@@ -200,7 +193,7 @@ void WSSession::on_read(
     boost::ignore_unused(bytes_transferred);
 
     if (ec)
-        return fail(ec, "read");
+        return on_fail(ec, "read");
 
     // Close the WebSocket connection
     ws_.async_close(websocket::close_code::normal,
@@ -211,7 +204,7 @@ void WSSession::on_read(
 
 void WSSession::on_close(beast::error_code ec) {
     if (ec)
-        return fail(ec, "close");
+        return on_fail(ec, "close");
 
     // If we get here then the connection is closed gracefully
 
@@ -221,6 +214,8 @@ void WSSession::on_close(beast::error_code ec) {
 
 bool WSSession::waitUtilConnected(std::chrono::seconds sec) {
     std::unique_lock lock(cond_mutex_);
+    if (ec_)
+        return false;
     conn_condition_.wait_for(lock, sec);
     return connected_;
 }
@@ -235,4 +230,13 @@ void WSSession::read(std::string* out_data) {
     beast::flat_buffer buffer;
     ws_.read(buffer);
     *out_data = beast::buffers_to_string(buffer.data());
+}
+
+void WSSession::on_fail(beast::error_code ec, char const* what) {
+    auto msg = ec.message();
+    LOG(error) << what << ": " << msg;
+
+    std::unique_lock lock(cond_mutex_);
+    ec_ = ec;
+    conn_condition_.notify_one();
 }

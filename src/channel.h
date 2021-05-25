@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "ws_session.h"
 #include <thread>
@@ -12,6 +12,8 @@ public:
 
     virtual ~Channel();
 
+private:
+    void run();
 
 private:
     std::shared_ptr<WSSession> ws_session_;
