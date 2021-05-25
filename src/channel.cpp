@@ -43,6 +43,9 @@ void Channel::run() {
 
                     std::string indata;
                     if (inq_.tryPop(&indata)) {
+                        if (indata.empty())
+                            throw std::runtime_error("connection closed!");
+
                         parseIncomeData(indata);
 
                         ws_session_->async_read(
@@ -51,13 +54,6 @@ void Channel::run() {
                             }
                         );
                     }
-
-                   /* while (ws_session_->canRead()) {
-                        std::string data;
-                        ws_session_->read(&data);
-
-                        parseIncomeData(data);
-                    }*/
                 }
             } else {
                 LOG(error) << "connect failed!";
