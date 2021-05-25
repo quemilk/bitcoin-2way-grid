@@ -8,7 +8,7 @@ public:
     using Channel::Channel;
 
 protected:
-    void onConnected() override {}
+    void onConnected() override;
 
 
 

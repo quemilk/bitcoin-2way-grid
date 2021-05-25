@@ -3,5 +3,8 @@
   "api_key": "",
   "passphrase": "",
   "secret": "",
-  "socks5_proxy": ""
+  "socks5_proxy": "",
+
+  "ticket": "BTC-USDT-SWAP"
+
 }

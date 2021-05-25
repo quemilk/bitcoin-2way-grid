@@ -137,7 +137,26 @@ Command::Request Command::makeSubscribeOrdersChannel(const std::string& inst_typ
     return req;
 }
 
-Command::Request Command::makeSubscriTickersChannel(const std::string& inst_id) {
+Command::Request Command::makeSubscribeInstrumentsChannel(const std::string& inst_type) {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    doc.AddMember("op", "subscribe", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+    rapidjson::Value arg(rapidjson::kObjectType);
+
+    arg.AddMember("channel", "instruments", doc.GetAllocator());
+    arg.AddMember("instType", inst_type, doc.GetAllocator());
+
+    args.PushBack(arg, doc.GetAllocator());
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    Request req;
+    req.op = "subscribe";
+    req.data = toString(doc);
+    return req;
+}
+
+Command::Request Command::makeSubscribeTickersChannel(const std::string& inst_id) {
     rapidjson::Document doc(rapidjson::kObjectType);
     doc.AddMember("op", "subscribe", doc.GetAllocator());
 

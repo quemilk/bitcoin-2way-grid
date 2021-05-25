@@ -36,8 +36,10 @@ public:
 
 
     // Public
+    // 产品频道
+    static Request makeSubscribeInstrumentsChannel(const std::string& inst_type);
     // 行情频道
-    static Request makeSubscriTickersChannel(const std::string& inst_id);
+    static Request makeSubscribeTickersChannel(const std::string& inst_id);
 
 
     

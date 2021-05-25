@@ -14,6 +14,7 @@
 std::string g_api_key;
 std::string g_passphrase;
 std::string g_secret;
+std::string g_ticket;
 
 int main(int argc, char** argv) {
     init_logger();
@@ -42,9 +43,15 @@ int main(int argc, char** argv) {
         g_api_key = doc["api_key"].GetString();
         g_passphrase = doc["passphrase"].GetString();
         g_secret = doc["secret"].GetString();
+        g_ticket = doc["ticket"].GetString();
 
         if (enviorment.empty() || g_api_key.empty() || g_secret.empty()) {
             LOG(error) << "missing api_key or secret!";
+            return -1;
+        }
+
+        if (g_ticket.empty()) {
+            LOG(error) << "missing ticket!";
             return -1;
         }
 
