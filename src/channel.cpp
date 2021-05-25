@@ -28,6 +28,12 @@ void Channel::run() {
             if (ws_session_->waitUtilConnected(std::chrono::seconds(10))) {
                 this->onConnected();
 
+                ws_session_->async_read(
+                    [&](std::string& data) {
+                        inq_.push(std::move(data));
+                    }
+                );
+
                 for (;;) {
                     Cmd cmd;
                     while (outq_.pop(&cmd, std::chrono::milliseconds(100))) {
@@ -35,12 +41,23 @@ void Channel::run() {
                         waiting_resp_q_.emplace_back(std::move(cmd));
                     }
 
-                    while (ws_session_->canRead()) {
+                    std::string indata;
+                    if (inq_.tryPop(&indata)) {
+                        parseIncomeData(indata);
+
+                        ws_session_->async_read(
+                            [&](std::string& data) {
+                                inq_.push(std::move(data));
+                            }
+                        );
+                    }
+
+                   /* while (ws_session_->canRead()) {
                         std::string data;
                         ws_session_->read(&data);
 
                         parseIncomeData(data);
-                    }
+                    }*/
                 }
             } else {
                 LOG(error) << "connect failed!";

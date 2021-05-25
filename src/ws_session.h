@@ -34,9 +34,7 @@ public:
 
     void send(const std::string& data);
     void read(std::string* out_data);
-    bool canRead() {
-        return ws_.is_message_done();
-    }
+    void async_read(std::function<void(std::string&)> func);
 
 private:
     void on_resolve(beast::error_code ec, tcp::resolver::results_type results);

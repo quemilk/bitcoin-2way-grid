@@ -180,15 +180,22 @@ bool WSSession::waitUtilConnected(std::chrono::seconds sec) {
 }
 
 void WSSession::send(const std::string& data) {
-    // Send the message
-    ws_.write(
-        net::buffer(data));
+    ws_.write(net::buffer(data));
 }
 
 void WSSession::read(std::string* out_data) {
-    beast::flat_buffer buffer;
-    ws_.read(buffer);
-    *out_data = beast::buffers_to_string(buffer.data());
+    ws_.read(buffer_);
+    *out_data = beast::buffers_to_string(buffer_.data());
+}
+
+void WSSession::async_read(std::function<void(std::string&)> func) {
+    ws_.async_read(
+        buffer_,
+        [func, this](beast::error_code, size_t) {
+            std::string str = beast::buffers_to_string(buffer_.data());
+            buffer_.clear();
+            func(str);
+        });
 }
 
 void WSSession::on_fail(beast::error_code ec, char const* what) {

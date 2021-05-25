@@ -40,5 +40,6 @@ private:
     };
 
     ConcurrentQueueT<Cmd> outq_;
+    ConcurrentQueueT<std::string> inq_;
     std::deque<Cmd> waiting_resp_q_;
 };
