@@ -51,10 +51,22 @@ void Channel::run() {
 }
 
 void Channel::parseIncomeData(const std::string& data) {
-    
+    Command::Response resp;
+    if (Command::parseReceivedData(data, &resp)) {
+        for (auto itr = waiting_resp_q_.begin(); itr != waiting_resp_q_.end();) {
+            auto& req = itr->req;
+            if (resp.id == req.id && (resp.op == req.op || resp.op == "error")) {
+                if (itr->cb)
+                    itr->cb(resp);
+                itr = waiting_resp_q_.erase(itr);
+                break;
+            }
+            ++itr;
+        }
+    }
 }
 
-void Channel::sendCmd(Command::Request&& req, std::function<void(const std::string&)> callback) {
+void Channel::sendCmd(Command::Request&& req, callback_func_t callback) {
     Cmd cmd;
     cmd.req = std::move(req);
     cmd.cb = callback;

@@ -15,7 +15,9 @@ public:
 
     virtual ~Channel();
 
-    void sendCmd(Command::Request&& req, std::function<void(const std::string&)> callback);
+    typedef std::function<void(Command::Response&)> callback_func_t;
+
+    void sendCmd(Command::Request&& req, callback_func_t callback);
 
 private:
     void run();
@@ -29,7 +31,7 @@ private:
 
     struct Cmd {
         Command::Request req;
-        std::function<void(const std::string&)> cb;
+        callback_func_t cb;
     };
 
     ConcurrentQueueT<Cmd> outq_;

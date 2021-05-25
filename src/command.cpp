@@ -87,24 +87,47 @@ Command::Request Command::makeSubscribeAccountChannel() {
     return req;
 }
 
-void Command::parseReceivedData(const std::string& data, std::deque<Response>* out_resp) {
+bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
     try {
         rapidjson::Document doc(rapidjson::kObjectType);
         doc.Parse<0>(data);
 
         if (doc.HasMember("event")) {
             std::string event = doc["event"].GetString();
-            if (event == "error") {
-                auto code = doc["code"].GetString();
-                auto msg = doc["msg"].GetString();
 
-            }
+            Response resp;
+            resp.data = data;
+            resp.op = event;
+            resp.code = 0;
+            if (doc.HasMember("id"))
+                resp.id = doc["id"].GetString();
 
+            if (doc.HasMember("code"))
+                resp.code = std::strtol(doc["code"].GetString(), nullptr, 0);
+            if (event == "error" && 0 == resp.code)
+                resp.code = -1;
+            if (doc.HasMember("msg"))
+                resp.msg = doc["msg"].GetString();
+            
+            *out_resp = std::move(resp);
+            return true;
+        } else if (doc.HasMember("op")) {
+            Response resp;
+            resp.data = data;
+            resp.op = doc["op"].GetString();
+            resp.code = 0;
+            if (doc.HasMember("id"))
+                resp.id = doc["id"].GetString();
+            if (doc.HasMember("code"))
+                resp.code = std::strtol(doc["code"].GetString(), nullptr, 0);
+            *out_resp = std::move(resp);
+            return true;
+        } else {
+
+            // TODO
         }
-
-
     } catch (const std::exception& e) {
         LOG(error) << "pase failed! " << e.what() << "\ndata=" << data;
     }
-    
+    return false;    
 }
