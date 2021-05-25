@@ -188,7 +188,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 std::string ccy = (*balitr)["ccy"].GetString();
                                 int cash_bal = std::strtol((*balitr)["cashBal"].GetString(), nullptr, 0);
 
-                                o << "  " << ccy << "\tcash:" << cash_bal << std::endl;
+                                o << "  " << ccy << " \tcash: " << cash_bal << std::endl;
                             }
                             LOG(debug) << o.str();
                         } 
@@ -209,7 +209,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 std::string ccy = (*positr)["ccy"].GetString();
                                 int utime = std::strtol((*positr)["uTime"].GetString(), nullptr, 0); // 仓位信息更新时间
                                 o << "  - " << pos_id  << " " << inst_id << "  " << inst_type << std::endl
-                                    << "    trade_id:" << trade_id << "\t" << pos_side << "\t" << pos << "\t" << avg_px << "\t" << ccy << "\t" << toTimeStr(utime) << std::endl;
+                                    << "    trade_id:" << trade_id << " \t" << pos_side << " \t" << pos << " \t" << avg_px << " \t" << ccy << std::endl;
                             }
                             LOG(debug) << o.str();
                         }
@@ -241,7 +241,12 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         int utime = std::strtol((*itr)["uTime"].GetString(), nullptr, 0); // 订单更新时间
                         int ctime = std::strtol((*itr)["cTime"].GetString(), nullptr, 0); // 订单更新时间
     
-                        o << "  " << ord_id << "  inst_id:" << inst_id << "  inst_type:" << inst_type << std::endl;
+                        o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << "\t" << toTimeStr(utime) << std::endl;
+                        if (state == "live")
+                            o << "    order: \t" << sz << " \t" << px << " \t" << lever << "x" << std::endl;
+                        else if (state == "filled" || state == "partially_filled")
+                            o << "    filled: \t" << fill_sz << " \t" << fill_px << " \t" << lever << "x" << std::endl;
+                        o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
                     }
                     LOG(debug) << o.str();
                 }
