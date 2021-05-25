@@ -8,6 +8,8 @@ extern std::string g_secret;
 
 void PrivateChannel::onConnected() {
     auto cmd = Command::makeLoginReq(g_api_key, g_passphrase, g_secret);
-    ws_session_->send(cmd);
+    this->sendCmd(cmd, [this](const std::string& data) {
+    });
+
     LOG(debug) << "send login. api_key=" << g_api_key;
 }

@@ -1,8 +1,10 @@
 ﻿#pragma once
 
 #include "ws_session.h"
+#include "concurrent_queue.h"
 #include <thread>
-
+#include <functional>
+#include <deque>
 
 class Channel {
 public:
@@ -12,13 +14,23 @@ public:
 
     virtual ~Channel();
 
+    void sendCmd(std::string data, std::function<void(const std::string&)> callback);
+
 private:
     void run();
     void parseIncomeData(const std::string& data);
 
     virtual void onConnected() = 0;
 
-protected:
+private:
     std::shared_ptr<WSSession> ws_session_;
     std::unique_ptr<std::thread> thread_;
+
+    struct Cmd {
+        std::string data;
+        std::function<void(const std::string&)> cb;
+    };
+
+    ConcurrentQueueT<Cmd> outq_;
+    std::deque<Cmd> waiting_resp_q_;
 };

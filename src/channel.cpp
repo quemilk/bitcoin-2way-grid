@@ -1,6 +1,5 @@
 ﻿#include "channel.h"
 #include "logger.h"
-#include <thread>
 
 
 Channel::Channel(net::io_context& ioc,
@@ -26,13 +25,20 @@ void Channel::run() {
             if (ws_session_->waitUtilConnected(std::chrono::seconds(10))) {
                 this->onConnected();
 
-                while (ws_session_->canRead()) {
-                    std::string data;
-                    ws_session_->read(&data);
+                for (;;) {
+                    Cmd cmd;
+                    while (outq_.pop(&cmd, std::chrono::milliseconds(100))) {
+                        ws_session_->send(cmd.data);
+                        waiting_resp_q_.emplace_back(std::move(cmd));
+                    }
 
-                    parseIncomeData(data);
+                    while (ws_session_->canRead()) {
+                        std::string data;
+                        ws_session_->read(&data);
+
+                        parseIncomeData(data);
+                    }
                 }
-                Sleep(100000);
             } else {
                 LOG(error) << "connect failed!";
             }
@@ -45,5 +51,12 @@ void Channel::run() {
 }
 
 void Channel::parseIncomeData(const std::string& data) {
+    
+}
 
+void Channel::sendCmd(std::string data, std::function<void(const std::string&)> callback) {
+    Cmd cmd;
+    cmd.data = data;
+    cmd.cb = callback;
+    outq_.push(std::move(cmd));
 }
