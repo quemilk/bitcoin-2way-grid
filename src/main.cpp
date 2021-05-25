@@ -2,18 +2,56 @@
 #include "logger.h"
 #include "global.h"
 #include "command.h"
+#include "json.h"
 #include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <thread>
+#include <fstream>
 
 int main(int argc, char** argv) {
     init_logger();
 
+    std::string api_key;
+    std::string passphrase;
+    std::string secret;
+    std::string enviorment;
+
+    std::string socks5_proxy = "socks5://127.0.0.1:9980";
+
+    try {
+        std::ifstream in("setting.json");
+        if (!in.is_open()) {
+            LOG(error) << "open setting.json failed!";
+            return -1;
+        }
+
+        std::string json_content((std::istreambuf_iterator<char>(in)),
+            std::istreambuf_iterator<char>());
+
+        rapidjson::Document doc;
+        doc.Parse<0>(json_content.data(), json_content.size());
+
+        enviorment = doc["enviorment"].GetString();
+        api_key = doc["api_key"].GetString();
+        passphrase = doc["passphrase"].GetString();
+        secret = doc["secret"].GetString();
+
+        if (enviorment.empty() || api_key.empty() || secret.empty()) {
+            LOG(error) << "missing api_key or secret!";
+            return -1;
+        }
+
+        if (doc.HasMember("socks_proxy"))
+            socks5_proxy = doc["socks_proxy"].GetString();
+    } catch (std::exception& e) {
+        LOG(error) << "pase setting.json failed!" << e.what();
+        return -1;
+    }
+
     auto const host = SIMU_WSS_HOST;
     auto const port = SIMU_WSS_PORT;
     auto const path = SIMU_WSS_PRIVATE_CHANNEL;
-    auto const socks5 = "socks5://127.0.0.1:9980";
 
     // The io_context is required for all I/O
     net::io_context ioc;
@@ -23,16 +61,13 @@ int main(int argc, char** argv) {
 
     // Launch the asynchronous operation
     auto ws_session = std::make_shared<WSSession>(ioc, ctx);
-    ws_session->setSocksProxy(socks5);
+    ws_session->setSocksProxy(socks5_proxy.c_str());
     ws_session->run(host, port, path);
 
     std::thread thread([&] { ioc.run(); });
 
     ws_session->waitUtilConnected(std::chrono::seconds(10));
 
-    auto const api_key = "c8e7a07f-fbdd-4554-8511-5e379332f395";
-    auto const passphrase = "123456";
-    auto const secret = "485F4DB9CC2606A345E5609BB45914DC";
     auto cmd = Command::makeLoginReq(api_key, passphrase, secret);
 
     ws_session->send(cmd);
