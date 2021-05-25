@@ -87,7 +87,7 @@ Command::Request Command::makeSubscribeAccountChannel() {
     return req;
 }
 
-void Command::parseReceivedData(const std::string& data, bool* is_resp) {
+void Command::parseReceivedData(const std::string& data, std::deque<Response>* out_resp) {
     try {
         rapidjson::Document doc(rapidjson::kObjectType);
         doc.Parse<0>(data);
