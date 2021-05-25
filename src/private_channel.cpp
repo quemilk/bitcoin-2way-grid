@@ -14,7 +14,7 @@ void PrivateChannel::onConnected() {
     this->sendCmd(std::move(req),
         [this](Command::Response& resp) {
             if (resp.code == 0) {
-                LOG(debug) << "<< login succeeded.";
+                LOG(debug) << "<< login ok.";
                 this->onLogined();
             } else
                 throw std::runtime_error("<< login failed! " + resp.msg);
@@ -30,9 +30,9 @@ void PrivateChannel::onLogined() {
     this->sendCmd(std::move(req),
         [this](Command::Response& resp) {
             if (resp.code == 0)
-                LOG(debug) << "<< subscribe succeeded. " << resp.data;
+                LOG(debug) << "<< subscribe ok. " << resp.data;
             else
-                LOG(debug) << "<< subscribe failed. " << resp.data;
+                throw std::runtime_error("<< subscribe failed! " + resp.msg);
         }
     );
 }
