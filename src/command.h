@@ -30,6 +30,12 @@ public:
     // inst_type: SPOT：币币; MARGIN：币币杠杆 SWAP：永续合约 FUTURES：交割合约 OPTION：期权 ANY： 全部
     static Request makeSubscribeOrdersChannel(const std::string& inst_type="ANY", const std::string& inst_id="");
 
+    // 交易下单
+
+
+    
     static bool parseReceivedData(const std::string& data, Response* out_resp);
+
+
 
 };
