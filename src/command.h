@@ -33,6 +33,13 @@ public:
     // 交易下单
 
 
+
+
+    // Public
+    // 行情频道
+    static Request makeSubscriTickersChannel(const std::string& inst_id);
+
+
     
     static bool parseReceivedData(const std::string& data, Response* out_resp);
 
