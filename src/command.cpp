@@ -30,6 +30,16 @@ static std::string calcHmacSHA256(const std::string& msg, const std::string& dec
     return std::string{ reinterpret_cast<char const*>(hash.data()), hashLen };
 }
 
+static std::string toTimeStr(int time_msec) {
+    struct tm tstruct;
+    char buf[80];
+    time_t now = time_msec / 1000;
+    tstruct = *localtime(&now);
+    strftime(buf, _countof(buf), "%m-%d %H:%M:%S", &tstruct);
+
+    return buf;
+}
+
 
 /*{
  "op": "login",
@@ -198,9 +208,8 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 int pos = std::strtol((*positr)["pos"].GetString(), nullptr, 0);
                                 std::string ccy = (*positr)["ccy"].GetString();
                                 int utime = std::strtol((*positr)["uTime"].GetString(), nullptr, 0); // 仓位信息更新时间
-
                                 o << "  - " << pos_id  << " " << inst_id << "  " << inst_type << std::endl
-                                    << "    trade_id:" << trade_id << "\t" << pos_side << "\t" << pos << "\t" << avg_px << "\t" << ccy << std::endl;
+                                    << "    trade_id:" << trade_id << "\t" << pos_side << "\t" << pos << "\t" << avg_px << "\t" << ccy << "\t" << toTimeStr(utime) << std::endl;
                             }
                             LOG(debug) << o.str();
                         }
