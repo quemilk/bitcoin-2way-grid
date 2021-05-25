@@ -144,12 +144,38 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
             if (doc.HasMember("arg")) {
                 std::string channel = doc["arg"]["channel"].GetString();
                 if (channel == "balance_and_position") {
+                    for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
+                        std::string event_type = (*itr)["eventType"].GetString();
 
+                        if (itr->HasMember("balData")) {
+                            auto& bal_data = (*itr)["balData"];
+                            for (auto balitr = bal_data.Begin(); balitr != bal_data.End(); ++balitr) {
+                                std::string ccy = (*balitr)["ccy"].GetString();
+                                int cash_bal = std::strtol((*balitr)["cashBal"].GetString(), nullptr, 0);
+
+                                LOG(debug) << "CCY: " << ccy << "\tcash:" << cash_bal;
+                            }
+                        } 
+
+                        if (itr->HasMember("posData")) {
+                            auto& pos_data = (*itr)["posData"];
+                            for (auto positr = pos_data.Begin(); positr != pos_data.End(); ++positr) {
+                                std::string pos_id = (*positr)["posId"].GetString();
+                                std::string trade_id = (*positr)["tradeId"].GetString();
+                                std::string inst_id = (*positr)["instId"].GetString();
+                                std::string inst_type = (*positr)["instType"].GetString();
+                                std::string pos_side = (*positr)["posSide"].GetString();
+                                int pos = std::strtol((*positr)["pos"].GetString(), nullptr, 0);
+                                std::string ccy = (*positr)["ccy"].GetString();
+
+                                LOG(debug) << "POS: " << pos_id << "\ttrade_id:" << trade_id 
+                                    << "\tinst_id:" << inst_id << "\tinst_type:" << inst_type
+                                    << "\tside:" << pos_side << "\tpos:" << pos << "\tccy:" << ccy;
+                            }
+                        }
+                    }
                 }
-            }
-            // TODO
-
-            LOG(debug) << "-- " << data;
+            }            
         }
     } catch (const std::exception& e) {
         LOG(error) << "pase failed! " << e.what() << "\ndata=" << data;
