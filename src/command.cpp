@@ -175,6 +175,24 @@ Command::Request Command::makeSubscribeTickersChannel(const std::string& inst_id
     return req;
 }
 
+Command::Request Command::makeSubscribeTradesChannel(const std::string& inst_id) {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    doc.AddMember("op", "subscribe", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+    rapidjson::Value arg(rapidjson::kObjectType);
+
+    arg.AddMember("channel", "trades", doc.GetAllocator());
+    arg.AddMember("instId", inst_id, doc.GetAllocator());
+
+    args.PushBack(arg, doc.GetAllocator());
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    Request req;
+    req.op = "subscribe";
+    req.data = toString(doc);
+    return req;
+}
 
 bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
     try {
@@ -286,6 +304,22 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         else if (state == "filled" || state == "partially_filled")
                             o << "    filled: \t" << fill_sz << " \t" << fill_px << " \t" << lever << "x" << std::endl;
                         o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
+                    }
+                    LOG(debug) << o.str();
+                } else if (channel == "trades") {
+                    std::ostringstream o;
+                    o << "=====Trades=====" << std::endl;
+
+                    for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
+                        std::string inst_id = (*itr)["instId"].GetString();
+                        std::string trade_id = (*itr)["tradeId"].GetString();
+                        std::string px = (*itr)["px"].GetString();
+                        std::string sz = (*itr)["sz"].GetString();
+                        std::string pos_side = (*itr)["side"].GetString();
+                        int ts = std::strtol((*itr)["ts"].GetString(), nullptr, 0);
+
+                        o << "  - " << inst_id << std::endl
+                            << "    trade_id:" << trade_id << " \t" << pos_side << " \t" << sz << " \t" << px << " \t" << toTimeStr(ts) << std::endl;
                     }
                     LOG(debug) << o.str();
                 }

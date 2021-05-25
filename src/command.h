@@ -40,7 +40,8 @@ public:
     static Request makeSubscribeInstrumentsChannel(const std::string& inst_type);
     // 行情频道
     static Request makeSubscribeTickersChannel(const std::string& inst_id);
-
+    // 交易频道
+    static Request makeSubscribeTradesChannel(const std::string& inst_id);
 
     
     static bool parseReceivedData(const std::string& data, Response* out_resp);

@@ -62,19 +62,22 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    std::string host, port, path;
+    std::string host, port, private_path, public_path;
     if (enviorment == "simu") {
         host = SIMU_WSS_HOST;
         port = SIMU_WSS_PORT;
-        path = SIMU_WSS_PRIVATE_CHANNEL;
+        private_path = SIMU_WSS_PRIVATE_CHANNEL;
+        public_path = SIMU_WSS_PUBLIC_CHANNEL;
     } else if (enviorment == "product") {
         host = WSS_HOST;
         port = WSS_PORT;
-        path = WSS_PRIVATE_CHANNEL;
+        private_path = WSS_PRIVATE_CHANNEL;
+        public_path = WSS_PUBLIC_CHANNEL;
     } else if (enviorment == "aws") {
         host = AWS_WSS_HOST;
         port = AWS_WSS_PORT;
-        path = AWS_WSS_PRIVATE_CHANNEL;
+        private_path = AWS_WSS_PRIVATE_CHANNEL;
+        public_path = AWS_WSS_PUBLIC_CHANNEL;
     } else {
         LOG(error) << "invalid enviorenment setting! " << enviorment << ". (simu, product, aws)";
         return -1;
@@ -84,8 +87,8 @@ int main(int argc, char** argv) {
     net::io_context::work worker(ioc);
     std::thread t([&ioc]() { ioc.run(); });
 
-    auto public_channel = std::make_shared<PublicChannel>(ioc, host, port, path, socks_proxy);
-   // auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, path, socks_proxy);
+    auto public_channel = std::make_shared<PublicChannel>(ioc, host, port, public_path, socks_proxy);
+   // auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, private_path, socks_proxy);
 
 
     t.join();
