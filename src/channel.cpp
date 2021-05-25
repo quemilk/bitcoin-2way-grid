@@ -26,7 +26,12 @@ void Channel::run() {
             if (ws_session_->waitUtilConnected(std::chrono::seconds(10))) {
                 this->onConnected();
 
+                while (ws_session_->canRead()) {
+                    std::string data;
+                    ws_session_->read(&data);
 
+                    // TODO
+                }
                 Sleep(100000);
             } else {
                 LOG(error) << "connect failed!";
