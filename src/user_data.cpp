@@ -38,13 +38,13 @@ static std::string floatToString(float f, const std::string& tick_sz) {
 }
 
 
-void UserData::startGrid(int count, float step_ratio) {
-    if (count <= 0 || step_ratio <= 0 || step_ratio >= 1.0f) {
+void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) {
+    if (grid_count <= 0 || step_ratio <= 0 || step_ratio >= 1.0f) {
         LOG(error) << "invalid param!";
         return;
     }
 
-    LOG(info) << "grid starting: count=" << count << " step_ratio=" << step_ratio << " " << g_ticket;
+    LOG(info) << "grid starting: injected_cash=" << injected_cash << " grid_count=" << grid_count << " step_ratio=" << step_ratio << " " << g_ticket;
 
     g_user_data.lock();
     make_scope_exit([] { g_user_data.unlock(); });
@@ -63,7 +63,7 @@ void UserData::startGrid(int count, float step_ratio) {
         return;
     }
     auto cash = itrbal->second;
-    LOG(info) << "cash: " << cash << " " << ccy;
+    LOG(info) << "available cash: " << cash << " " << ccy;
 
 
     auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
@@ -83,7 +83,7 @@ void UserData::startGrid(int count, float step_ratio) {
     auto tick_sz = itrproduct->second.tick_sz;
     std::deque<std::pair<std::string, std::string> > grid_prices;
     float px = cur_price;
-    for (int i = 0; i < count; ++i) {
+    for (int i = 0; i < grid_count; ++i) {
         px = px * (1.0f - step_ratio);
         grid_prices.push_back({ floatToString(px, tick_sz), "" });
     }

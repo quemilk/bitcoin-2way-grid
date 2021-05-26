@@ -72,7 +72,7 @@ public:
     };
 
 public:
-    void startGrid(int count, float step_ratio);
+    void startGrid(float injected_cash, int grid_count, float step_ratio);
 
 public:
     void lock() {

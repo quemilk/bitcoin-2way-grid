@@ -119,10 +119,11 @@ int main(int argc, char** argv) {
         } else if (op.substr(0, 11) == "start grid ") {
             std::vector<std::string> params;
             splitString(op.substr(11), params, ' ');
-            if (params.size() >= 2) {
-                int count = strtol(params[0].c_str(), nullptr, 0);
-                float step_ration = strtof(params[1].c_str(), nullptr);
-                g_user_data.startGrid(count, step_ration);
+            if (params.size() >= 3) {
+                float cash = strtof(params[0].c_str(), nullptr);
+                int count = strtol(params[1].c_str(), nullptr, 0);
+                float step_ration = strtof(params[2].c_str(), nullptr);
+                g_user_data.startGrid(cash, count, step_ration);
             }
         } else {
             std::cout << "commands:" << std::endl;
@@ -130,7 +131,7 @@ int main(int argc, char** argv) {
             std::cout << "\tshow balance" << std::endl;
             std::cout << "\tshow trades" << std::endl;
             std::cout << "\thide trades" << std::endl;
-            std::cout << "\tstart grid %count% %step_ratio%" << std::endl;
+            std::cout << "\tstart grid %cash% %grid_count% %grid_step_ratio%" << std::endl;
         }
     }
 
