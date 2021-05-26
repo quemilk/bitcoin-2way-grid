@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2018 jackarain (jack dot wgm at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -458,7 +458,7 @@ public:
                     domain.push_back(read<uint8_t>(resp));
                 auto port = read<uint16_t>(resp);
 
-                std::cout << "* SOCKS remote host: " << domain << ":" << port << std::endl;
+                //std::cout << "* SOCKS remote host: " << domain << ":" << port << std::endl;
             }
 
             if (atyp == detail::SOCKS5_ATYP_IPV4)
@@ -467,8 +467,8 @@ public:
                     net::ip::address_v4(read<uint32_t>(resp)),
                     read<uint16_t>(resp));
 
-                std::cout << "* SOCKS remote host: " << remote_endp.address().to_string()
-                    << ":" << remote_endp.port() << std::endl;
+               /* std::cout << "* SOCKS remote host: " << remote_endp.address().to_string()
+                    << ":" << remote_endp.port() << std::endl;*/
             }
 
             if (atyp == detail::SOCKS5_ATYP_IPV6)
@@ -481,8 +481,8 @@ public:
                     net::ip::address_v6(bytes),
                     read<uint16_t>(resp));
 
-                std::cout << "* SOCKS remote host: " << remote_endp.address().to_string()
-                    << ":" << remote_endp.port() << std::endl;
+                /*std::cout << "* SOCKS remote host: " << remote_endp.address().to_string()
+                    << ":" << remote_endp.port() << std::endl;*/
             }
 
             // fail.
