@@ -425,7 +425,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                     for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
                         UserData::ProductInfo::Info info;
                         info.inst_id = (*itr)["instId"].GetString();
-                        info.lot_sz = (*itr)["minSz"].GetString(); // 下单数量精度
+                        info.lot_sz = (*itr)["lotSz"].GetString(); // 下单数量精度
                         info.min_sz = (*itr)["minSz"].GetString(); // 最小下单数量
                         info.tick_sz = (*itr)["tickSz"].GetString(); // 最小下单价格
                         info.settle_ccy = (*itr)["settleCcy"].GetString();

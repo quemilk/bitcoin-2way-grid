@@ -64,7 +64,10 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
     }
     auto cash = itrbal->second;
     LOG(info) << "available cash: " << cash << " " << ccy;
-
+    if (strtof(cash.c_str(), nullptr) < injected_cash) {
+        LOG(error) << "no enough cash!";
+        return;
+    }
 
     auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
     if (itrtrades == public_trades_info_.trades_data.end()) {
@@ -83,10 +86,17 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
     auto tick_sz = itrproduct->second.tick_sz;
     std::deque<std::pair<std::string, std::string> > grid_prices;
     float px = cur_price;
+    float total_px = 0;
     for (int i = 0; i < grid_count; ++i) {
         px = px * (1.0f - step_ratio);
+        total_px += px;
         grid_prices.push_back({ floatToString(px, tick_sz), "" });
     }
 
+    auto min_sz = strtof(itrproduct->second.min_sz.c_str(), nullptr);
+    if (min_sz * total_px >= injected_cash) {
+        LOG(error) << "no enmoght cash. require at least " << floatToString(min_sz * total_px, tick_sz);
+        return;
+    }
 
 }
