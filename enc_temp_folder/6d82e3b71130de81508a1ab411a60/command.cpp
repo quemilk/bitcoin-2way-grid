@@ -200,31 +200,6 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
     return req;
 }
 
-Command::Request Command::makeCancelOrderReq(const std::string& inst_id, const std::string& cliordid, const std::string& ordid) {
-    rapidjson::Document doc(rapidjson::kObjectType);
-    auto id = generateRandomString(10);
-    doc.AddMember("id", id, doc.GetAllocator());
-    doc.AddMember("op", "cancel-order", doc.GetAllocator());
-
-    rapidjson::Value args(rapidjson::kArrayType);
-    rapidjson::Value arg(rapidjson::kObjectType);
-
-    arg.AddMember("instId", inst_id, doc.GetAllocator());
-    if (!ordid.empty())
-        arg.AddMember("ordId", rapidjson::StringRef(ordid), doc.GetAllocator());
-    if (!cliordid.empty())
-        arg.AddMember("clOrdId", rapidjson::StringRef(cliordid), doc.GetAllocator());
-
-    args.PushBack(arg, doc.GetAllocator());
-    doc.AddMember("args", args, doc.GetAllocator());
-
-    Request req;
-    req.id = id;
-    req.op = "cancel-order";
-    req.data = toString(doc);
-    return req;
-}
-
 Command::Request Command::makeSubscribeInstrumentsChannel(const std::string& inst_type) {
     rapidjson::Document doc(rapidjson::kObjectType);
     doc.AddMember("op", "subscribe", doc.GetAllocator());
