@@ -100,4 +100,11 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         return;
     }
 
+    auto amount = floatToString(injected_cash / total_px, itrproduct->second.ct_val);
+    for (auto& v : grid_prices) {
+        v.second = amount;
+    }
+    
+    LOG(info) << "grid generated: " << grid_prices;
+
 }
