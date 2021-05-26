@@ -78,7 +78,8 @@ public:
     struct GridStrategy {
         struct Grid {
             std::string px;
-            OrderData order_data;
+            OrderData long_order_data;
+            OrderData short_order_data;
         };
 
         std::string order_amount;

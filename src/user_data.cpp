@@ -88,9 +88,6 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
             return;
         }
 
-        auto order_side = OrderSide::Buy;
-        auto order_pos_side = OrderPosSide::Long;
-
         auto tick_sz = itrproduct->second.tick_sz;
 
         grid_strategy_.grids.clear();
@@ -114,7 +111,8 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         px = cur_price;
         total_px += px;
         GridStrategy::Grid grid;
-        grid.px = floatToString(px, tick_sz);
+        auto cur_price_str = floatToString(px, tick_sz);
+        grid.px = cur_price_str;
         grid_strategy_.grids.push_back(grid);
 
         for (int i = grid_count / 2; i < grid_count; ++i) {
@@ -126,21 +124,35 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         }
 
         auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
-        if (ct_val * total_px >= injected_cash) {
-            LOG(error) << "no enmoght cash. require at least " << floatToString(ct_val * total_px, tick_sz);
+        auto requred_cash = ct_val * total_px * 2;
+        if (requred_cash >= injected_cash) {
+            LOG(error) << "no enough cash. require at least " << floatToString(requred_cash, tick_sz);
             return;
         }
 
         grid_strategy_.order_amount = floatToString(injected_cash / total_px / ct_val, itrproduct->second.lot_sz);
 
         for (auto& grid : grid_strategy_.grids) {
+            if (cur_price_str == grid.px)
+                continue;
             OrderData order_data;
             order_data.clordid = generateRandomString(10);
-            order_data.side = order_side;
-            order_data.pos_side = order_pos_side;
             order_data.px = grid.px;
             order_data.amount = grid_strategy_.order_amount;
-            grid.order_data = std::move(order_data);
+            order_data.side = OrderSide::Buy;
+            order_data.pos_side = OrderPosSide::Long;
+            grid.long_order_data = order_data;
+            order_data.side = OrderSide::Sell;
+            order_data.pos_side = OrderPosSide::Short;
+            grid.short_order_data = order_data;
+        }
+
+        std::deque<OrderData> grid_orders;
+        for (auto& grid : grid_strategy_.grids) {
+            if (!grid.long_order_data.amount.empty())
+                grid_orders.push_back(grid.long_order_data);
+            if (!grid.short_order_data.amount.empty())
+                grid_orders.push_back(grid.short_order_data);
         }
 
         auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Isolated, grid_orders);

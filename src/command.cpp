@@ -378,9 +378,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 std::string ccy = (*balitr)["ccy"].GetString();
                                 std::string bal = (*balitr)["cashBal"].GetString();
                                 g_user_data.balance_.balval[ccy] = bal;
-                            }
-
-                            LOG(info) << g_user_data.balance_;                           
+                            }                      
                         } 
 
                         if (itr->HasMember("posData")) {
@@ -407,8 +405,6 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 else
                                     g_user_data.position_.posval[data.pos_id] = std::move(data);
                             }
-
-                            LOG(info) << g_user_data.position_;
                         }
                     }
                 } else if (channel == "orders") {

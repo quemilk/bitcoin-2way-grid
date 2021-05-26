@@ -99,6 +99,15 @@ int main(int argc, char** argv) {
 
     while (g_user_data.public_product_info_.data.empty() || g_user_data.public_trades_info_.trades_data.empty())
         std::this_thread::sleep_for(std::chrono::seconds(1));
+   
+    {
+        g_user_data.lock();
+        make_scope_exit([] { g_user_data.unlock(); });
+
+        LOG(info) << g_ticket;
+        LOG(info) << g_user_data.balance_;
+        LOG(info) << g_user_data.position_;
+    }
 
     for (;;) {
         std::cout << "> ";
