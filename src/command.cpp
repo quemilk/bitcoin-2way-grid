@@ -5,6 +5,7 @@
 #include <openssl/hmac.h>
 #include <string>
 #include <array>
+#include <random>
 
 static std::string toString(rapidjson::Value& v) {
     rapidjson::StringBuffer strbuf;
@@ -38,6 +39,26 @@ static std::string toTimeStr(int time_msec) {
     strftime(buf, _countof(buf), "%m-%d %H:%M:%S", &tstruct);
 
     return buf;
+}
+
+static int generateRadomInt(int min_value, int max_value) {
+    // genenrate random uuid of device
+    static std::random_device r;
+    static std::seed_seq seed{ r(), r(), r(), r(), r(), r(), r(), r() };
+    static std::mt19937_64 eng(seed);
+
+    std::uniform_int_distribution<int> dist{ min_value, max_value };
+    return dist(eng);
+}
+
+std::string generateRandomString(size_t length) {
+    static const std::string k_alpha = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZjJ";
+
+    std::string s;
+    s.reserve(length);
+    for (auto i = 0; i < length; ++i)
+        s.push_back(k_alpha[generateRadomInt(0, (int)(k_alpha.size() - 1))]);
+    return s;
 }
 
 
@@ -133,6 +154,48 @@ Command::Request Command::makeSubscribeOrdersChannel(const std::string& inst_typ
 
     Request req;
     req.op = "subscribe";
+    req.data = toString(doc);
+    return req;
+}
+
+Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
+    OrderSide side, const std::string& px, const std::string& amount) {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    auto id = generateRandomString(10);
+    doc.AddMember("id", id, doc.GetAllocator());
+    doc.AddMember("op", "order", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+    rapidjson::Value arg(rapidjson::kObjectType);
+
+    arg.AddMember("instId", inst_id, doc.GetAllocator());
+    
+    auto side_str = (side == OrderSide::Buy) ? "buy" : "sell";
+    arg.AddMember("side", rapidjson::StringRef(side_str), doc.GetAllocator());
+    
+    const char* tdmode;
+    if (trade_mode == TradeMode::Cross)
+        tdmode = "cross";
+    else if (trade_mode == TradeMode::Cash)
+        tdmode = "cash";
+    else
+        tdmode = "isolated";
+    arg.AddMember("tdMode", rapidjson::StringRef(tdmode), doc.GetAllocator());
+
+    auto order_type_str = order_type == OrderType::Market ? "market" : "limit";
+    arg.AddMember("ordType", rapidjson::StringRef(order_type_str), doc.GetAllocator());
+
+    if (order_type == OrderType::Limit)
+        arg.AddMember("px", rapidjson::StringRef(px), doc.GetAllocator());
+
+    arg.AddMember("sz", rapidjson::StringRef(amount), doc.GetAllocator());
+
+    args.PushBack(arg, doc.GetAllocator());
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    Request req;
+    req.id = id;
+    req.op = "order";
     req.data = toString(doc);
     return req;
 }

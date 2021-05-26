@@ -31,7 +31,18 @@ public:
     static Request makeSubscribeOrdersChannel(const std::string& inst_type="ANY", const std::string& inst_id="");
 
     // 交易下单
-
+    enum class OrderSide { Buy, Sell };
+    enum class OrderType {
+        Market, // 市价单
+        Limit // 限价单
+    };
+    enum class TradeMode {
+        Isolated, //逐仓
+        Cross,  // 全仓
+        Cash //现金
+    };
+    static Request makeOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
+        OrderSide side, const std::string& px, const std::string& amount);
 
 
 
