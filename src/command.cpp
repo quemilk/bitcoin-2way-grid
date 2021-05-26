@@ -307,7 +307,10 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 auto utime = (*positr)["uTime"].GetString();
                                 data.utime_msec = std::strtoull(utime, nullptr, 0);
 
-                                g_user_data.position_.posval[data.pos_id] = std::move(data);
+                                if (data.pos == "0")
+                                    g_user_data.position_.posval.erase(data.pos_id);
+                                else
+                                    g_user_data.position_.posval[data.pos_id] = std::move(data);
                             }
 
                             LOG(debug) << g_user_data.position_;
