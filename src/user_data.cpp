@@ -133,7 +133,7 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
 
         grid_strategy_.order_amount = floatToString(injected_cash / total_px / ct_val, itrproduct->second.lot_sz);
 
-        for (int i = 0; i < grid_strategy_.grids.size(); ++i) {
+        for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
             if (cur_price_str == grid.px)
                 continue;
@@ -181,7 +181,7 @@ void UserData::updateGrid() {
         g_user_data.lock();
         make_scope_exit([] { g_user_data.unlock(); });
 
-        for (int i=0; i < grid_strategy_.grids.size(); ++i) {
+        for (size_t i=0; i < grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
             auto grid_next = (i < grid_strategy_.grids.size() - 1) ? &grid_strategy_.grids[i + 1] : nullptr;
             auto grid_pre = (i > 0) ? &grid_strategy_.grids[i - 1] : nullptr;
