@@ -1,11 +1,17 @@
 ﻿#include "user_data.h"
 #include "logger.h"
+#include <deque>
 
 extern std::string g_ticket;
 
 UserData g_user_data;
 
 void UserData::startGrid(int count, float step_ratio) {
+    if (count <= 0 || step_ratio <= 0 || step_ratio >= 1.0f) {
+        LOG(error) << "invalid param!";
+        return;
+    }
+
     LOG(info) << "grid starting: count=" << count << " step_ratio=" << step_ratio << " " << g_ticket;
 
     g_user_data.lock();
@@ -36,7 +42,21 @@ void UserData::startGrid(int count, float step_ratio) {
     auto price = itrtrades->second.px;
     LOG(info) << "current price: " << price;
 
+    float cur_price = strtof(price.c_str(), nullptr);
+    if (cur_price <= 0) {
+        LOG(error) << "invalid price: " << cur_price;
+        return;
+    }
 
+    float tick_sz = strtof(itrproduct->second.tick_sz.c_str(), nullptr);
+
+    std::deque<std::string> grid_prices;
+    float px = cur_price;
+    for (int i = 0; i < count; ++i) {
+        px = px * (1.0f - step_ratio);
+        px = px / tick_sz * tick_sz;
+        grid_prices.push_back(std::to_string(px));
+    }
 
 
 }

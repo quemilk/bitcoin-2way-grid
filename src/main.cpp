@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
     private_channel->waitLogined();
 
-    while (g_user_data.public_product_info_.data.empty())
+    while (g_user_data.public_product_info_.data.empty() || g_user_data.public_trades_info_.trades_data.empty())
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
     for (;;) {
@@ -104,14 +104,7 @@ int main(int argc, char** argv) {
         std::string op;
         std::getline(std::cin, op);
 
-        if (op == "help") {
-            std::cout << "commands:" << std::endl;
-            std::cout << "\tshow position" << std::endl;
-            std::cout << "\tshow balance" << std::endl;
-            std::cout << "\tshow trades" << std::endl;
-            std::cout << "\thide trades" << std::endl;
-            std::cout << "\tstart grid %count% %step_ratio%" << std::endl;
-        } else if (op == "show trades") {
+        if (op == "show trades") {
             g_show_trades = true;
         } else if (op == "hide trades") {
             g_show_trades = false;
@@ -131,6 +124,13 @@ int main(int argc, char** argv) {
                 float step_ration = strtof(params[1].c_str(), nullptr);
                 g_user_data.startGrid(count, step_ration);
             }
+        } else {
+            std::cout << "commands:" << std::endl;
+            std::cout << "\tshow position" << std::endl;
+            std::cout << "\tshow balance" << std::endl;
+            std::cout << "\tshow trades" << std::endl;
+            std::cout << "\thide trades" << std::endl;
+            std::cout << "\tstart grid %count% %step_ratio%" << std::endl;
         }
     }
 
