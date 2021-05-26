@@ -352,21 +352,22 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                     }
                     LOG(debug) << o.str();
                 } else if (channel == "trades") {
-                    std::ostringstream o;
-                    o << "=====Trades=====" << std::endl;
+                    g_user_data.lock();
+                    make_scope_exit([] { g_user_data.unlock(); });
 
                     for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
-                        std::string inst_id = (*itr)["instId"].GetString();
-                        std::string trade_id = (*itr)["tradeId"].GetString();
-                        std::string px = (*itr)["px"].GetString();
-                        std::string sz = (*itr)["sz"].GetString();
-                        std::string pos_side = (*itr)["side"].GetString();
-                        int ts = std::strtol((*itr)["ts"].GetString(), nullptr, 0);
+                        UserData::PublicTradesInfo::Info info;
+                        info.inst_id = (*itr)["instId"].GetString();
+                        info.trade_id = (*itr)["tradeId"].GetString();
+                        info.px = (*itr)["px"].GetString();
+                        info.sz = (*itr)["sz"].GetString();
+                        info.pos_side = (*itr)["side"].GetString();
+                        info.ts = std::strtoull((*itr)["ts"].GetString(), nullptr, 0);
 
-                        o << "  - " << inst_id << std::endl
-                            << "    trade_id:" << trade_id << " \t" << pos_side << " \t" << sz << " \t" << px << " \t" << toTimeStr(ts) << std::endl;
+                        LOG(debug) << "  - " << info.inst_id << " \t" << info.pos_side << " \t" << info.sz << " \t" << info.px << " \t" << toTimeStr(info.ts) << std::endl;
+
+                        g_user_data.public_trades_info_.trades_data[info.inst_id] = std::move(info);
                     }
-                    LOG(debug) << o.str();
                 }
             }
         }

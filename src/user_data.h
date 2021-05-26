@@ -48,6 +48,17 @@ public:
         }
     };
 
+    struct PublicTradesInfo {
+        struct Info {
+            std::string inst_id;
+            std::string trade_id;
+            std::string px;
+            std::string sz;
+            std::string pos_side;
+            uint64_t ts;
+        };
+        std::map<std::string, Info> trades_data;
+    };
 
 public:
     void lock() {
@@ -61,6 +72,7 @@ public:
 public:
     Balance balance_;
     Position position_;
+    PublicTradesInfo public_trades_info_;
 
 private:
     std::mutex mutex_;
