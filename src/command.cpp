@@ -428,6 +428,8 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         info.lot_sz = (*itr)["lotSz"].GetString(); // 下单数量精度
                         info.min_sz = (*itr)["minSz"].GetString(); // 最小下单数量
                         info.tick_sz = (*itr)["tickSz"].GetString(); // 最小下单价格
+                        info.ct_val = (*itr)["ctVal"].GetString(); // 最小下单价格
+                        info.ct_multi = (*itr)["ctMult"].GetString(); // 最小下单价格
                         info.settle_ccy = (*itr)["settleCcy"].GetString();
 
                         g_user_data.public_product_info_.data[info.inst_id] = std::move(info);

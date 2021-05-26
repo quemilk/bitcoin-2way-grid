@@ -93,9 +93,9 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         grid_prices.push_back({ floatToString(px, tick_sz), "" });
     }
 
-    auto min_sz = strtof(itrproduct->second.min_sz.c_str(), nullptr);
-    if (min_sz * total_px >= injected_cash) {
-        LOG(error) << "no enmoght cash. require at least " << floatToString(min_sz * total_px, tick_sz);
+    auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
+    if (ct_val * total_px >= injected_cash) {
+        LOG(error) << "no enmoght cash. require at least " << floatToString(ct_val * total_px, tick_sz);
         return;
     }
 
