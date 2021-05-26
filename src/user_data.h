@@ -74,12 +74,13 @@ public:
     };
 
 
-    struct StrategyOrders {
+    struct GridStrategy {
         struct OrderStatus {
             OrderData order_data;
         };
 
-        std::map<std::string /* cliordid */, OrderStatus> orders;
+        std::map<std::string /* cliordid */, OrderStatus> buy_orders;
+        std::map<std::string /* cliordid */, OrderStatus> sell_orders;
     };
 
 public:
