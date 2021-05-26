@@ -77,6 +77,13 @@ struct OrderData {
     std::string amount;
 };
 
+enum class OrderStatus {
+    Empty,
+    Canceled,
+    Live,
+    PartiallyFilled,
+    Filled
+};
 
 
 #endif

@@ -133,26 +133,34 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
 
         grid_strategy_.order_amount = floatToString(injected_cash / total_px / ct_val, itrproduct->second.lot_sz);
 
-        for (auto& grid : grid_strategy_.grids) {
+        for (int i = 0; i < grid_strategy_.grids.size(); ++i) {
+            auto& grid = grid_strategy_.grids[i];
             if (cur_price_str == grid.px)
                 continue;
+
             OrderData order_data;
             order_data.clordid = generateRandomString(10);
             order_data.px = grid.px;
             order_data.amount = grid_strategy_.order_amount;
-            order_data.side = OrderSide::Buy;
-            order_data.pos_side = OrderPosSide::Long;
-            grid.long_order_data = order_data;
-            order_data.side = OrderSide::Sell;
-            order_data.pos_side = OrderPosSide::Short;
-            grid.short_order_data = order_data;
+            if (i < grid_strategy_.grids.size() - 1) {
+                order_data.side = OrderSide::Buy;
+                order_data.pos_side = OrderPosSide::Long;
+                grid.long_order.order_data = order_data;
+                grid.long_order.order_status = OrderStatus::Live;
+            }
+            if (i > 0) {
+                order_data.side = OrderSide::Sell;
+                order_data.pos_side = OrderPosSide::Short;
+                grid.short_order.order_data = order_data;
+                grid.short_order.order_status = OrderStatus::Live;
+            }
         }
 
         for (auto& grid : grid_strategy_.grids) {
-            if (!grid.long_order_data.amount.empty())
-                grid_orders.push_back(grid.long_order_data);
-            if (!grid.short_order_data.amount.empty())
-                grid_orders.push_back(grid.short_order_data);
+            if (!grid.long_order.order_data.amount.empty())
+                grid_orders.push_back(grid.long_order.order_data);
+            if (!grid.short_order.order_data.amount.empty())
+                grid_orders.push_back(grid.short_order.order_data);
         }
      }
 
@@ -166,3 +174,100 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
          }
      );
 }
+
+void UserData::updateGrid() {
+    std::deque<OrderData> grid_orders;
+    {
+        g_user_data.lock();
+        make_scope_exit([] { g_user_data.unlock(); });
+
+        for (int i=0; i < grid_strategy_.grids.size(); ++i) {
+            auto& grid = grid_strategy_.grids[i];
+            auto grid_next = (i < grid_strategy_.grids.size() - 1) ? &grid_strategy_.grids[i + 1] : nullptr;
+            auto grid_pre = (i > 0) ? &grid_strategy_.grids[i - 1] : nullptr;
+
+            if (grid.long_order.order_status == OrderStatus::Filled) {
+                grid.long_order.order_status = OrderStatus::Empty;
+                grid.long_order.order_data.amount.clear();
+                if (grid.long_order.order_data.side == OrderSide::Buy) {
+                    if (grid_next) {
+                        if (grid_next->long_order.order_data.amount.empty()) {
+                            OrderData order_data;
+                            order_data.clordid = generateRandomString(10);
+                            order_data.px = grid_next->px;
+                            order_data.amount = grid_strategy_.order_amount;
+                            order_data.side = OrderSide::Sell;
+                            order_data.pos_side = OrderPosSide::Long;
+                            grid_next->long_order.order_data = order_data;
+                            grid_next->long_order.order_status = OrderStatus::Live;
+                            grid_orders.push_back(order_data);
+                        }
+                    }
+                } else if (grid.long_order.order_data.side == OrderSide::Sell) {
+                    if (grid_pre) {
+                        if (grid_pre->long_order.order_data.amount.empty()) {
+                            OrderData order_data;
+                            order_data.clordid = generateRandomString(10);
+                            order_data.px = grid_pre->px;
+                            order_data.amount = grid_strategy_.order_amount;
+                            order_data.side = OrderSide::Buy;
+                            order_data.pos_side = OrderPosSide::Long;
+                            grid_pre->long_order.order_data = order_data;
+                            grid_pre->long_order.order_status = OrderStatus::Live;
+                            grid_orders.push_back(order_data);
+                        }
+                    }
+                }
+            }
+
+            if (grid.short_order.order_status == OrderStatus::Filled) {
+                grid.short_order.order_status = OrderStatus::Empty;
+                grid.short_order.order_data.amount.clear();
+                if (grid.short_order.order_data.side == OrderSide::Buy) {
+                    if (grid_next) {
+                        if (grid_next->short_order.order_data.amount.empty()) {
+                            OrderData order_data;
+                            order_data.clordid = generateRandomString(10);
+                            order_data.px = grid_next->px;
+                            order_data.amount = grid_strategy_.order_amount;
+                            order_data.side = OrderSide::Sell;
+                            order_data.pos_side = OrderPosSide::Short;
+                            grid_next->short_order.order_data = order_data;
+                            grid_next->short_order.order_status = OrderStatus::Live;
+                            grid_orders.push_back(order_data);
+                        }
+                    }
+                } else if (grid.short_order.order_data.side == OrderSide::Sell) {
+                    if (grid_pre) {
+                        if (grid_pre->short_order.order_data.amount.empty()) {
+                            OrderData order_data;
+                            order_data.clordid = generateRandomString(10);
+                            order_data.px = grid_pre->px;
+                            order_data.amount = grid_strategy_.order_amount;
+                            order_data.side = OrderSide::Buy;
+                            order_data.pos_side = OrderPosSide::Short;
+                            grid_pre->short_order.order_data = order_data;
+                            grid_pre->short_order.order_status = OrderStatus::Live;
+                            grid_orders.push_back(order_data);
+                        }
+                    }
+                }
+            }
+
+
+        }
+    }
+
+    if (!grid_orders.empty()) {
+        auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Cross, grid_orders);
+        g_private_channel->sendCmd(std::move(cmd),
+            [this](Command::Response& resp) {
+                if (resp.code == 0) {
+                    LOG(debug) << "<< order ok.";
+                } else
+                    LOG(error) << "<< order failed.";
+            }
+        );
+    }
+}
+

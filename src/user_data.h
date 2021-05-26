@@ -78,8 +78,12 @@ public:
     struct GridStrategy {
         struct Grid {
             std::string px;
-            OrderData long_order_data;
-            OrderData short_order_data;
+            struct Order {
+                OrderData order_data;
+                OrderStatus order_status = OrderStatus::Empty;
+            };
+            Order long_order;
+            Order short_order;
         };
 
         std::string order_amount;
@@ -88,6 +92,7 @@ public:
 
 public:
     void startGrid(float injected_cash, int grid_count, float step_ratio);
+    void updateGrid();
 
 public:
     void lock() {

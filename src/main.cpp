@@ -114,6 +114,7 @@ int main(int argc, char** argv) {
 
         std::string op;
         std::getline(std::cin, op);
+        trimString(op);
 
         if (op == "show trades") {
             g_show_trades = true;
@@ -136,6 +137,8 @@ int main(int argc, char** argv) {
                 float step_ration = strtof(params[2].c_str(), nullptr);
                 g_user_data.startGrid(cash, count, step_ration);
             }
+        } else if (op == "clear grid") {
+            // TODO  sell all
         } else {
             std::cout << "commands:" << std::endl;
             std::cout << "\tshow position" << std::endl;
@@ -143,6 +146,7 @@ int main(int argc, char** argv) {
             std::cout << "\tshow trades" << std::endl;
             std::cout << "\thide trades" << std::endl;
             std::cout << "\tstart grid %cash% %grid_count% %grid_step_ratio%" << std::endl;
+            std::cout << "\tclear grid" << std::endl;
         }
     }
 

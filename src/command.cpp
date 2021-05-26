@@ -176,6 +176,8 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
     args.PushBack(arg, doc.GetAllocator());
     doc.AddMember("args", args, doc.GetAllocator());
 
+    LOG(info) << "order " << side_str << " \t" << pos_side_str << " \t" << order_data.px << " \t" << order_data.amount;
+
     Request req;
     req.id = id;
     req.op = "order";
@@ -227,6 +229,8 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
         arg.AddMember("sz", rapidjson::StringRef(order.amount), doc.GetAllocator());
 
         args.PushBack(arg, doc.GetAllocator());
+
+        LOG(info) << "order " << side_str << " \t" << pos_side_str << " \t" << order.px << " \t" << order.amount;
     }
 
     doc.AddMember("args", args, doc.GetAllocator());
@@ -415,8 +419,9 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         std::string inst_type = (*itr)["instType"].GetString();
                         std::string inst_id = (*itr)["instId"].GetString();
                         std::string ord_id = (*itr)["ordId"].GetString();
+                        std::string clordid = (*itr)["clOrdId"].GetString();
                         std::string side = (*itr)["side"].GetString(); // buy sell
-                        std::string posSide = (*itr)["posSide"].GetString(); // 持仓方向 long short net
+                        std::string pos_side = (*itr)["posSide"].GetString(); // 持仓方向 long short net
                         std::string px = (*itr)["px"].GetString(); // 委托价格
                         std::string sz = (*itr)["sz"].GetString(); // 原始委托数量
                         std::string fill_px = (*itr)["fillPx"].GetString(); // 最新成交价格
@@ -433,7 +438,32 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
 
                         uint64_t utime = std::strtoull((*itr)["uTime"].GetString(), nullptr, 0); // 订单更新时间
                         uint64_t ctime = std::strtoull((*itr)["cTime"].GetString(), nullptr, 0); // 订单更新时间
-    
+
+                        {
+                            g_user_data.lock();
+                            make_scope_exit([] { g_user_data.unlock(); });
+
+                            for (auto& grid : g_user_data.grid_strategy_.grids) {
+                                auto orders = { &grid.long_order, &grid.short_order };
+                                for (auto order : orders) {
+                                    if (order->order_data.clordid == clordid) {
+                                        if (state == "canceled") {
+                                            order->order_status = OrderStatus::Canceled;
+                                            order->order_data.amount.clear();
+                                            order->order_data.clordid.clear();
+                                        } else if (state == "filled") {
+                                            order->order_status = OrderStatus::Filled;
+                                        } else if (state == "partially_filled") {
+                                            order->order_status = OrderStatus::PartiallyFilled;
+                                        } else if (state == "live") {
+                                            order->order_status = OrderStatus::Live;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        g_user_data.updateGrid();
+
                         o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << "\t" << toTimeStr(utime) << std::endl;
                         if (state == "live")
                             o << "    order: \t" << sz << " \t" << px << " \t" << lever << "x" << std::endl;
