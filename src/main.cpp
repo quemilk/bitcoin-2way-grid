@@ -1,5 +1,6 @@
 ﻿#include "logger.h"
 #include "global.h"
+#include "user_data.h"
 #include "command.h"
 #include "public_channel.h"
 #include "private_channel.h"
@@ -92,6 +93,34 @@ int main(int argc, char** argv) {
     auto public_channel = std::make_shared<PublicChannel>(ioc, host, port, public_path, socks_proxy);
     auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, private_path, socks_proxy);
 
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    for (;;) {
+        std::cout << "> ";
+
+        std::string op;
+        std::getline(std::cin, op);
+
+        if (op == "help") {
+            std::cout << "commands:" << std::endl;
+            std::cout << "\tshow position" << std::endl;
+            std::cout << "\tshow balance" << std::endl;
+            std::cout << "\tshow trades" << std::endl;
+            std::cout << "\thide trades" << std::endl;
+        } else if (op == "show trades") {
+            g_show_trades = true;
+        } else if (op == "hide trades") {
+            g_show_trades = false;
+        } else if (op == "show position") {
+            g_user_data.lock();
+            make_scope_exit([] { g_user_data.unlock(); });
+            std::cout << g_user_data.position_;
+        } else if (op == "show balance") {
+            g_user_data.lock();
+            make_scope_exit([] { g_user_data.unlock(); });
+            std::cout << g_user_data.balance_;
+        }
+    }
 
     t.join();
     return EXIT_SUCCESS;
