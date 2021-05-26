@@ -139,16 +139,17 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
                 continue;
 
             OrderData order_data;
-            order_data.clordid = generateRandomString(10);
             order_data.px = grid.px;
             order_data.amount = grid_strategy_.order_amount;
             if (i < grid_strategy_.grids.size() - 1) {
+                order_data.clordid = generateRandomString(10);
                 order_data.side = OrderSide::Buy;
                 order_data.pos_side = OrderPosSide::Long;
                 grid.long_order.order_data = order_data;
                 grid.long_order.order_status = OrderStatus::Live;
             }
             if (i > 0) {
+                order_data.clordid = generateRandomString(10);
                 order_data.side = OrderSide::Sell;
                 order_data.pos_side = OrderPosSide::Short;
                 grid.short_order.order_data = order_data;

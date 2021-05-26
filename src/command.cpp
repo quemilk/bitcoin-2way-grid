@@ -142,6 +142,9 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
     rapidjson::Value args(rapidjson::kArrayType);
     rapidjson::Value arg(rapidjson::kObjectType);
 
+    if (!order_data.clordid.empty())
+        arg.AddMember("clOrdId", rapidjson::StringRef(order_data.clordid), doc.GetAllocator());
+
     arg.AddMember("instId", inst_id, doc.GetAllocator());
     
     std::string side_str = toString(order_data.side);
@@ -196,6 +199,9 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
 
     for (auto& order : orders) {
         rapidjson::Value arg(rapidjson::kObjectType);
+
+        if (!order.clordid.empty())
+            arg.AddMember("clOrdId", rapidjson::StringRef(order.clordid), doc.GetAllocator());
 
         arg.AddMember("instId", inst_id, doc.GetAllocator());
 
@@ -439,7 +445,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         uint64_t utime = std::strtoull((*itr)["uTime"].GetString(), nullptr, 0); // 订单更新时间
                         uint64_t ctime = std::strtoull((*itr)["cTime"].GetString(), nullptr, 0); // 订单更新时间
 
-                        {
+                        if (!clordid.empty()) {
                             g_user_data.lock();
                             make_scope_exit([] { g_user_data.unlock(); });
 
