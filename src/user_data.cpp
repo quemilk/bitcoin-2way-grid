@@ -50,6 +50,7 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
 
     LOG(info) << "grid starting: injected_cash=" << injected_cash << " grid_count=" << grid_count << " step_ratio=" << step_ratio << " " << g_ticket;
 
+    std::deque<OrderData> grid_orders;
     {
         g_user_data.lock();
         make_scope_exit([] { g_user_data.unlock(); });
@@ -147,23 +148,21 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
             grid.short_order_data = order_data;
         }
 
-        std::deque<OrderData> grid_orders;
         for (auto& grid : grid_strategy_.grids) {
             if (!grid.long_order_data.amount.empty())
                 grid_orders.push_back(grid.long_order_data);
             if (!grid.short_order_data.amount.empty())
                 grid_orders.push_back(grid.short_order_data);
         }
+     }
 
-        auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Isolated, grid_orders);
-        g_private_channel->sendCmd(std::move(cmd),
-            [this](Command::Response& resp) {
-                if (resp.code == 0) {
-                    LOG(debug) << "<< order ok.";
-                } else
-                    LOG(error) << "<< order failed.";
-            }
-        );
-
-    }
+     auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Cross, grid_orders);
+     g_private_channel->sendCmd(std::move(cmd),
+         [this](Command::Response& resp) {
+             if (resp.code == 0) {
+                 LOG(debug) << "<< order ok.";
+             } else
+                 LOG(error) << "<< order failed.";
+         }
+     );
 }
