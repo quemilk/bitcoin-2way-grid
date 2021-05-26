@@ -1,4 +1,4 @@
-{
+﻿{
   "enviorment": "simu",
   "api_key": "",
   "passphrase": "",
@@ -8,7 +8,7 @@
   "ticket": "BTC-USDT-SWAP",
 
   "strategy": {
-    "grid_ratio": "0.1",
+    "grid_step_ratio": "0.1",
     "grid_count":  10
   }
 
