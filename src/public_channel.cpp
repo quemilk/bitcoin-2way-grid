@@ -5,7 +5,7 @@
 extern std::string g_ticket;
 
 void PublicChannel::onConnected() {
-   /* auto req = Command::makeSubscribeInstrumentsChannel("SWAP");
+    auto req = Command::makeSubscribeInstrumentsChannel("SWAP");
 
     LOG(debug) << ">> subscribe. " << req.data;
 
@@ -16,9 +16,9 @@ void PublicChannel::onConnected() {
             else
                 throw std::runtime_error("<< subscribe failed! " + resp.msg);
         }
-    );*/
+    );
 
-    auto req = Command::makeSubscribeTradesChannel(g_ticket);
+    req = Command::makeSubscribeTradesChannel(g_ticket);
 
     LOG(debug) << ">> subscribe. " << req.data;
 

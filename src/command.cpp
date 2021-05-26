@@ -368,6 +368,18 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
 
                         g_user_data.public_trades_info_.trades_data[info.inst_id] = std::move(info);
                     }
+                } else if (channel == "instruments") {
+                    g_user_data.lock();
+                    make_scope_exit([] { g_user_data.unlock(); });
+
+                    for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
+                        UserData::ProductInfo::Info info;
+                        info.inst_id = (*itr)["instId"].GetString();
+                        info.lot_sz = (*itr)["minSz"].GetString(); // 下单数量精度
+                        info.min_sz = (*itr)["minSz"].GetString(); // 最小下单数量
+
+                        g_user_data.public_product_info_.data[info.inst_id] = std::move(info);
+                    }
                 }
             }
         }

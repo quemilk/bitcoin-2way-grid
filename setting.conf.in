@@ -5,6 +5,11 @@
   "secret": "",
   "socks5_proxy": "",
 
-  "ticket": "BTC-USDT-SWAP"
+  "ticket": "BTC-USDT-SWAP",
+
+  "strategy": {
+    "grid_ratio": "0.1",
+    "grid_count":  10
+  }
 
 }

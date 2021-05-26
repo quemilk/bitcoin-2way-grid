@@ -60,6 +60,15 @@ public:
         std::map<std::string, Info> trades_data;
     };
 
+    struct ProductInfo {
+        struct Info {
+            std::string inst_id;
+            std::string lot_sz;
+            std::string min_sz;
+        };
+        std::map<std::string, Info> data;
+    };
+
 public:
     void lock() {
         mutex_.lock();
@@ -73,6 +82,7 @@ public:
     Balance balance_;
     Position position_;
     PublicTradesInfo public_trades_info_;
+    ProductInfo public_product_info_;
 
 private:
     std::mutex mutex_;
