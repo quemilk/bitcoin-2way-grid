@@ -1,9 +1,11 @@
 ﻿#include "user_data.h"
+#include "private_channel.h"
 #include "logger.h"
 #include "command.h"
 #include <deque>
 
 extern std::string g_ticket;
+extern std::shared_ptr<PrivateChannel> g_private_channel;
 
 UserData g_user_data;
 
@@ -109,6 +111,16 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
     for (auto& v : grid_prices) {
         v.amount = amount;
     }
+
+    auto cmd = Command::makeMultiOrderReq(g_ticket, Command::OrderType::Limit, Command::TradeMode::Isolated, grid_prices);
+    g_private_channel->sendCmd(std::move(cmd),
+        [this](Command::Response& resp) {
+            if (resp.code == 0) {
+                LOG(debug) << "<< order ok.";
+            } else
+                LOG(error) << "<< order failed.";
+        }
+    );
     
 
 }

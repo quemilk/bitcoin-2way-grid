@@ -16,6 +16,8 @@ std::string g_api_key;
 std::string g_passphrase;
 std::string g_secret;
 std::string g_ticket;
+std::shared_ptr<PublicChannel> g_public_channel;
+std::shared_ptr<PrivateChannel> g_private_channel;
 
 bool g_show_trades = false;
 
@@ -90,10 +92,10 @@ int main(int argc, char** argv) {
     net::io_context::work worker(ioc);
     std::thread t([&ioc]() { ioc.run(); });
 
-    auto public_channel = std::make_shared<PublicChannel>(ioc, host, port, public_path, socks_proxy);
-    auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, private_path, socks_proxy);
+    g_public_channel = std::make_shared<PublicChannel>(ioc, host, port, public_path, socks_proxy);
+    g_private_channel = std::make_shared<PrivateChannel>(ioc, host, port, private_path, socks_proxy);
 
-    private_channel->waitLogined();
+    g_private_channel->waitLogined();
 
     while (g_user_data.public_product_info_.data.empty() || g_user_data.public_trades_info_.trades_data.empty())
         std::this_thread::sleep_for(std::chrono::seconds(1));
