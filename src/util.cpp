@@ -1,4 +1,4 @@
-#include "util.h"
+﻿#include "util.h"
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
 #include <random>
@@ -50,4 +50,38 @@ std::string generateRandomString(size_t length) {
     for (size_t i = 0; i < length; ++i)
         s.push_back(k_alpha[generateRadomInt(0, (int)(k_alpha.size() - 1))]);
     return s;
+}
+
+void trimString(string& str) {
+    if (str.empty())
+        return;
+
+    string spacechars = "\r\t\n ";
+    str.erase(0, str.find_first_not_of(spacechars));
+    spacechars.push_back('\0');
+    str.erase(str.find_last_not_of(spacechars) + 1);
+}
+
+void splitString(const string& v, std::vector<string>& out, char delim, size_t max_seg) {
+    string::size_type last_pos = 0;
+    for (;;) {
+        string s;
+        if (out.size() >= max_seg - 1) {
+            s = v.substr(last_pos);
+            trimString(s);
+            out.push_back(s);
+            break;
+        }
+
+        string::size_type pos = v.find(delim, last_pos);
+        if (pos == string::npos)
+            s = v.substr(last_pos);
+        else
+            s = v.substr(last_pos, pos - last_pos);
+        trimString(s);
+        out.push_back(s);
+        last_pos = pos + 1;
+        if (pos == string::npos)
+            break;
+    }
 }

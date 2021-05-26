@@ -108,6 +108,7 @@ int main(int argc, char** argv) {
             std::cout << "\tshow balance" << std::endl;
             std::cout << "\tshow trades" << std::endl;
             std::cout << "\thide trades" << std::endl;
+            std::cout << "\tstart grid %count% %step_ratio%" << std::endl;
         } else if (op == "show trades") {
             g_show_trades = true;
         } else if (op == "hide trades") {
@@ -120,6 +121,13 @@ int main(int argc, char** argv) {
             g_user_data.lock();
             make_scope_exit([] { g_user_data.unlock(); });
             std::cout << g_user_data.balance_;
+        } else if (op.substr(0, 11) == "start grid ") {
+            std::vector<std::string> params;
+            splitString(op.substr(11), params, ' ');
+            if (params.size() >= 2) {
+                int count = strtol(params[0].c_str(), nullptr, 0);
+                float step_ration = strtof(params[1].c_str(), nullptr);
+            }
         }
     }
 
