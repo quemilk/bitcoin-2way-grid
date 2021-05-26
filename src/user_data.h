@@ -65,6 +65,7 @@ public:
             std::string inst_id;
             std::string lot_sz;
             std::string min_sz;
+            std::string tick_sz;
             std::string settle_ccy;
         };
         std::map<std::string, Info> data;
