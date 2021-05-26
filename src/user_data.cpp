@@ -6,6 +6,38 @@ extern std::string g_ticket;
 
 UserData g_user_data;
 
+static std::string floatToString(float f, const std::string& tick_sz) {
+    std::vector<std::string> v;
+    splitString(tick_sz, v, '.');
+
+    if (v.size() == 1) {
+        auto l = strtol(v[0].c_str(), nullptr, 0);
+        if (l)
+            return std::to_string((int)(f / l * l));
+    } else if (v.size() == 2) {
+        auto l = strtol(v[0].c_str(), nullptr, 0);
+        auto d = strtol(v[1].c_str(), nullptr, 0);
+        int power = 1;
+        auto digit = v[1].size();
+        for (int i = 0; i < digit; ++i)
+            power *= 10;
+        int r = (int)(f * power / (l * power + d));
+        auto ipart = std::to_string((int)(r / power));
+        auto fpart = std::to_string((int)(r % power));
+        std::string o = ipart;
+        if (digit > 0) {
+            for (int i = 0; i < digit - fpart.size(); ++i)
+                o += "0";
+            o += "." + fpart;
+        }
+        return o;
+    } else {
+        assert(false);
+    }
+    return std::string();
+}
+
+
 void UserData::startGrid(int count, float step_ratio) {
     if (count <= 0 || step_ratio <= 0 || step_ratio >= 1.0f) {
         LOG(error) << "invalid param!";
@@ -48,14 +80,12 @@ void UserData::startGrid(int count, float step_ratio) {
         return;
     }
 
-    float tick_sz = strtof(itrproduct->second.tick_sz.c_str(), nullptr);
-
+    auto tick_sz = itrproduct->second.tick_sz;
     std::deque<std::string> grid_prices;
     float px = cur_price;
     for (int i = 0; i < count; ++i) {
         px = px * (1.0f - step_ratio);
-        px = px / tick_sz * tick_sz;
-        grid_prices.push_back(std::to_string(px));
+        grid_prices.push_back(floatToString(px, tick_sz));
     }
 
 
