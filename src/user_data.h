@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "type.h"
 #include "util.h"
@@ -65,9 +65,13 @@ public:
             std::string inst_id;
             std::string lot_sz;
             std::string min_sz;
+            std::string settle_ccy;
         };
         std::map<std::string, Info> data;
     };
+
+public:
+    void startGrid(int count, float step_ratio);
 
 public:
     void lock() {

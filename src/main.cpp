@@ -94,7 +94,9 @@ int main(int argc, char** argv) {
     auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, private_path, socks_proxy);
 
     private_channel->waitLogined();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    while (g_user_data.public_product_info_.data.empty())
+        std::this_thread::sleep_for(std::chrono::seconds(1));
 
     for (;;) {
         std::cout << "> ";
@@ -127,6 +129,7 @@ int main(int argc, char** argv) {
             if (params.size() >= 2) {
                 int count = strtol(params[0].c_str(), nullptr, 0);
                 float step_ration = strtof(params[1].c_str(), nullptr);
+                g_user_data.startGrid(count, step_ration);
             }
         }
     }
