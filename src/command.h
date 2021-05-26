@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <string>
+#include "type.h"
 #include <deque>
 
 class Command {
@@ -31,27 +31,6 @@ public:
     // 订单频道
     // inst_type: SPOT：币币; MARGIN：币币杠杆 SWAP：永续合约 FUTURES：交割合约 OPTION：期权 ANY： 全部
     static Request makeSubscribeOrdersChannel(const std::string& inst_type="ANY", const std::string& inst_id="");
-
-    // 交易下单
-    enum class OrderSide { Buy, Sell };
-    enum class  OrderPosSide { Net, Long, Short };
-    enum class OrderType {
-        Market, // 市价单
-        Limit // 限价单
-    };
-    enum class TradeMode {
-        Isolated, //逐仓
-        Cross,  // 全仓
-        Cash //现金
-    };
-
-    struct OrderData {
-        std::string clordid;
-        OrderSide side;
-        OrderPosSide pos_side;
-        std::string px;
-        std::string amount;
-    };
 
     static Request makeOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
         const OrderData& order_data);

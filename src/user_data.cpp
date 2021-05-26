@@ -87,11 +87,11 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         return;
     }
 
-    auto order_side = Command::OrderSide::Buy;
-    auto order_pos_side = Command::OrderPosSide::Long;
+    auto order_side = OrderSide::Buy;
+    auto order_pos_side = OrderPosSide::Long;
 
     auto tick_sz = itrproduct->second.tick_sz;
-    std::deque<Command::OrderData> grid_prices;
+    std::deque<OrderData> grid_prices;
     float px = cur_price;
     float total_px = 0;
 
@@ -99,7 +99,8 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         px = px * (1.0f - step_ratio);
         total_px += px;
 
-        Command::OrderData order_data;
+        OrderData order_data;
+        order_data.clordid = generateRandomString(10);
         order_data.side = order_side;
         order_data.pos_side = order_pos_side;
         order_data.px = floatToString(px, tick_sz);
@@ -117,7 +118,7 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         v.amount = amount;
     }
 
-    auto cmd = Command::makeMultiOrderReq(g_ticket, Command::OrderType::Limit, Command::TradeMode::Isolated, grid_prices);
+    auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Isolated, grid_prices);
     g_private_channel->sendCmd(std::move(cmd),
         [this](Command::Response& resp) {
             if (resp.code == 0) {

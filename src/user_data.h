@@ -73,6 +73,15 @@ public:
         std::map<std::string, Info> data;
     };
 
+
+    struct StrategyOrders {
+        struct OrderStatus {
+            OrderData order_data;
+        };
+
+        std::map<std::string /* cliordid */, OrderStatus> orders;
+    };
+
 public:
     void startGrid(float injected_cash, int grid_count, float step_ratio);
 
