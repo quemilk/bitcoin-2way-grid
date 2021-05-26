@@ -18,7 +18,7 @@ static std::string floatToString(float f, const std::string& tick_sz) {
         auto l = strtol(v[0].c_str(), nullptr, 0);
         auto d = strtol(v[1].c_str(), nullptr, 0);
         int power = 1;
-        auto digit = v[1].size();
+        int digit = v[1].size();
         for (int i = 0; i < digit; ++i)
             power *= 10;
         int r = (int)(f * power / (l * power + d));
@@ -26,7 +26,7 @@ static std::string floatToString(float f, const std::string& tick_sz) {
         auto fpart = std::to_string((int)(r % power));
         std::string o = ipart;
         if (digit > 0) {
-            for (int i = 0; i < digit - fpart.size(); ++i)
+            for (int i = 0; i < digit - (int)fpart.size(); ++i)
                 o += "0";
             o += "." + fpart;
         }
@@ -81,11 +81,11 @@ void UserData::startGrid(int count, float step_ratio) {
     }
 
     auto tick_sz = itrproduct->second.tick_sz;
-    std::deque<std::string> grid_prices;
+    std::deque<std::pair<std::string, std::string> > grid_prices;
     float px = cur_price;
     for (int i = 0; i < count; ++i) {
         px = px * (1.0f - step_ratio);
-        grid_prices.push_back(floatToString(px, tick_sz));
+        grid_prices.push_back({ floatToString(px, tick_sz), "" });
     }
 
 

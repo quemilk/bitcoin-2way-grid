@@ -44,6 +44,9 @@ public:
     static Request makeOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
         OrderSide side, const std::string& px, const std::string& amount);
 
+    static Request makeMultiOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
+        OrderSide side, std::deque<std::pair<std::string /* px */, std::string /*sz*/> >& orders);
+
     // 撤单
     static Request makeCancelOrderReq(const std::string& inst_id, const std::string& cliordid, const std::string& ordid);
 
@@ -62,4 +65,3 @@ public:
 
 
 };
-

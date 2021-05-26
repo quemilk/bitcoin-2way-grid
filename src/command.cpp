@@ -153,6 +153,52 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
     return req;
 }
 
+Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
+    OrderSide side, std::deque<std::pair<std::string, std::string> >& orders) {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    auto id = generateRandomString(10);
+    doc.AddMember("id", id, doc.GetAllocator());
+    doc.AddMember("op", "batch-orders", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+
+    for (auto& order : orders) {
+        rapidjson::Value arg(rapidjson::kObjectType);
+
+        arg.AddMember("instId", inst_id, doc.GetAllocator());
+
+        auto side_str = (side == OrderSide::Buy) ? "buy" : "sell";
+        arg.AddMember("side", rapidjson::StringRef(side_str), doc.GetAllocator());
+
+        const char* tdmode;
+        if (trade_mode == TradeMode::Cross)
+            tdmode = "cross";
+        else if (trade_mode == TradeMode::Cash)
+            tdmode = "cash";
+        else
+            tdmode = "isolated";
+        arg.AddMember("tdMode", rapidjson::StringRef(tdmode), doc.GetAllocator());
+
+        auto order_type_str = order_type == OrderType::Market ? "market" : "limit";
+        arg.AddMember("ordType", rapidjson::StringRef(order_type_str), doc.GetAllocator());
+
+        if (order_type == OrderType::Limit)
+            arg.AddMember("px", rapidjson::StringRef(order.first), doc.GetAllocator());
+
+        arg.AddMember("sz", rapidjson::StringRef(order.second), doc.GetAllocator());
+
+        args.PushBack(arg, doc.GetAllocator());
+    }
+
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    Request req;
+    req.id = id;
+    req.op = "batch-orders";
+    req.data = toString(doc);
+    return req;
+}
+
 Command::Request Command::makeCancelOrderReq(const std::string& inst_id, const std::string& cliordid, const std::string& ordid) {
     rapidjson::Document doc(rapidjson::kObjectType);
     auto id = generateRandomString(10);
