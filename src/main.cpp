@@ -93,7 +93,8 @@ int main(int argc, char** argv) {
     auto public_channel = std::make_shared<PublicChannel>(ioc, host, port, public_path, socks_proxy);
     auto private_channel = std::make_shared<PrivateChannel>(ioc, host, port, private_path, socks_proxy);
 
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    private_channel->waitLogined();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     for (;;) {
         std::cout << "> ";

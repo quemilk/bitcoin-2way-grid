@@ -47,5 +47,15 @@ void PrivateChannel::onLogined() {
                 throw std::runtime_error("<< subscribe failed! " + resp.msg);
         }
     );
+
+    std::unique_lock lock(cond_mutex_);
+    logined_ = true;
+    conn_condition_.notify_one();
 }
 
+void PrivateChannel::waitLogined() {
+    std::unique_lock lock(cond_mutex_);
+    if (logined_)
+        return;
+    conn_condition_.wait(lock);
+}
