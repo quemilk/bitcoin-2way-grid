@@ -4,6 +4,8 @@
 #include "json.h"
 #include "crypto/base64.h"
 
+extern bool g_show_trades;
+
 static std::string toString(rapidjson::Value& v) {
     rapidjson::StringBuffer strbuf;
     rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
@@ -285,7 +287,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 g_user_data.balance_.balval[ccy] = bal;
                             }
 
-                            LOG(debug) << g_user_data.balance_;                           
+                            LOG(info) << g_user_data.balance_;                           
                         } 
 
                         if (itr->HasMember("posData")) {
@@ -313,7 +315,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                     g_user_data.position_.posval[data.pos_id] = std::move(data);
                             }
 
-                            LOG(debug) << g_user_data.position_;
+                            LOG(info) << g_user_data.position_;
                         }
                     }
                 } else if (channel == "orders") {
@@ -364,7 +366,8 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         info.pos_side = (*itr)["side"].GetString();
                         info.ts = std::strtoull((*itr)["ts"].GetString(), nullptr, 0);
 
-                        LOG(debug) << "  - " << info.inst_id << " \t" << info.pos_side << " \t" << info.sz << " \t" << info.px << " \t" << toTimeStr(info.ts) << std::endl;
+                        if (g_show_trades)
+                            LOG(info) << "  - " << info.inst_id << " \t" << info.pos_side << " \t" << info.sz << " \t" << info.px << " \t" << toTimeStr(info.ts) << std::endl;
 
                         g_user_data.public_trades_info_.trades_data[info.inst_id] = std::move(info);
                     }

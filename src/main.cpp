@@ -16,6 +16,8 @@ std::string g_passphrase;
 std::string g_secret;
 std::string g_ticket;
 
+bool g_show_trades = false;
+
 int main(int argc, char** argv) {
     init_logger();
 

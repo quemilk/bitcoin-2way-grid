@@ -37,7 +37,7 @@ void init_logger() {
 
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::info
     );
 
     logging::add_common_attributes();
