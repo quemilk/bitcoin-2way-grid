@@ -26,9 +26,10 @@ static std::string floatToString(float f, const std::string& tick_sz) {
         auto fpart = std::to_string((int)(r % power));
         std::string o = ipart;
         if (digit > 0) {
+            o += ".";
             for (int i = 0; i < digit - (int)fpart.size(); ++i)
                 o += "0";
-            o += "." + fpart;
+            o += fpart;
         }
         return o;
     } else {
