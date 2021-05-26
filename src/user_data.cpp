@@ -50,83 +50,108 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
 
     LOG(info) << "grid starting: injected_cash=" << injected_cash << " grid_count=" << grid_count << " step_ratio=" << step_ratio << " " << g_ticket;
 
-    g_user_data.lock();
-    make_scope_exit([] { g_user_data.unlock(); });
+    {
+        g_user_data.lock();
+        make_scope_exit([] { g_user_data.unlock(); });
 
-    auto itrproduct = public_product_info_.data.find(g_ticket);
-    if (itrproduct == public_product_info_.data.end()) {
-        LOG(error) << "cannot fetch product " << g_ticket;
-        return;
-    }
-
-    auto ccy = itrproduct->second.settle_ccy;
-
-    auto itrbal = balance_.balval.find(ccy);
-    if (itrbal == balance_.balval.end()) {
-        LOG(error) << "cannot fetch balance " << ccy;
-        return;
-    }
-    auto cash = itrbal->second;
-    LOG(info) << "available cash: " << cash << " " << ccy;
-    if (strtof(cash.c_str(), nullptr) < injected_cash) {
-        LOG(error) << "no enough cash!";
-        return;
-    }
-
-    auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
-    if (itrtrades == public_trades_info_.trades_data.end()) {
-        LOG(error) << "cannot fetch current price.";
-        return;
-    }
-    auto price = itrtrades->second.px;
-    LOG(info) << "current price: " << price;
-
-    float cur_price = strtof(price.c_str(), nullptr);
-    if (cur_price <= 0) {
-        LOG(error) << "invalid price: " << cur_price;
-        return;
-    }
-
-    auto order_side = OrderSide::Buy;
-    auto order_pos_side = OrderPosSide::Long;
-
-    auto tick_sz = itrproduct->second.tick_sz;
-    std::deque<OrderData> grid_prices;
-    float px = cur_price;
-    float total_px = 0;
-
-    for (int i = 0; i < grid_count; ++i) {
-        px = px * (1.0f - step_ratio);
-        total_px += px;
-
-        OrderData order_data;
-        order_data.clordid = generateRandomString(10);
-        order_data.side = order_side;
-        order_data.pos_side = order_pos_side;
-        order_data.px = floatToString(px, tick_sz);
-        grid_prices.push_back(order_data);
-    }
-
-    auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
-    if (ct_val * total_px >= injected_cash) {
-        LOG(error) << "no enmoght cash. require at least " << floatToString(ct_val * total_px, tick_sz);
-        return;
-    }
-
-    auto amount = floatToString(injected_cash / total_px / ct_val, itrproduct->second.lot_sz);
-    for (auto& v : grid_prices) {
-        v.amount = amount;
-    }
-
-    auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Isolated, grid_prices);
-    g_private_channel->sendCmd(std::move(cmd),
-        [this](Command::Response& resp) {
-            if (resp.code == 0) {
-                LOG(debug) << "<< order ok.";
-            } else
-                LOG(error) << "<< order failed.";
+        auto itrproduct = public_product_info_.data.find(g_ticket);
+        if (itrproduct == public_product_info_.data.end()) {
+            LOG(error) << "cannot fetch product " << g_ticket;
+            return;
         }
-    );
-    
 
+        auto ccy = itrproduct->second.settle_ccy;
+
+        auto itrbal = balance_.balval.find(ccy);
+        if (itrbal == balance_.balval.end()) {
+            LOG(error) << "cannot fetch balance " << ccy;
+            return;
+        }
+        auto cash = itrbal->second;
+        LOG(info) << "available cash: " << cash << " " << ccy;
+        if (strtof(cash.c_str(), nullptr) < injected_cash) {
+            LOG(error) << "no enough cash!";
+            return;
+        }
+
+        auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
+        if (itrtrades == public_trades_info_.trades_data.end()) {
+            LOG(error) << "cannot fetch current price.";
+            return;
+        }
+        auto price = itrtrades->second.px;
+        LOG(info) << "current price: " << price;
+
+        float cur_price = strtof(price.c_str(), nullptr);
+        if (cur_price <= 0) {
+            LOG(error) << "invalid price: " << cur_price;
+            return;
+        }
+
+        auto order_side = OrderSide::Buy;
+        auto order_pos_side = OrderPosSide::Long;
+
+        auto tick_sz = itrproduct->second.tick_sz;
+
+        grid_strategy_.grids.clear();
+        grid_strategy_.grids.reserve(grid_count + 1);
+        float px = cur_price;
+        float total_px = 0;
+
+        std::deque<std::string> d0;
+        for (int i = 0; i < grid_count / 2; ++i) {
+            px = px * (1.0f - step_ratio);
+            total_px += px;
+            d0.push_back(floatToString(px, tick_sz));
+        }
+
+        for (auto itr = d0.rbegin(); itr != d0.rend(); ++itr) {
+            GridStrategy::Grid grid;
+            grid.px = *itr;
+            grid_strategy_.grids.push_back(grid);
+        }
+
+        px = cur_price;
+        total_px += px;
+        GridStrategy::Grid grid;
+        grid.px = floatToString(px, tick_sz);
+        grid_strategy_.grids.push_back(grid);
+
+        for (int i = grid_count / 2; i < grid_count; ++i) {
+            px = px * (1.0f + step_ratio);
+            total_px += px;
+            GridStrategy::Grid grid;
+            grid.px = floatToString(px, tick_sz);
+            grid_strategy_.grids.push_back(grid);
+        }
+
+        auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
+        if (ct_val * total_px >= injected_cash) {
+            LOG(error) << "no enmoght cash. require at least " << floatToString(ct_val * total_px, tick_sz);
+            return;
+        }
+
+        grid_strategy_.order_amount = floatToString(injected_cash / total_px / ct_val, itrproduct->second.lot_sz);
+
+        for (auto& grid : grid_strategy_.grids) {
+            OrderData order_data;
+            order_data.clordid = generateRandomString(10);
+            order_data.side = order_side;
+            order_data.pos_side = order_pos_side;
+            order_data.px = grid.px;
+            order_data.amount = grid_strategy_.order_amount;
+            grid.order_data = std::move(order_data);
+        }
+
+        auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Isolated, grid_orders);
+        g_private_channel->sendCmd(std::move(cmd),
+            [this](Command::Response& resp) {
+                if (resp.code == 0) {
+                    LOG(debug) << "<< order ok.";
+                } else
+                    LOG(error) << "<< order failed.";
+            }
+        );
+
+    }
 }

@@ -3,9 +3,10 @@
 #include "type.h"
 #include "util.h"
 #include <mutex>
+#include <ostream>
 #include <map>
 #include <set>
-#include <ostream>
+#include <vector>
 
 class UserData {
 public:
@@ -75,12 +76,13 @@ public:
 
 
     struct GridStrategy {
-        struct OrderStatus {
+        struct Grid {
+            std::string px;
             OrderData order_data;
         };
 
-        std::map<std::string /* cliordid */, OrderStatus> buy_orders;
-        std::map<std::string /* cliordid */, OrderStatus> sell_orders;
+        std::string order_amount;
+        std::vector<Grid> grids;
     };
 
 public:
@@ -100,6 +102,7 @@ public:
     Position position_;
     PublicTradesInfo public_trades_info_;
     ProductInfo public_product_info_;
+    GridStrategy grid_strategy_;
 
 private:
     std::mutex mutex_;
