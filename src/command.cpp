@@ -1,64 +1,14 @@
 ﻿#include "command.h"
+#include "util.h"
+#include "user_data.h"
 #include "json.h"
 #include "crypto/base64.h"
-#include <openssl/sha.h>
-#include <openssl/hmac.h>
-#include <string>
-#include <array>
-#include <random>
 
 static std::string toString(rapidjson::Value& v) {
     rapidjson::StringBuffer strbuf;
     rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
     v.Accept(writer);
     return strbuf.GetString();
-}
-
-static std::string calcHmacSHA256(const std::string& msg, const std::string& decoded_key) {
-    std::array<unsigned char, EVP_MAX_MD_SIZE> hash;
-    unsigned int hashLen;
-
-    HMAC(
-        EVP_sha256(),
-        decoded_key.data(),
-        static_cast<int>(decoded_key.size()),
-        reinterpret_cast<unsigned char const*>(msg.data()),
-        static_cast<int>(msg.size()),
-        hash.data(),
-        &hashLen
-    );
-
-    return std::string{ reinterpret_cast<char const*>(hash.data()), hashLen };
-}
-
-static std::string toTimeStr(int time_msec) {
-    struct tm tstruct;
-    char buf[80];
-    time_t now = time_msec / 1000;
-    tstruct = *localtime(&now);
-    strftime(buf, _countof(buf), "%m-%d %H:%M:%S", &tstruct);
-
-    return buf;
-}
-
-static int generateRadomInt(int min_value, int max_value) {
-    // genenrate random uuid of device
-    static std::random_device r;
-    static std::seed_seq seed{ r(), r(), r(), r(), r(), r(), r(), r() };
-    static std::mt19937_64 eng(seed);
-
-    std::uniform_int_distribution<int> dist{ min_value, max_value };
-    return dist(eng);
-}
-
-std::string generateRandomString(size_t length) {
-    static const std::string k_alpha = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZjJ";
-
-    std::string s;
-    s.reserve(length);
-    for (auto i = 0; i < length; ++i)
-        s.push_back(k_alpha[generateRadomInt(0, (int)(k_alpha.size() - 1))]);
-    return s;
 }
 
 
@@ -325,38 +275,42 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         std::string event_type = (*itr)["eventType"].GetString();
 
                         if (itr->HasMember("balData")) {
-                            std::ostringstream o;
-                            o << "=====Balance=====" << std::endl;
-
+                            g_user_data.lock();
+                            make_scope_exit([] { g_user_data.unlock(); });
+                            
                             auto& bal_data = (*itr)["balData"];
                             for (auto balitr = bal_data.Begin(); balitr != bal_data.End(); ++balitr) {
                                 std::string ccy = (*balitr)["ccy"].GetString();
-                                int cash_bal = std::strtol((*balitr)["cashBal"].GetString(), nullptr, 0);
-
-                                o << "  " << ccy << " \tcash: " << cash_bal << std::endl;
+                                std::string bal = (*balitr)["cashBal"].GetString();
+                                g_user_data.balance_.balval[ccy] = bal;
                             }
-                            LOG(debug) << o.str();
+
+                            LOG(debug) << g_user_data.balance_;                           
                         } 
 
                         if (itr->HasMember("posData")) {
-                            std::ostringstream o;
-                            o << "=====Position=====" << std::endl;
+                            g_user_data.lock();
+                            make_scope_exit([] { g_user_data.unlock(); });
 
                             auto& pos_data = (*itr)["posData"];
                             for (auto positr = pos_data.Begin(); positr != pos_data.End(); ++positr) {
-                                std::string pos_id = (*positr)["posId"].GetString();
-                                std::string trade_id = (*positr)["tradeId"].GetString();
-                                std::string inst_id = (*positr)["instId"].GetString();
-                                std::string inst_type = (*positr)["instType"].GetString();
-                                std::string pos_side = (*positr)["posSide"].GetString();
-                                std::string avg_px = (*positr)["avgPx"].GetString();
-                                int pos = std::strtol((*positr)["pos"].GetString(), nullptr, 0);
-                                std::string ccy = (*positr)["ccy"].GetString();
-                                int utime = std::strtol((*positr)["uTime"].GetString(), nullptr, 0); // 仓位信息更新时间
-                                o << "  - " << pos_id  << " " << inst_id << "  " << inst_type << std::endl
-                                    << "    trade_id:" << trade_id << " \t" << pos_side << " \t" << pos << " \t" << avg_px << " \t" << ccy << std::endl;
+                                UserData::Position::PosData data;
+
+                                data.pos_id = (*positr)["posId"].GetString();
+                                data.inst_id = (*positr)["instId"].GetString();
+                                data.inst_type = (*positr)["instType"].GetString();
+
+                                data.pos_side = (*positr)["posSide"].GetString();
+                                data.avg_px = (*positr)["avgPx"].GetString();
+                                data.pos = (*positr)["pos"].GetString();
+                                data.ccy = (*positr)["ccy"].GetString();
+                                auto utime = (*positr)["uTime"].GetString();
+                                data.utime_msec = std::strtoull(utime, nullptr, 0);
+
+                                g_user_data.position_.posval[data.pos_id] = std::move(data);
                             }
-                            LOG(debug) << o.str();
+
+                            LOG(debug) << g_user_data.position_;
                         }
                     }
                 } else if (channel == "orders") {
@@ -383,8 +337,8 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         std::string fee = (*itr)["fee"].GetString(); // 订单交易手续费
                         std::string pnl = (*itr)["pnl"].GetString(); // 收益
 
-                        int utime = std::strtol((*itr)["uTime"].GetString(), nullptr, 0); // 订单更新时间
-                        int ctime = std::strtol((*itr)["cTime"].GetString(), nullptr, 0); // 订单更新时间
+                        uint64_t utime = std::strtoull((*itr)["uTime"].GetString(), nullptr, 0); // 订单更新时间
+                        uint64_t ctime = std::strtoull((*itr)["cTime"].GetString(), nullptr, 0); // 订单更新时间
     
                         o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << "\t" << toTimeStr(utime) << std::endl;
                         if (state == "live")
