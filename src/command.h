@@ -43,11 +43,19 @@ public:
         Cross,  // 全仓
         Cash //现金
     };
+
+    struct OrderData {
+        std::string clordid;
+        OrderSide side;
+        std::string px;
+        std::string amount;
+    };
+
     static Request makeOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
-        OrderSide side, const std::string& px, const std::string& amount);
+        const OrderData& order_data);
 
     static Request makeMultiOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
-        OrderSide side, std::deque<std::pair<std::string /* px */, std::string /*sz*/> >& orders);
+        std::deque<OrderData>& orders);
 
     // 撤单
     static Request makeCancelOrderReq(const std::string& inst_id, const std::string& cliordid, const std::string& ordid);

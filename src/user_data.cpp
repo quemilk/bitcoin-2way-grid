@@ -1,5 +1,6 @@
 ﻿#include "user_data.h"
 #include "logger.h"
+#include "command.h"
 #include <deque>
 
 extern std::string g_ticket;
@@ -85,13 +86,17 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
     }
 
     auto tick_sz = itrproduct->second.tick_sz;
-    std::deque<std::pair<std::string, std::string> > grid_prices;
+    std::deque<Command::OrderData> grid_prices;
     float px = cur_price;
     float total_px = 0;
     for (int i = 0; i < grid_count; ++i) {
         px = px * (1.0f - step_ratio);
         total_px += px;
-        grid_prices.push_back({ floatToString(px, tick_sz), "" });
+
+        Command::OrderData order_data;
+        order_data.side = Command::OrderSide::Sell;
+        order_data.px = floatToString(px, tick_sz);
+        grid_prices.push_back(order_data);
     }
 
     auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
@@ -102,9 +107,8 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
 
     auto amount = floatToString(injected_cash / total_px, itrproduct->second.ct_val);
     for (auto& v : grid_prices) {
-        v.second = amount;
+        v.amount = amount;
     }
     
-    LOG(info) << "grid generated: " << grid_prices;
 
 }

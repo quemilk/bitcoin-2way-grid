@@ -133,7 +133,7 @@ Command::Request Command::makeSubscribeOrdersChannel(const std::string& inst_typ
 }
 
 Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
-    OrderSide side, const std::string& px, const std::string& amount) {
+    const OrderData& order_data) {
     rapidjson::Document doc(rapidjson::kObjectType);
     auto id = generateRandomString(10);
     doc.AddMember("id", id, doc.GetAllocator());
@@ -144,7 +144,7 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
 
     arg.AddMember("instId", inst_id, doc.GetAllocator());
     
-    auto side_str = (side == OrderSide::Buy) ? "buy" : "sell";
+    auto side_str = (order_data.side == OrderSide::Buy) ? "buy" : "sell";
     arg.AddMember("side", rapidjson::StringRef(side_str), doc.GetAllocator());
     
     const char* tdmode;
@@ -160,9 +160,9 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
     arg.AddMember("ordType", rapidjson::StringRef(order_type_str), doc.GetAllocator());
 
     if (order_type == OrderType::Limit)
-        arg.AddMember("px", rapidjson::StringRef(px), doc.GetAllocator());
+        arg.AddMember("px", rapidjson::StringRef(order_data.px), doc.GetAllocator());
 
-    arg.AddMember("sz", rapidjson::StringRef(amount), doc.GetAllocator());
+    arg.AddMember("sz", rapidjson::StringRef(order_data.amount), doc.GetAllocator());
 
     args.PushBack(arg, doc.GetAllocator());
     doc.AddMember("args", args, doc.GetAllocator());
@@ -175,7 +175,7 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
 }
 
 Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
-    OrderSide side, std::deque<std::pair<std::string, std::string> >& orders) {
+    std::deque<OrderData>& orders) {
     rapidjson::Document doc(rapidjson::kObjectType);
     auto id = generateRandomString(10);
     doc.AddMember("id", id, doc.GetAllocator());
@@ -188,7 +188,7 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
 
         arg.AddMember("instId", inst_id, doc.GetAllocator());
 
-        auto side_str = (side == OrderSide::Buy) ? "buy" : "sell";
+        auto side_str = (order.side == OrderSide::Buy) ? "buy" : "sell";
         arg.AddMember("side", rapidjson::StringRef(side_str), doc.GetAllocator());
 
         const char* tdmode;
@@ -204,9 +204,9 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
         arg.AddMember("ordType", rapidjson::StringRef(order_type_str), doc.GetAllocator());
 
         if (order_type == OrderType::Limit)
-            arg.AddMember("px", rapidjson::StringRef(order.first), doc.GetAllocator());
+            arg.AddMember("px", rapidjson::StringRef(order.px), doc.GetAllocator());
 
-        arg.AddMember("sz", rapidjson::StringRef(order.second), doc.GetAllocator());
+        arg.AddMember("sz", rapidjson::StringRef(order.amount), doc.GetAllocator());
 
         args.PushBack(arg, doc.GetAllocator());
     }
