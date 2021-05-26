@@ -340,7 +340,14 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
         } else if (doc.HasMember("data")) {
             if (doc.HasMember("arg")) {
                 std::string channel = doc["arg"]["channel"].GetString();
-                if (channel == "balance_and_position") {
+
+                if (channel == "account") {
+                    // TODO
+
+                } else if (channel == "positions") {
+                    // TODO
+
+                } else if (channel == "balance_and_position") {
                     for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
                         std::string event_type = (*itr)["eventType"].GetString();
 
