@@ -87,16 +87,21 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         return;
     }
 
+    auto order_side = Command::OrderSide::Buy;
+    auto order_pos_side = Command::OrderPosSide::Long;
+
     auto tick_sz = itrproduct->second.tick_sz;
     std::deque<Command::OrderData> grid_prices;
     float px = cur_price;
     float total_px = 0;
+
     for (int i = 0; i < grid_count; ++i) {
         px = px * (1.0f - step_ratio);
         total_px += px;
 
         Command::OrderData order_data;
-        order_data.side = Command::OrderSide::Sell;
+        order_data.side = order_side;
+        order_data.pos_side = order_pos_side;
         order_data.px = floatToString(px, tick_sz);
         grid_prices.push_back(order_data);
     }

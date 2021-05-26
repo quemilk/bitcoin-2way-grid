@@ -34,6 +34,7 @@ public:
 
     // 交易下单
     enum class OrderSide { Buy, Sell };
+    enum class  OrderPosSide { Net, Long, Short };
     enum class OrderType {
         Market, // 市价单
         Limit // 限价单
@@ -47,6 +48,7 @@ public:
     struct OrderData {
         std::string clordid;
         OrderSide side;
+        OrderPosSide pos_side;
         std::string px;
         std::string amount;
     };

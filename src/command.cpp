@@ -144,20 +144,29 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
 
     arg.AddMember("instId", inst_id, doc.GetAllocator());
     
-    auto side_str = (order_data.side == OrderSide::Buy) ? "buy" : "sell";
-    arg.AddMember("side", rapidjson::StringRef(side_str), doc.GetAllocator());
+    std::string side_str = (order_data.side == OrderSide::Buy) ? "buy" : "sell";
+    arg.AddMember("side", side_str, doc.GetAllocator());
+
+    std::string pos_side_str;
+    if (order_data.pos_side == OrderPosSide::Long)
+        pos_side_str = "long";
+    else if (order_data.pos_side == OrderPosSide::Short)
+        pos_side_str = "short";
+    else
+        pos_side_str = "net";
+    arg.AddMember("posSide", pos_side_str, doc.GetAllocator());
     
-    const char* tdmode;
+    std::string tdmode;
     if (trade_mode == TradeMode::Cross)
         tdmode = "cross";
     else if (trade_mode == TradeMode::Cash)
         tdmode = "cash";
     else
         tdmode = "isolated";
-    arg.AddMember("tdMode", rapidjson::StringRef(tdmode), doc.GetAllocator());
+    arg.AddMember("tdMode", tdmode, doc.GetAllocator());
 
-    auto order_type_str = order_type == OrderType::Market ? "market" : "limit";
-    arg.AddMember("ordType", rapidjson::StringRef(order_type_str), doc.GetAllocator());
+    std::string order_type_str = order_type == OrderType::Market ? "market" : "limit";
+    arg.AddMember("ordType", order_type_str, doc.GetAllocator());
 
     if (order_type == OrderType::Limit)
         arg.AddMember("px", rapidjson::StringRef(order_data.px), doc.GetAllocator());
@@ -188,20 +197,29 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
 
         arg.AddMember("instId", inst_id, doc.GetAllocator());
 
-        auto side_str = (order.side == OrderSide::Buy) ? "buy" : "sell";
-        arg.AddMember("side", rapidjson::StringRef(side_str), doc.GetAllocator());
+        std::string side_str = (order.side == OrderSide::Buy) ? "buy" : "sell";
+        arg.AddMember("side", side_str, doc.GetAllocator());
 
-        const char* tdmode;
+        std::string pos_side_str;
+        if (order.pos_side == OrderPosSide::Long)
+            pos_side_str = "long";
+        else if (order.pos_side == OrderPosSide::Short)
+            pos_side_str = "short";
+        else
+            pos_side_str = "net";
+        arg.AddMember("posSide", pos_side_str, doc.GetAllocator());
+
+        std::string tdmode;
         if (trade_mode == TradeMode::Cross)
             tdmode = "cross";
         else if (trade_mode == TradeMode::Cash)
             tdmode = "cash";
         else
             tdmode = "isolated";
-        arg.AddMember("tdMode", rapidjson::StringRef(tdmode), doc.GetAllocator());
+        arg.AddMember("tdMode", tdmode, doc.GetAllocator());
 
-        auto order_type_str = order_type == OrderType::Market ? "market" : "limit";
-        arg.AddMember("ordType", rapidjson::StringRef(order_type_str), doc.GetAllocator());
+        std::string order_type_str = order_type == OrderType::Market ? "market" : "limit";
+        arg.AddMember("ordType", order_type_str, doc.GetAllocator());
 
         if (order_type == OrderType::Limit)
             arg.AddMember("px", rapidjson::StringRef(order.px), doc.GetAllocator());
