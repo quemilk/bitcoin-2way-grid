@@ -23,8 +23,10 @@ public:
 
     static Request makeSubscribeAccountChannel();
 
+    static Request makeSubscribePositionsChannel(const std::string& inst_type="ANY", const std::string& inst_id="");
+
     // 账户余额和持仓频道
-    static Request makeSubscriBebalanceAndPositionChannel();
+    static Request makeSubscriBebalanceAndPositionsChannel();
 
     // 订单频道
     // inst_type: SPOT：币币; MARGIN：币币杠杆 SWAP：永续合约 FUTURES：交割合约 OPTION：期权 ANY： 全部

@@ -71,7 +71,28 @@ Command::Request Command::makeSubscribeAccountChannel() {
     return req;
 }
 
-Command::Request Command::makeSubscriBebalanceAndPositionChannel() {
+Command::Request Command::makeSubscribePositionsChannel(const std::string& inst_type, const std::string& inst_id) {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    doc.AddMember("op", "subscribe", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+    rapidjson::Value arg(rapidjson::kObjectType);
+
+    arg.AddMember("channel", "positions", doc.GetAllocator());
+    arg.AddMember("instType", inst_type, doc.GetAllocator());
+    if (!inst_id.empty())
+        arg.AddMember("instId", inst_id, doc.GetAllocator());
+
+    args.PushBack(arg, doc.GetAllocator());
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    Request req;
+    req.op = "subscribe";
+    req.data = toString(doc);
+    return req;
+}
+
+Command::Request Command::makeSubscriBebalanceAndPositionsChannel() {
     rapidjson::Document doc(rapidjson::kObjectType);
     doc.AddMember("op", "subscribe", doc.GetAllocator());
 
