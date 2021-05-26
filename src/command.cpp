@@ -442,7 +442,8 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         info.ts = std::strtoull((*itr)["ts"].GetString(), nullptr, 0);
 
                         if (g_show_trades)
-                            std::cout << "  - " << info.inst_id << " \t" << info.pos_side << " \t" << info.sz << " \t" << info.px << " \t" << toTimeStr(info.ts) << std::endl;
+                            std::cout << "  - " << info.inst_id << " \t" << info.pos_side << " \t"
+                            << info.sz << " \t" << info.px << "  \t" << toTimeStr(info.ts) << std::endl;
 
                         g_user_data.public_trades_info_.trades_data[info.inst_id] = std::move(info);
                     }
