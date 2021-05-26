@@ -13,3 +13,7 @@ std::string generateRandomString(size_t length);
 
 void trimString(string& str);
 void splitString(const string& v, std::vector<string>& out, char delim, size_t max_seg = -1);
+
+inline std::string toString(OrderSide side) {
+    return (side == OrderSide::Buy) ? "buy" : "sell";
+}

@@ -139,12 +139,17 @@ int main(int argc, char** argv) {
             }
         } else if (op == "clear grid") {
             // TODO  sell all
+        } else if (op == "show grid") {
+            g_user_data.lock();
+            make_scope_exit([] { g_user_data.unlock(); });
+            std::cout << g_user_data.grid_strategy_;
         } else {
             std::cout << "commands:" << std::endl;
             std::cout << "\tshow position" << std::endl;
             std::cout << "\tshow balance" << std::endl;
             std::cout << "\tshow trades" << std::endl;
             std::cout << "\thide trades" << std::endl;
+            std::cout << "\tshow grid" << std::endl;
             std::cout << "\tstart grid %cash% %grid_count% %grid_step_ratio%" << std::endl;
             std::cout << "\tclear grid" << std::endl;
         }

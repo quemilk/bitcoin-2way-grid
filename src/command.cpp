@@ -144,7 +144,7 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
 
     arg.AddMember("instId", inst_id, doc.GetAllocator());
     
-    std::string side_str = (order_data.side == OrderSide::Buy) ? "buy" : "sell";
+    std::string side_str = toString(order_data.side);
     arg.AddMember("side", side_str, doc.GetAllocator());
 
     std::string pos_side_str;
@@ -199,7 +199,7 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
 
         arg.AddMember("instId", inst_id, doc.GetAllocator());
 
-        std::string side_str = (order.side == OrderSide::Buy) ? "buy" : "sell";
+        std::string side_str = toString(order.side);
         arg.AddMember("side", side_str, doc.GetAllocator());
 
         std::string pos_side_str;
