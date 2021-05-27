@@ -185,7 +185,7 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
                 if (resp.code == 0) {
                     LOG(debug) << "<< order ok.";
                 } else
-                    LOG(error) << "<< order failed. " << resp.msg;
+                    LOG(error) << "<< order failed. " << resp.data;
             }
         );
     }
@@ -266,7 +266,7 @@ void UserData::updateGrid() {
                 if (resp.code == 0) {
                     LOG(debug) << "<< order ok.";
                 } else
-                    LOG(error) << "<< order failed. " << resp.msg;
+                    LOG(error) << "<< order failed. " << resp.data;
             }
         );
     }
@@ -310,43 +310,37 @@ void UserData::clearGrid() {
         }
     }
 
-    Command::Request clear_orders_cmd;
-    if (!to_clear_orders.empty())
-        clear_orders_cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Market, TradeMode::Cross, to_clear_orders);
-    std::function cmdfunc = [req=std::move(clear_orders_cmd)] () mutable {
-        if (!req.data.empty()) {
-            g_private_channel->sendCmd(std::move(req),
-                [](Command::Response& resp) {
-                    if (resp.code == 0) {
-                        LOG(debug) << "<< order ok.";
-                    } else
-                        LOG(error) << "<< order failed." << resp.data;
-                }
-            );
+    struct DoneTask {
+        ~DoneTask() {
+            if (!r.data.empty()) {
+                g_private_channel->sendCmd(std::move(r),
+                    [](Command::Response& resp) {
+                        if (resp.code == 0) {
+                            LOG(debug) << "<< order ok.";
+                        } else
+                            LOG(error) << "<< order failed." << resp.data;
+                    }
+                );
+            }
         }
+        Command::Request r;
     };
 
-    if (!to_cancel_cliordids.empty()) {
+    auto t = std::make_shared<DoneTask>();
+    if (!to_clear_orders.empty())
+        t->r = Command::makeMultiOrderReq(g_ticket, OrderType::Market, TradeMode::Cross, to_clear_orders);
+
+    while (!to_cancel_cliordids.empty()) {
         auto cmd = Command::makeCancelMultiOrderReq(g_ticket, to_cancel_cliordids);
         g_private_channel->sendCmd(std::move(cmd),
-            [this, next_tocancel = std::move(to_cancel_cliordids), f = std::move(cmdfunc)] (Command::Response& resp) mutable {
+            [t] (Command::Response& resp) {
                 if (resp.code == 0) {
                     LOG(debug) << "<< cancel ok.";
                 } else
                     LOG(error) << "<< cancel failed. " << resp.data;
-
-                if (!req.data.empty()) {
-                    g_private_channel->sendCmd(std::move(req),
-                        [this](Command::Response& resp) {
-                            if (resp.code == 0) {
-                                LOG(debug) << "<< order ok.";
-                            } else
-                                LOG(error) << "<< order failed." << resp.data;
-                        }
-                    );
-                }
             }
         );
+
     }
 
 

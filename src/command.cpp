@@ -208,7 +208,7 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
         rapidjson::Value arg(rapidjson::kObjectType);
 
         if (!order.clordid.empty())
-            arg.AddMember("clOrdId", rapidjson::StringRef(order.clordid), doc.GetAllocator());
+            arg.AddMember("clOrdId", order.clordid, doc.GetAllocator());
 
         arg.AddMember("instId", inst_id, doc.GetAllocator());
 
@@ -237,9 +237,9 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
         arg.AddMember("ordType", order_type_str, doc.GetAllocator());
 
         if (order_type == OrderType::Limit)
-            arg.AddMember("px", rapidjson::StringRef(order.px), doc.GetAllocator());
+            arg.AddMember("px", order.px, doc.GetAllocator());
 
-        arg.AddMember("sz", rapidjson::StringRef(order.amount), doc.GetAllocator());
+        arg.AddMember("sz", order.amount, doc.GetAllocator());
 
         args.PushBack(arg, doc.GetAllocator());
 
@@ -298,7 +298,7 @@ Command::Request Command::makeCancelMultiOrderReq(const std::string& inst_id, st
 
         rapidjson::Value arg(rapidjson::kObjectType);
         arg.AddMember("instId", inst_id, doc.GetAllocator());
-        arg.AddMember("clOrdId", rapidjson::StringRef(cliordid), doc.GetAllocator());
+        arg.AddMember("clOrdId", cliordid, doc.GetAllocator());
         args.PushBack(arg, doc.GetAllocator());
     }
 
