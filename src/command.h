@@ -32,11 +32,9 @@ public:
     // inst_type: SPOT：币币; MARGIN：币币杠杆 SWAP：永续合约 FUTURES：交割合约 OPTION：期权 ANY： 全部
     static Request makeSubscribeOrdersChannel(const std::string& inst_type="ANY", const std::string& inst_id="");
 
-    static Request makeOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
-        const OrderData& order_data);
+    static Request makeOrderReq(const std::string& inst_id, TradeMode trade_mode, const OrderData& order_data);
 
-    static Request makeMultiOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
-        std::deque<OrderData>& orders);
+    static Request makeMultiOrderReq(const std::string& inst_id, TradeMode trade_mode, std::deque<OrderData>& orders);
 
     // 撤单
     static Request makeCancelOrderReq(const std::string& inst_id, const std::string& cliordid, const std::string& ordid);

@@ -9,6 +9,9 @@
 #include <vector>
 #include <deque>
 
+extern std::string g_ticket;
+
+
 class UserData {
 public:
     struct Balance {
@@ -95,8 +98,11 @@ public:
         float origin_cash = 0;
         float current_cash = 0;
 
-        friend class std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
-            o << "=====Grid===== ";
+        float injected_cash = 0;
+
+        friend std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
+            o << "=====Grid===== " << g_ticket << std::endl;
+            o << "inject cash : " << t.injected_cash;
             if (t.current_cash) {
                 if (t.current_cash >= t.origin_cash) {
                     o << " +" << t.current_cash - t.origin_cash;

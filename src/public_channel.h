@@ -19,3 +19,6 @@ protected:
 
 
 };
+
+
+extern std::shared_ptr<PublicChannel> g_public_channel;

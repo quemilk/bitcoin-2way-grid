@@ -4,8 +4,6 @@
 #include "command.h"
 #include <deque>
 
-extern std::string g_ticket;
-extern std::shared_ptr<PrivateChannel> g_private_channel;
 
 UserData g_user_data;
 
@@ -54,6 +52,8 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
     {
         g_user_data.lock();
         make_scope_exit([] { g_user_data.unlock(); });
+
+        grid_strategy_.injected_cash = injected_cash;
 
         auto itrproduct = public_product_info_.data.find(g_ticket);
         if (itrproduct == public_product_info_.data.end()) {
@@ -156,7 +156,7 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
                 grid_order.order_data.clordid = genCliOrdId();
                 grid_order.order_data.side = OrderSide::Buy;
                 grid_order.order_data.pos_side = OrderPosSide::Long;
-                grid_order.order_status = OrderStatus::Live;                
+                grid_order.order_status = OrderStatus::Live;   
                 grid.long_orders.push_back(grid_order);
             }
             if (i > 0) {
@@ -168,18 +168,29 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
             }
         }
 
-        for (auto& grid : grid_strategy_.grids) {
-            for (auto& order : grid.long_orders)
-                if (!order.order_data.amount.empty())
-                    grid_orders.push_back(order.order_data);
-            for (auto& order : grid.short_orders)
-                if (!order.order_data.amount.empty())
-                    grid_orders.push_back(order.order_data);
+        for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
+            auto& grid = grid_strategy_.grids[i];
+            for (auto& order : grid.long_orders) {
+                if (!order.order_data.amount.empty()) {
+                    auto new_order = order.order_data;
+                    if (i >= grid_strategy_.grids.size() / 2)
+                        new_order.order_type = OrderType::Market;
+                    grid_orders.push_back(new_order);
+                }
+            }
+            for (auto& order : grid.short_orders) {
+                if (!order.order_data.amount.empty()) {
+                    auto new_order = order.order_data;
+                    if (i <= grid_strategy_.grids.size() / 2)
+                        new_order.order_type = OrderType::Market;
+                    grid_orders.push_back(new_order);
+                }
+            }
         }
      }
 
     while (!grid_orders.empty()) {
-        auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Cross, grid_orders);
+        auto cmd = Command::makeMultiOrderReq(g_ticket, TradeMode::Cross, grid_orders);
         g_private_channel->sendCmd(std::move(cmd),
             [this](Command::Response& resp) {
                 if (resp.code == 0) {
@@ -260,7 +271,7 @@ void UserData::updateGrid() {
     }
 
     while (!grid_orders.empty()) {
-        auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Cross, grid_orders);
+        auto cmd = Command::makeMultiOrderReq(g_ticket, TradeMode::Cross, grid_orders);
         g_private_channel->sendCmd(std::move(cmd),
             [this](Command::Response& resp) {
                 if (resp.code == 0) {
@@ -299,6 +310,7 @@ void UserData::clearGrid() {
                             if (to_clear) {
                                 auto new_order = order.order_data;
                                 new_order.clordid = genCliOrdId();
+                                new_order.order_type = OrderType::Market;
                                 to_clear_orders.push_back(new_order);
                             }
                         }
@@ -328,7 +340,7 @@ void UserData::clearGrid() {
 
     auto t = std::make_shared<DoneTask>();
     if (!to_clear_orders.empty())
-        t->r = Command::makeMultiOrderReq(g_ticket, OrderType::Market, TradeMode::Cross, to_clear_orders);
+        t->r = Command::makeMultiOrderReq(g_ticket, TradeMode::Cross, to_clear_orders);
 
     while (!to_cancel_cliordids.empty()) {
         auto cmd = Command::makeCancelMultiOrderReq(g_ticket, to_cancel_cliordids);

@@ -20,3 +20,5 @@ private:
     std::condition_variable conn_condition_;
 
 };
+
+extern std::shared_ptr<PrivateChannel> g_private_channel;

@@ -132,7 +132,7 @@ Command::Request Command::makeSubscribeOrdersChannel(const std::string& inst_typ
     return req;
 }
 
-Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
+Command::Request Command::makeOrderReq(const std::string& inst_id, TradeMode trade_mode,
     const OrderData& order_data) {
     rapidjson::Document doc(rapidjson::kObjectType);
     auto id = generateRandomString(10);
@@ -168,10 +168,10 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
         tdmode = "isolated";
     arg.AddMember("tdMode", tdmode, doc.GetAllocator());
 
-    std::string order_type_str = order_type == OrderType::Market ? "market" : "limit";
+    std::string order_type_str = order_data.order_type == OrderType::Market ? "market" : "limit";
     arg.AddMember("ordType", order_type_str, doc.GetAllocator());
 
-    if (order_type == OrderType::Limit)
+    if (order_data.order_type == OrderType::Limit)
         arg.AddMember("px", rapidjson::StringRef(order_data.px), doc.GetAllocator());
 
     arg.AddMember("sz", rapidjson::StringRef(order_data.amount), doc.GetAllocator());
@@ -188,8 +188,7 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
     return req;
 }
 
-Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderType order_type, TradeMode trade_mode,
-    std::deque<OrderData>& orders) {
+Command::Request Command::makeMultiOrderReq(const std::string& inst_id, TradeMode trade_mode, std::deque<OrderData>& orders) {
     rapidjson::Document doc(rapidjson::kObjectType);
     auto id = generateRandomString(10);
     doc.AddMember("id", id, doc.GetAllocator());
@@ -233,10 +232,10 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
             tdmode = "isolated";
         arg.AddMember("tdMode", tdmode, doc.GetAllocator());
 
-        std::string order_type_str = order_type == OrderType::Market ? "market" : "limit";
+        std::string order_type_str = order.order_type == OrderType::Market ? "market" : "limit";
         arg.AddMember("ordType", order_type_str, doc.GetAllocator());
 
-        if (order_type == OrderType::Limit)
+        if (order.order_type == OrderType::Limit)
             arg.AddMember("px", order.px, doc.GetAllocator());
 
         arg.AddMember("sz", order.amount, doc.GetAllocator());

@@ -75,6 +75,7 @@ struct OrderData {
     OrderPosSide pos_side;
     std::string px;
     std::string amount;
+    OrderType order_type = OrderType::Limit;
 };
 
 enum class OrderStatus {
