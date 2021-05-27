@@ -192,6 +192,8 @@ void UserData::updateGrid() {
             auto grid_pre = (i > 0) ? &grid_strategy_.grids[i - 1] : nullptr;
 
             std::deque<GridStrategy::Grid::Order>* orders_arr[] = { &grid.long_orders, &grid.short_orders };
+            std::deque<GridStrategy::Grid::Order>* next_orders_arr[] = { };
+            std::deque<GridStrategy::Grid::Order>* pre_orders_arr[] = { };
             OrderPosSide pos_sides[] = { OrderPosSide::Long, OrderPosSide::Short };
 
             for (int i = 0; i < 2; ++i) {
@@ -213,7 +215,7 @@ void UserData::updateGrid() {
                                 new_order.order_data.side = OrderSide::Sell;
                                 new_order.order_data.pos_side = pos_side;
                                 new_order.order_status = OrderStatus::Live;
-                                grid_next->long_orders.push_back(new_order);
+                                next_orders_arr[i]->push_back(new_order);
                                 grid_orders.push_back(new_order.order_data);
                             }
                         } else if (order_data.side == OrderSide::Sell) {
@@ -225,7 +227,7 @@ void UserData::updateGrid() {
                                 new_order.order_data.side = OrderSide::Buy;
                                 new_order.order_data.pos_side = pos_side;
                                 new_order.order_status = OrderStatus::Live;
-                                grid_pre->long_orders.push_back(new_order);
+                                pre_orders_arr[i].push_back(new_order);
                                 grid_orders.push_back(new_order.order_data);
                             }
                         }
