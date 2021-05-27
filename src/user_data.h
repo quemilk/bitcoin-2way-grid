@@ -8,6 +8,7 @@
 #include <set>
 #include <vector>
 #include <deque>
+#include <iomanip>
 
 extern std::string g_ticket;
 
@@ -20,7 +21,7 @@ public:
         friend class std::ostream& operator << (std::ostream& o, const Balance& t) {
             o << "=====Balance=====" << std::endl;
             for (auto& v : t.balval) {
-                o << "  " << v.first << " \tcash: " << v.second << std::endl;
+                o << "  " << std::left << std::setw(10) << v.first << " cash: " << v.second << std::endl;
             }
             return o;
         }
@@ -46,8 +47,8 @@ public:
 
             for (auto& pos : t.posval) {
                 auto& v = pos.second;
-                o << "  - pos: " << pos.first << " " << pos.second.inst_id << "  " << pos.second.inst_type << std::endl;
-                o << "    " << v.pos_side << " \t" << v.pos << " \t" << v.avg_px << " \t" << v.ccy << "\t" << toTimeStr(v.utime_msec) << std::endl;
+                o << "  - pos: " << std::setw(10) << pos.first << " " << pos.second.inst_id << "  " << pos.second.inst_type << std::endl;
+                o << std::setw(8) << v.pos_side << std::setw(8) << v.pos << " \t" << v.avg_px << " " << v.ccy << " \t" << toTimeStr(v.utime_msec) << std::endl;
             }
             return o;
         }
