@@ -192,8 +192,9 @@ void UserData::updateGrid() {
             auto grid_pre = (i > 0) ? &grid_strategy_.grids[i - 1] : nullptr;
 
             std::deque<GridStrategy::Grid::Order>* orders_arr[] = { &grid.long_orders, &grid.short_orders };
-            std::deque<GridStrategy::Grid::Order>* next_orders_arr[] = { };
-            std::deque<GridStrategy::Grid::Order>* pre_orders_arr[] = { };
+            std::deque<GridStrategy::Grid::Order>* next_orders_arr[] = { grid_next ? &grid_next->long_orders : nullptr,  grid_next ? &grid_next->short_orders : nullptr };
+            std::deque<GridStrategy::Grid::Order>* pre_orders_arr[] = { grid_pre ? &grid_pre->long_orders : nullptr,  grid_pre ? &grid_pre->short_orders : nullptr };
+            
             OrderPosSide pos_sides[] = { OrderPosSide::Long, OrderPosSide::Short };
 
             for (int i = 0; i < 2; ++i) {
