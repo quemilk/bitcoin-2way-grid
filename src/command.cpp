@@ -179,7 +179,7 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, OrderType ord
     args.PushBack(arg, doc.GetAllocator());
     doc.AddMember("args", args, doc.GetAllocator());
 
-    LOG(info) << "! order \t" << side_str << " \t" << pos_side_str << " \t" << order_data.px << " \t" << order_data.amount;
+    LOG(info) << "\b\b! order \t" << side_str << " \t" << pos_side_str << " \t" << order_data.px << " \t" << order_data.amount;
 
     Request req;
     req.id = id;
@@ -236,7 +236,7 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
 
         args.PushBack(arg, doc.GetAllocator());
 
-        LOG(info) << "! order \t" << side_str << " \t" << pos_side_str << " \t" << order.px << " \t" << order.amount;
+        LOG(info) << "\b\b! order \t" << side_str << " \t" << pos_side_str << " \t" << order.px << " \t" << order.amount;
     }
 
     doc.AddMember("args", args, doc.GetAllocator());
@@ -501,7 +501,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                             o << "    order: \t" << sz << " \t" << px << " \t" << lever << "x" << std::endl;
                         else if (state == "filled" || state == "partially_filled") {
                             o << "    filled: \t" << fill_sz << " \t" << fill_px << " \t" << lever << "x" << std::endl;
-                            std::cout << "! order  \t" << state << " " << pos_side << " \t" << px << " \t" << fill_sz << " \tearn:" << pnl;
+                            std::cout << "\b\b! order  \t" << state << " \t" << pos_side << " \t" << px << " \t" << fill_sz << " \tearn:" << pnl << std::endl;
                         }
                         o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
                     }

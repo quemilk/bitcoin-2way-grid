@@ -180,7 +180,7 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
              if (resp.code == 0) {
                  LOG(debug) << "<< order ok.";
              } else
-                 LOG(error) << "<< order failed.";
+                 LOG(error) << "<< order failed. " << resp.msg;
          }
      );
 }
@@ -255,15 +255,72 @@ void UserData::updateGrid() {
                 if (resp.code == 0) {
                     LOG(debug) << "<< order ok.";
                 } else
-                    LOG(error) << "<< order failed.";
+                    LOG(error) << "<< order failed. " << resp.msg;
             }
         );
     }
 }
 
 void UserData::clearGrid() {
+    std::deque<std::string> to_cancel_cliordids;
+    std::deque<OrderData> to_clear_orders;
     {
         g_user_data.lock();
         make_scope_exit([] { g_user_data.unlock(); });
+
+        for (auto& grid : grid_strategy_.grids) {
+            auto orders_arr = { &grid.long_orders, &grid.short_orders };
+            for (auto orders : orders_arr) {
+                for (auto& order : *orders) {
+                    if (!order.order_data.amount.empty()) {
+                        if (order.order_status == OrderStatus::Live) {
+                            to_cancel_cliordids.push_back(order.order_data.clordid);
+
+                            bool to_clear = false;
+                            if (order.order_data.pos_side == OrderPosSide::Long) {
+                                if (order.order_data.side == OrderSide::Sell)
+                                    to_clear = true;
+                            } else if (order.order_data.pos_side == OrderPosSide::Short) {
+                                if (order.order_data.side == OrderSide::Buy)
+                                    to_clear = true;
+                            }
+
+                            if (to_clear) {
+                                auto new_order = order.order_data;
+                                new_order.clordid = genCliOrdId();
+                                to_clear_orders.push_back(new_order);
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        }
     }
+
+    if (!to_cancel_cliordids.empty()) {
+        auto cmd = Command::makeCancelMultiOrderReq(g_ticket, to_cancel_cliordids);
+        g_private_channel->sendCmd(std::move(cmd),
+            [this](Command::Response& resp) {
+                if (resp.code == 0) {
+                    LOG(debug) << "<< cancel ok.";
+                } else
+                    LOG(error) << "<< cancel failed. " << resp.msg;
+            }
+        );
+    }
+
+    if (!to_clear_orders.empty()) {
+        auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Market, TradeMode::Cross, to_clear_orders);
+        g_private_channel->sendCmd(std::move(cmd),
+            [this](Command::Response& resp) {
+                if (resp.code == 0) {
+                    LOG(debug) << "<< order ok.";
+                } else
+                    LOG(error) << "<< order failed." << resp.msg;
+            }
+        );
+    }
+
 }
