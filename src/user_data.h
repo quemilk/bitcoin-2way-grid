@@ -91,8 +91,21 @@ public:
         std::string order_amount;
         std::vector<Grid> grids;
 
+        std::string ccy;
+        float origin_cash = 0;
+        float current_cash = 0;
+
         friend class std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
-            o << "=====Grid=====" << std::endl;
+            o << "=====Grid===== ";
+            if (t.current_cash) {
+                if (t.current_cash >= t.origin_cash) {
+                    o << " +" << t.current_cash - t.origin_cash;
+                } else {
+                    o << " -" << t.origin_cash - t.current_cash;
+                }
+                o << " " << t.ccy;
+            }
+            o << std::endl;
 
             o << "  long:" << std::endl;
             for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {

@@ -387,6 +387,9 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                 resp.id = doc["id"].GetString();
             if (doc.HasMember("code"))
                 resp.code = std::strtol(doc["code"].GetString(), nullptr, 0);
+            if (doc.HasMember("msg"))
+                resp.msg = doc["msg"].GetString();
+
             *out_resp = std::move(resp);
             return true;
         } else if (doc.HasMember("data")) {

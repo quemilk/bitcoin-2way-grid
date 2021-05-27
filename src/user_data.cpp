@@ -74,11 +74,15 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
             return;
         }
         auto cash = itrbal->second;
+        auto cashval = strtof(cash.c_str(), nullptr);
         LOG(info) << "available cash: " << cash << " " << ccy;
-        if (strtof(cash.c_str(), nullptr) < injected_cash) {
+        if (cashval < injected_cash) {
             LOG(error) << "no enough cash!";
             return;
         }
+        grid_strategy_.ccy = ccy;
+        grid_strategy_.origin_cash = cashval;
+        grid_strategy_.current_cash = 0;
 
         auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
         if (itrtrades == public_trades_info_.trades_data.end()) {
@@ -245,6 +249,11 @@ void UserData::updateGrid() {
                         ++itr;
                 }
             }
+        }
+
+        auto itrbal = balance_.balval.find(grid_strategy_.ccy);
+        if (itrbal != balance_.balval.end()) {
+            grid_strategy_.current_cash = strtof(itrbal->second.c_str(), nullptr);
         }
     }
 
