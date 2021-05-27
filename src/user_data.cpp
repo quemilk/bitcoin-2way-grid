@@ -216,6 +216,9 @@ void UserData::updateGrid() {
         g_user_data.lock();
         make_scope_exit([] { g_user_data.unlock(); });
 
+        if (grid_strategy_.grids.empty())
+            sell_count = buy_count = -1;
+
         for (size_t i=0; i < grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
             auto grid_next = (i < grid_strategy_.grids.size() - 1) ? &grid_strategy_.grids[i + 1] : nullptr;
@@ -287,12 +290,12 @@ void UserData::updateGrid() {
         clearGrid();
         std::this_thread::sleep_for(std::chrono::seconds(5));
         LOG(warning) << "WARNING!!! grid will restart on 5min.";
-        std::thread thread(
+        std::thread(
             [] {
                 std::this_thread::sleep_for(std::chrono::minutes(5));
                 g_user_data.startGrid(g_user_data.grid_strategy_.option);
             }
-        );
+        ).detach();
         return;
     }
 

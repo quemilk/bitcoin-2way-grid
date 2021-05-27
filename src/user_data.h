@@ -110,7 +110,8 @@ public:
         float current_cash = 0;
 
         friend std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
-            o << "=====Grid===== " << g_ticket;
+            o << "=====Grid=====" << std::endl;
+            o << g_ticket;
             if (t.current_cash) {
                 if (t.current_cash >= t.start_cash) {
                     o << " +" << t.current_cash - t.start_cash;
