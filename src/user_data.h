@@ -117,6 +117,7 @@ public:
                 } else {
                     o << " -" << t.start_cash - t.current_cash;
                 }
+                o << " " << t.ccy;
 
                 if (t.start_cash != t.origin_cash) {
                     o << " " << t.ccy << " \ttotal: ";
@@ -129,7 +130,8 @@ public:
                 }
             }
             o << std::endl;
-            o << "inject cash: " << t.option.injected_cash << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio;
+            o << "inject cash: " << t.option.injected_cash 
+                << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio << std::endl;;
            
             o << "  long:" << std::endl;
             for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
