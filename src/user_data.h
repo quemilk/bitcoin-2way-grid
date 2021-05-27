@@ -92,24 +92,33 @@ public:
 
         friend class std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
             o << "=====Grid=====" << std::endl;
+
+            o << "  long:" << std::endl;
             for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
                 auto& v = *itr;
-                o << "  * " << v.px << std::endl;
+                o << "    * " << v.px;
 
                 if (!v.long_orders.empty()) {
-                    o << "      long: ";
                     for (auto& order : v.long_orders) {
                         auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                        o << long_side << " \t" << order.order_data.amount << std::endl;
+                        o << " \t" << long_side << " \t" << order.order_data.amount;
                     }
                 }
+                o << std::endl;
+            }
+
+            o << "  short:" << std::endl;
+            for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
+                auto& v = *itr;
+                o << "    * " << v.px;
+
                 if (!v.short_orders.empty()) {
-                    o << "      short: ";
                     for (auto& order : v.short_orders) {
-                        auto short_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                        o << short_side << " \t" << order.order_data.amount << std::endl;
+                        auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
+                        o << " \t" << long_side << " \t" << order.order_data.amount;
                     }
                 }
+                o << std::endl;
             }
             return o;
         }

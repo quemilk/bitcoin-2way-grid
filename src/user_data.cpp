@@ -139,8 +139,6 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
 
         for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
-            if (cur_price_str == grid.px)
-                continue;
 
             GridStrategy::Grid::Order grid_order;
             grid_order.order_data.px = grid.px;
