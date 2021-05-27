@@ -10,6 +10,7 @@
 #include <deque>
 #include <iomanip>
 
+
 extern std::string g_ticket;
 
 
@@ -21,7 +22,7 @@ public:
         friend class std::ostream& operator << (std::ostream& o, const Balance& t) {
             o << "=====Balance=====" << std::endl;
             for (auto& v : t.balval) {
-                o << "  " << std::left << std::setw(10) << v.first << " cash: " << v.second << std::endl;
+                o << "  " << v.first << " \tcash: " << v.second << std::endl;
             }
             return o;
         }
@@ -47,8 +48,8 @@ public:
 
             for (auto& pos : t.posval) {
                 auto& v = pos.second;
-                o << "  - pos: " << std::setw(10) << pos.first << " " << pos.second.inst_id << "  " << pos.second.inst_type << std::endl;
-                o << std::setw(8) << v.pos_side << std::setw(8) << v.pos << " \t" << v.avg_px << " " << v.ccy << " \t" << toTimeStr(v.utime_msec) << std::endl;
+                o << "  - pos: " << pos.first << " " << pos.second.inst_id << "  " << pos.second.inst_type << std::endl;
+                o << "    " << v.pos_side << " \t" << v.pos << " \t" << v.avg_px << " \t" << v.ccy << "\t" << toTimeStr(v.utime_msec) << std::endl;
             }
             return o;
         }
@@ -103,7 +104,7 @@ public:
 
         friend std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
             o << "=====Grid===== " << g_ticket << std::endl;
-            o << "inject cash : " << t.injected_cash;
+            o << "inject cash: " << t.injected_cash;
             if (t.current_cash) {
                 if (t.current_cash >= t.origin_cash) {
                     o << " +" << t.current_cash - t.origin_cash;

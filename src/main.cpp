@@ -128,15 +128,23 @@ int main(int argc, char** argv) {
             g_user_data.lock();
             make_scope_exit([] { g_user_data.unlock(); });
             std::cout << g_user_data.balance_;
-        } else if (op.substr(0, 11) == "start grid ") {
-            std::vector<std::string> params;
-            splitString(op.substr(11), params, ' ');
-            if (params.size() >= 3) {
-                float cash = strtof(params[0].c_str(), nullptr);
-                int count = strtol(params[1].c_str(), nullptr, 0);
-                float step_ration = strtof(params[2].c_str(), nullptr);
-                g_user_data.startGrid(cash, count, step_ration);
-            }
+        } else if (op == "start grid") {
+            std::cout << "inject cash: ";
+            std::string inject_cash;
+            std::getline(std::cin, inject_cash);
+            trimString(inject_cash);
+
+            std::cout << "grid level (10): ";
+            std::string grid_level;
+            std::getline(std::cin, grid_level);
+            trimString(grid_level);
+            if (grid_level.empty())
+                grid_level = "10";
+
+            g_user_data.startGrid(
+                strtof(inject_cash.c_str(), nullptr),
+                strtol(grid_level.c_str(), nullptr, 0),
+                0.01);
         } else if (op == "clear grid") {
             g_user_data.clearGrid();
         } else if (op == "show grid") {
