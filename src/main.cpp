@@ -141,10 +141,17 @@ int main(int argc, char** argv) {
             if (grid_level.empty())
                 grid_level = "10";
 
+            std::cout << "grid step (0.01): ";
+            std::string grid_step;
+            std::getline(std::cin, grid_step);
+            trimString(grid_step);
+            if (grid_step.empty())
+                grid_step = "0.01";
+
             g_user_data.startGrid(
                 strtof(inject_cash.c_str(), nullptr),
                 strtol(grid_level.c_str(), nullptr, 0),
-                0.01);
+                strtof(grid_step.c_str(), nullptr));
         } else if (op == "clear grid") {
             g_user_data.clearGrid();
         } else if (op == "show grid") {
