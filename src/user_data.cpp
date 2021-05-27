@@ -208,7 +208,7 @@ void UserData::updateGrid() {
                         itr->order_status = OrderStatus::Empty;
                         order_data.amount.clear();
                         if (order_data.side == OrderSide::Buy) {
-                            if (grid_next) {
+                            if (grid_next && next_orders_arr[i]) {
                                 GridStrategy::Grid::Order new_order;
                                 new_order.order_data.clordid = genCliOrdId();
                                 new_order.order_data.px = grid_next->px;
@@ -220,7 +220,7 @@ void UserData::updateGrid() {
                                 grid_orders.push_back(new_order.order_data);
                             }
                         } else if (order_data.side == OrderSide::Sell) {
-                            if (grid_pre) {
+                            if (grid_pre && pre_orders_arr[i]) {
                                 GridStrategy::Grid::Order new_order;
                                 new_order.order_data.clordid = genCliOrdId();
                                 new_order.order_data.px = grid_pre->px;
@@ -228,7 +228,7 @@ void UserData::updateGrid() {
                                 new_order.order_data.side = OrderSide::Buy;
                                 new_order.order_data.pos_side = pos_side;
                                 new_order.order_status = OrderStatus::Live;
-                                pre_orders_arr[i].push_back(new_order);
+                                pre_orders_arr[i]->push_back(new_order);
                                 grid_orders.push_back(new_order.order_data);
                             }
                         }
