@@ -178,15 +178,17 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         }
      }
 
-     auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Cross, grid_orders);
-     g_private_channel->sendCmd(std::move(cmd),
-         [this](Command::Response& resp) {
-             if (resp.code == 0) {
-                 LOG(debug) << "<< order ok.";
-             } else
-                 LOG(error) << "<< order failed. " << resp.msg;
-         }
-     );
+    while (!grid_orders.empty()) {
+        auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Cross, grid_orders);
+        g_private_channel->sendCmd(std::move(cmd),
+            [this](Command::Response& resp) {
+                if (resp.code == 0) {
+                    LOG(debug) << "<< order ok.";
+                } else
+                    LOG(error) << "<< order failed. " << resp.msg;
+            }
+        );
+    }
 }
 
 void UserData::updateGrid() {
@@ -257,7 +259,7 @@ void UserData::updateGrid() {
         }
     }
 
-    if (!grid_orders.empty()) {
+    while (!grid_orders.empty()) {
         auto cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Limit, TradeMode::Cross, grid_orders);
         g_private_channel->sendCmd(std::move(cmd),
             [this](Command::Response& resp) {
@@ -311,11 +313,23 @@ void UserData::clearGrid() {
     Command::Request clear_orders_cmd;
     if (!to_clear_orders.empty())
         clear_orders_cmd = Command::makeMultiOrderReq(g_ticket, OrderType::Market, TradeMode::Cross, to_clear_orders);
+    std::function cmdfunc = [req=std::move(clear_orders_cmd)] () mutable {
+        if (!req.data.empty()) {
+            g_private_channel->sendCmd(std::move(req),
+                [](Command::Response& resp) {
+                    if (resp.code == 0) {
+                        LOG(debug) << "<< order ok.";
+                    } else
+                        LOG(error) << "<< order failed." << resp.data;
+                }
+            );
+        }
+    };
 
     if (!to_cancel_cliordids.empty()) {
         auto cmd = Command::makeCancelMultiOrderReq(g_ticket, to_cancel_cliordids);
         g_private_channel->sendCmd(std::move(cmd),
-            [this, req = clear_orders_cmd] (Command::Response& resp) mutable {
+            [this, next_tocancel = std::move(to_cancel_cliordids), f = std::move(cmdfunc)] (Command::Response& resp) mutable {
                 if (resp.code == 0) {
                     LOG(debug) << "<< cancel ok.";
                 } else

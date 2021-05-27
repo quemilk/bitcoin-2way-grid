@@ -197,7 +197,14 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, OrderTyp
 
     rapidjson::Value args(rapidjson::kArrayType);
 
-    for (auto& order : orders) {
+    int i = 0;
+    while (!orders.empty()) {
+        if (++i > 20)
+            break;
+
+        auto order = orders.front();
+        orders.pop_front();
+
         rapidjson::Value arg(rapidjson::kObjectType);
 
         if (!order.clordid.empty())
@@ -273,7 +280,7 @@ Command::Request Command::makeCancelOrderReq(const std::string& inst_id, const s
     return req;
 }
 
-Command::Request Command::makeCancelMultiOrderReq(const std::string& inst_id, const std::deque<std::string>& cliordids) {
+Command::Request Command::makeCancelMultiOrderReq(const std::string& inst_id, std::deque<std::string>& cliordids) {
     rapidjson::Document doc(rapidjson::kObjectType);
     auto id = generateRandomString(10);
     doc.AddMember("id", id, doc.GetAllocator());
@@ -281,7 +288,14 @@ Command::Request Command::makeCancelMultiOrderReq(const std::string& inst_id, co
 
     rapidjson::Value args(rapidjson::kArrayType);
 
-    for (auto& cliordid : cliordids) {
+    int i = 0;
+    while (!cliordids.empty()) {
+        if (++i > 20)
+            break;
+
+        auto cliordid = cliordids.front();
+        cliordids.pop_front();
+
         rapidjson::Value arg(rapidjson::kObjectType);
         arg.AddMember("instId", inst_id, doc.GetAllocator());
         arg.AddMember("clOrdId", rapidjson::StringRef(cliordid), doc.GetAllocator());
