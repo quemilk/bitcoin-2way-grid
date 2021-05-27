@@ -132,8 +132,7 @@ public:
             }
             o << std::endl;
             o << "inject cash: " << t.option.injected_cash 
-                << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio
-                << ", origin: " << t.origin_cash << std::endl;
+                << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio << std::endl;;
            
             o << "  long:" << std::endl;
             for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
