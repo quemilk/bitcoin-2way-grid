@@ -7,6 +7,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <deque>
 
 class UserData {
 public:
@@ -82,8 +83,8 @@ public:
                 OrderData order_data;
                 OrderStatus order_status = OrderStatus::Empty;
             };
-            Order long_order;
-            Order short_order;
+            std::deque<Order> long_orders;
+            std::deque<Order> short_orders;
         };
 
         std::string order_amount;
@@ -92,10 +93,18 @@ public:
         friend class std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
             o << "=====Grid=====" << std::endl;
             for (auto& v : t.grids) {
-                auto long_side = v.long_order.order_data.amount.empty() ? "  " : toString(v.long_order.order_data.side);
-                auto short_side = v.short_order.order_data.amount.empty() ? "  " : toString(v.short_order.order_data.side);
-                o << "  " << v.px << " \tlong: " << long_side  << " \t" << v.long_order.order_data.amount
-                    << " \tshort: " << short_side << " \t" << v.short_order.order_data.amount << std::endl;
+                o << "  " << v.px;
+
+                o << " \tlong: " << std::endl;;
+                for (auto& order : v.long_orders) {
+                    auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
+                    o << long_side << " \t" << order.order_data.amount << std::endl;;
+                }
+                o << " \tshort: ";
+                for (auto& order : v.short_orders) {
+                    auto short_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
+                    o << short_side << " \t" << order.order_data.amount << std::endl;;
+                }
             }
             return o;
         }

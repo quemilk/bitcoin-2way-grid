@@ -450,19 +450,21 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                             make_scope_exit([] { g_user_data.unlock(); });
 
                             for (auto& grid : g_user_data.grid_strategy_.grids) {
-                                auto orders = { &grid.long_order, &grid.short_order };
-                                for (auto order : orders) {
-                                    if (order->order_data.clordid == clordid) {
-                                        if (state == "canceled") {
-                                            order->order_status = OrderStatus::Canceled;
-                                            order->order_data.amount.clear();
-                                            order->order_data.clordid.clear();
-                                        } else if (state == "filled") {
-                                            order->order_status = OrderStatus::Filled;
-                                        } else if (state == "partially_filled") {
-                                            order->order_status = OrderStatus::PartiallyFilled;
-                                        } else if (state == "live") {
-                                            order->order_status = OrderStatus::Live;
+                                auto orders_arr = { &grid.long_orders, &grid.short_orders };
+                                for (auto orders : orders_arr) {
+                                    for (auto& order : *orders) {
+                                        if (order.order_data.clordid == clordid) {
+                                            if (state == "canceled") {
+                                                order.order_status = OrderStatus::Canceled;
+                                                order.order_data.amount.clear();
+                                                order.order_data.clordid.clear();
+                                            } else if (state == "filled") {
+                                                order.order_status = OrderStatus::Filled;
+                                            } else if (state == "partially_filled") {
+                                                order.order_status = OrderStatus::PartiallyFilled;
+                                            } else if (state == "live") {
+                                                order.order_status = OrderStatus::Live;
+                                            }
                                         }
                                     }
                                 }

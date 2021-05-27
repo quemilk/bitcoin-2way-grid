@@ -127,41 +127,47 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
         auto requred_cash = ct_val * total_px * 2;
         if (requred_cash >= injected_cash) {
-            LOG(error) << "no enough cash. require at least " << floatToString(requred_cash, tick_sz);
+            LOG(error) << "no enough cash. require at least! " << floatToString(requred_cash, tick_sz);
             return;
         }
 
         grid_strategy_.order_amount = floatToString(injected_cash / total_px / ct_val, itrproduct->second.lot_sz);
+        if (grid_strategy_.order_amount.empty()) {
+            LOG(error) << "invalid amount!";
+            return;
+        }
 
         for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
             if (cur_price_str == grid.px)
                 continue;
 
-            OrderData order_data;
-            order_data.px = grid.px;
-            order_data.amount = grid_strategy_.order_amount;
+            GridStrategy::Grid::Order grid_order;
+            grid_order.order_data.px = grid.px;
+            grid_order.order_data.amount = grid_strategy_.order_amount;
             if (i < grid_strategy_.grids.size() - 1) {
-                order_data.clordid = generateRandomString(10);
-                order_data.side = OrderSide::Buy;
-                order_data.pos_side = OrderPosSide::Long;
-                grid.long_order.order_data = order_data;
-                grid.long_order.order_status = OrderStatus::Live;
+                grid_order.order_data.clordid = genCliOrdId();
+                grid_order.order_data.side = OrderSide::Buy;
+                grid_order.order_data.pos_side = OrderPosSide::Long;
+                grid_order.order_status = OrderStatus::Live;                
+                grid.long_orders.push_back(grid_order);
             }
             if (i > 0) {
-                order_data.clordid = generateRandomString(10);
-                order_data.side = OrderSide::Sell;
-                order_data.pos_side = OrderPosSide::Short;
-                grid.short_order.order_data = order_data;
-                grid.short_order.order_status = OrderStatus::Live;
+                grid_order.order_data.clordid = genCliOrdId();
+                grid_order.order_data.side = OrderSide::Sell;
+                grid_order.order_data.pos_side = OrderPosSide::Short;
+                grid_order.order_status = OrderStatus::Live;
+                grid.short_orders.push_back(grid_order);
             }
         }
 
         for (auto& grid : grid_strategy_.grids) {
-            if (!grid.long_order.order_data.amount.empty())
-                grid_orders.push_back(grid.long_order.order_data);
-            if (!grid.short_order.order_data.amount.empty())
-                grid_orders.push_back(grid.short_order.order_data);
+            for (auto& order : grid.long_orders)
+                if (!order.order_data.amount.empty())
+                    grid_orders.push_back(order.order_data);
+            for (auto& order : grid.short_orders)
+                if (!order.order_data.amount.empty())
+                    grid_orders.push_back(order.order_data);
         }
      }
 
@@ -187,75 +193,87 @@ void UserData::updateGrid() {
             auto grid_next = (i < grid_strategy_.grids.size() - 1) ? &grid_strategy_.grids[i + 1] : nullptr;
             auto grid_pre = (i > 0) ? &grid_strategy_.grids[i - 1] : nullptr;
 
-            if (grid.long_order.order_status == OrderStatus::Filled) {
-                grid.long_order.order_status = OrderStatus::Empty;
-                grid.long_order.order_data.amount.clear();
-                if (grid.long_order.order_data.side == OrderSide::Buy) {
-                    if (grid_next) {
-                        if (grid_next->long_order.order_data.amount.empty()) {
-                            OrderData order_data;
-                            order_data.clordid = generateRandomString(10);
-                            order_data.px = grid_next->px;
-                            order_data.amount = grid_strategy_.order_amount;
-                            order_data.side = OrderSide::Sell;
-                            order_data.pos_side = OrderPosSide::Long;
-                            grid_next->long_order.order_data = order_data;
-                            grid_next->long_order.order_status = OrderStatus::Live;
-                            grid_orders.push_back(order_data);
+            for (auto itr = grid.long_orders.begin(); itr != grid.long_orders.end(); ) {
+                auto& order_data = itr->order_data;
+
+                if (itr->order_status == OrderStatus::Filled) {
+                    itr->order_status = OrderStatus::Empty;
+                    order_data.amount.clear();
+                    if (order_data.side == OrderSide::Buy) {
+                        if (grid_next) {
+                            GridStrategy::Grid::Order new_order;
+                            new_order.order_data.clordid = genCliOrdId();
+                            new_order.order_data.px = grid_next->px;
+                            new_order.order_data.amount = grid_strategy_.order_amount;
+                            new_order.order_data.side = OrderSide::Sell;
+                            new_order.order_data.pos_side = OrderPosSide::Long;
+                            new_order.order_status = OrderStatus::Live;
+                            grid_next->long_orders.push_back(new_order);
+                            grid_orders.push_back(new_order.order_data);
                         }
-                    }
-                } else if (grid.long_order.order_data.side == OrderSide::Sell) {
-                    if (grid_pre) {
-                        if (grid_pre->long_order.order_data.amount.empty()) {
-                            OrderData order_data;
-                            order_data.clordid = generateRandomString(10);
-                            order_data.px = grid_pre->px;
-                            order_data.amount = grid_strategy_.order_amount;
-                            order_data.side = OrderSide::Buy;
-                            order_data.pos_side = OrderPosSide::Long;
-                            grid_pre->long_order.order_data = order_data;
-                            grid_pre->long_order.order_status = OrderStatus::Live;
-                            grid_orders.push_back(order_data);
+                    } else if (order_data.side == OrderSide::Sell) {
+                        if (grid_pre) {
+                            GridStrategy::Grid::Order new_order;
+                            new_order.order_data.clordid = genCliOrdId();
+                            new_order.order_data.px = grid_pre->px;
+                            new_order.order_data.amount = grid_strategy_.order_amount;
+                            new_order.order_data.side = OrderSide::Buy;
+                            new_order.order_data.pos_side = OrderPosSide::Long;
+                            new_order.order_status = OrderStatus::Live;
+                            grid_pre->long_orders.push_back(new_order);
+                            grid_orders.push_back(new_order.order_data);
                         }
                     }
                 }
+                
+                if (itr->order_status == OrderStatus::Canceled || itr->order_status == OrderStatus::Empty) {
+                    itr = grid.long_orders.erase(itr);
+                } else
+                    ++itr;
             }
 
-            if (grid.short_order.order_status == OrderStatus::Filled) {
-                grid.short_order.order_status = OrderStatus::Empty;
-                grid.short_order.order_data.amount.clear();
-                if (grid.short_order.order_data.side == OrderSide::Buy) {
-                    if (grid_next) {
-                        if (grid_next->short_order.order_data.amount.empty()) {
-                            OrderData order_data;
-                            order_data.clordid = generateRandomString(10);
-                            order_data.px = grid_next->px;
-                            order_data.amount = grid_strategy_.order_amount;
-                            order_data.side = OrderSide::Sell;
-                            order_data.pos_side = OrderPosSide::Short;
-                            grid_next->short_order.order_data = order_data;
-                            grid_next->short_order.order_status = OrderStatus::Live;
-                            grid_orders.push_back(order_data);
+            for (auto itr = grid.short_orders.begin(); itr != grid.short_orders.end(); ) {
+                auto& order_data = itr->order_data;
+                if (itr->order_status != OrderStatus::Canceled) {
+                    itr = grid.short_orders.erase(itr);
+                    continue;
+                }
+
+                if (itr->order_status == OrderStatus::Filled) {
+                    itr->order_status = OrderStatus::Empty;
+                    order_data.amount.clear();
+                    if (order_data.side == OrderSide::Buy) {
+                        if (grid_next) {
+                            GridStrategy::Grid::Order new_order;
+                            new_order.order_data.clordid = genCliOrdId();
+                            new_order.order_data.px = grid_next->px;
+                            new_order.order_data.amount = grid_strategy_.order_amount;
+                            new_order.order_data.side = OrderSide::Sell;
+                            new_order.order_data.pos_side = OrderPosSide::Short;
+                            new_order.order_status = OrderStatus::Live;
+                            grid_next->short_orders.push_back(new_order);
+                            grid_orders.push_back(new_order.order_data);
                         }
-                    }
-                } else if (grid.short_order.order_data.side == OrderSide::Sell) {
-                    if (grid_pre) {
-                        if (grid_pre->short_order.order_data.amount.empty()) {
-                            OrderData order_data;
-                            order_data.clordid = generateRandomString(10);
-                            order_data.px = grid_pre->px;
-                            order_data.amount = grid_strategy_.order_amount;
-                            order_data.side = OrderSide::Buy;
-                            order_data.pos_side = OrderPosSide::Short;
-                            grid_pre->short_order.order_data = order_data;
-                            grid_pre->short_order.order_status = OrderStatus::Live;
-                            grid_orders.push_back(order_data);
+                    } else if (order_data.side == OrderSide::Sell) {
+                        if (grid_pre) {
+                            GridStrategy::Grid::Order new_order;
+                            new_order.order_data.clordid = genCliOrdId();
+                            new_order.order_data.px = grid_pre->px;
+                            new_order.order_data.amount = grid_strategy_.order_amount;
+                            new_order.order_data.side = OrderSide::Buy;
+                            new_order.order_data.pos_side = OrderPosSide::Short;
+                            new_order.order_status = OrderStatus::Live;
+                            grid_pre->short_orders.push_back(new_order);
+                            grid_orders.push_back(new_order.order_data);
                         }
                     }
                 }
+
+                if (itr->order_status == OrderStatus::Canceled || itr->order_status == OrderStatus::Empty) {
+                    itr = grid.short_orders.erase(itr);
+                } else
+                    ++itr;
             }
-
-
         }
     }
 

@@ -17,3 +17,5 @@ void splitString(const string& v, std::vector<string>& out, char delim, size_t m
 inline std::string toString(OrderSide side) {
     return (side == OrderSide::Buy) ? "buy" : "sell";
 }
+
+std::string genCliOrdId();

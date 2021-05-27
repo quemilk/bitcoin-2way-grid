@@ -3,7 +3,7 @@
 #include <openssl/hmac.h>
 #include <random>
 #include <array>
-
+#include <atomic>
 
 std::string calcHmacSHA256(const std::string& msg, const std::string& decoded_key) {
     std::array<unsigned char, EVP_MAX_MD_SIZE> hash;
@@ -84,4 +84,10 @@ void splitString(const string& v, std::vector<string>& out, char delim, size_t m
         if (pos == string::npos)
             break;
     }
+}
+
+std::string genCliOrdId() {
+    static auto k_uni = generateRandomString(8);
+    static std::atomic_int k_inc{ 0 };
+    return k_uni + std::to_string(++k_inc);
 }
