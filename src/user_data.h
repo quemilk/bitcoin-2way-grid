@@ -93,28 +93,44 @@ public:
             std::deque<Order> short_orders;
         };
 
+        struct Option {
+            float injected_cash = 0;
+            int grid_count = 10;
+            float step_ratio = 0.01;
+        };
+
+        Option option;
+
         std::string order_amount;
         std::vector<Grid> grids;
 
         std::string ccy;
         float origin_cash = 0;
+        float start_cash = 0;
         float current_cash = 0;
 
-        float injected_cash = 0;
-
         friend std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
-            o << "=====Grid===== " << g_ticket << std::endl;
-            o << "inject cash: " << t.injected_cash;
+            o << "=====Grid===== " << g_ticket;
             if (t.current_cash) {
-                if (t.current_cash >= t.origin_cash) {
-                    o << " +" << t.current_cash - t.origin_cash;
+                if (t.current_cash >= t.start_cash) {
+                    o << " +" << t.current_cash - t.start_cash;
                 } else {
-                    o << " -" << t.origin_cash - t.current_cash;
+                    o << " -" << t.start_cash - t.current_cash;
                 }
-                o << " " << t.ccy;
+
+                if (t.start_cash != t.origin_cash) {
+                    o << " " << t.ccy << " \ttotal: ";
+                    if (t.current_cash >= t.origin_cash) {
+                        o << " +" << t.current_cash - t.origin_cash;
+                    } else {
+                        o << " -" << t.origin_cash - t.current_cash;
+                    }
+                    o << " " << t.ccy;
+                }
             }
             o << std::endl;
-
+            o << "inject cash: " << t.option.injected_cash << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio;
+           
             o << "  long:" << std::endl;
             for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
                 auto& v = *itr;
@@ -147,7 +163,7 @@ public:
     };
 
 public:
-    void startGrid(float injected_cash, int grid_count, float step_ratio);
+    void startGrid(GridStrategy::Option option);
     void updateGrid();
     void clearGrid();
 

@@ -40,20 +40,25 @@ static std::string floatToString(float f, const std::string& tick_sz) {
 }
 
 
-void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) {
-    if (grid_count <= 0 || step_ratio <= 0 || step_ratio >= 1.0f) {
+void UserData::startGrid(GridStrategy::Option option) {
+    if (option.grid_count <= 0 || option.step_ratio <= 0 || option.step_ratio >= 1.0f) {
         LOG(error) << "invalid param!";
         return;
     }
 
-    LOG(info) << "grid starting: injected_cash=" << injected_cash << " grid_count=" << grid_count << " step_ratio=" << step_ratio << " " << g_ticket;
+    LOG(info) << "grid starting: injected_cash=" << option.injected_cash
+        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio << " " << g_ticket;
 
     std::deque<OrderData> grid_orders;
     {
         g_user_data.lock();
         make_scope_exit([] { g_user_data.unlock(); });
 
-        grid_strategy_.injected_cash = injected_cash;
+        if (!grid_strategy_.grids.empty()) {
+            LOG(error, "grid already running");
+            return;
+        }
+        grid_strategy_.option = option;
 
         auto itrproduct = public_product_info_.data.find(g_ticket);
         if (itrproduct == public_product_info_.data.end()) {
@@ -76,12 +81,14 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         auto cash = itrbal->second;
         auto cashval = strtof(cash.c_str(), nullptr);
         LOG(info) << "available cash: " << cash << " " << ccy;
-        if (cashval < injected_cash) {
+        if (cashval < option.injected_cash) {
             LOG(error) << "no enough cash!";
             return;
         }
         grid_strategy_.ccy = ccy;
-        grid_strategy_.origin_cash = cashval;
+        if (0 == grid_strategy_.origin_cash)
+            grid_strategy_.origin_cash = cashval;
+        grid_strategy_.start_cash = cashval;
         grid_strategy_.current_cash = 0;
 
         auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
@@ -101,13 +108,13 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         auto tick_sz = itrproduct->second.tick_sz;
 
         grid_strategy_.grids.clear();
-        grid_strategy_.grids.reserve(grid_count + 1);
+        grid_strategy_.grids.reserve(option.grid_count + 1);
         float px = cur_price;
         float total_px = 0;
 
         std::deque<std::string> d0;
-        for (int i = 0; i < grid_count / 2; ++i) {
-            px = px * (1.0f - step_ratio);
+        for (int i = 0; i < option.grid_count / 2; ++i) {
+            px = px * (1.0f - option.step_ratio);
             total_px += px;
             d0.push_back(floatToString(px, tick_sz));
         }
@@ -125,8 +132,8 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
         grid.px = cur_price_str;
         grid_strategy_.grids.push_back(grid);
 
-        for (int i = grid_count / 2; i < grid_count; ++i) {
-            px = px * (1.0f + step_ratio);
+        for (int i = option.grid_count / 2; i < option.grid_count; ++i) {
+            px = px * (1.0f + option.step_ratio);
             total_px += px;
             GridStrategy::Grid grid;
             grid.px = floatToString(px, tick_sz);
@@ -135,12 +142,12 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
 
         auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
         auto requred_cash = ct_val * total_px * 2;
-        if (requred_cash >= injected_cash) {
+        if (requred_cash >= option.injected_cash) {
             LOG(error) << "no enough cash. require at least! " << floatToString(requred_cash, tick_sz);
             return;
         }
 
-        grid_strategy_.order_amount = floatToString(injected_cash / total_px / ct_val, itrproduct->second.lot_sz);
+        grid_strategy_.order_amount = floatToString(option.injected_cash / total_px / ct_val, itrproduct->second.lot_sz);
         if (grid_strategy_.order_amount.empty()) {
             LOG(error) << "invalid amount!";
             return;
@@ -204,6 +211,7 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
 
 void UserData::updateGrid() {
     std::deque<OrderData> grid_orders;
+    int sell_count = 0, buy_count = 0;
     {
         g_user_data.lock();
         make_scope_exit([] { g_user_data.unlock(); });
@@ -225,6 +233,10 @@ void UserData::updateGrid() {
 
                 for (auto itr = orders.begin(); itr != orders.end(); ) {
                     auto& order_data = itr->order_data;
+                    if (order_data.side == OrderSide::Buy)
+                        ++buy_count;
+                    else if (order_data.side == OrderSide::Sell)
+                        ++sell_count;
 
                     if (itr->order_status == OrderStatus::Filled) {
                         itr->order_status = OrderStatus::Empty;
@@ -268,6 +280,20 @@ void UserData::updateGrid() {
         if (itrbal != balance_.balval.end()) {
             grid_strategy_.current_cash = strtof(itrbal->second.c_str(), nullptr);
         }
+    }
+
+    if (buy_count == 0 && sell_count == 0) {
+        LOG(warning) << "WARNING!!! exeed to grid limit. closeout the grid.";
+        clearGrid();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        LOG(warning) << "WARNING!!! grid will restart on 5min.";
+        std::thread thread(
+            [] {
+                std::this_thread::sleep_for(std::chrono::minutes(5));
+                g_user_data.startGrid(g_user_data.grid_strategy_.option);
+            }
+        );
+        return;
     }
 
     while (!grid_orders.empty()) {

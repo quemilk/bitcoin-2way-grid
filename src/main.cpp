@@ -148,10 +148,12 @@ int main(int argc, char** argv) {
             if (grid_step.empty())
                 grid_step = "0.01";
 
-            g_user_data.startGrid(
-                strtof(inject_cash.c_str(), nullptr),
-                strtol(grid_level.c_str(), nullptr, 0),
-                strtof(grid_step.c_str(), nullptr));
+            UserData::GridStrategy::Option option;
+            option.injected_cash = strtof(inject_cash.c_str(), nullptr);
+            option.grid_count = strtol(grid_level.c_str(), nullptr, 0);
+            option.step_ratio = strtof(grid_step.c_str(), nullptr);
+
+            g_user_data.startGrid(option);
         } else if (op == "clear grid") {
             g_user_data.clearGrid();
         } else if (op == "show grid") {
