@@ -65,7 +65,6 @@ public:
     struct ProductInfo {
         struct Info {
             std::string inst_id;
-            std::string inst_type;
             std::string lot_sz;
             std::string min_sz;
             std::string tick_sz;

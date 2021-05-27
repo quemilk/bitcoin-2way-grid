@@ -61,11 +61,6 @@ void UserData::startGrid(float injected_cash, int grid_count, float step_ratio) 
             return;
         }
 
-        if (itrproduct->second.inst_type != "SWAP") {
-            LOG(error) << "only support SWAP type!";
-            return;
-        }
-
         auto ccy = itrproduct->second.settle_ccy;
 
         auto itrbal = balance_.balval.find(ccy);
