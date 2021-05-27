@@ -40,6 +40,7 @@ public:
 
     // 撤单
     static Request makeCancelOrderReq(const std::string& inst_id, const std::string& cliordid, const std::string& ordid);
+    static Request makeCancelMultiOrderReq(const std::string& inst_id, const std::deque<std::string>& cliordids);
 
 
     // Public

@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
                 g_user_data.startGrid(cash, count, step_ration);
             }
         } else if (op == "clear grid") {
-            g_user_data.clearGrid();
+            // TODO  sell all
         } else if (op == "show grid") {
             g_user_data.lock();
             make_scope_exit([] { g_user_data.unlock(); });

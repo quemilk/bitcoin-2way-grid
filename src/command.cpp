@@ -273,6 +273,30 @@ Command::Request Command::makeCancelOrderReq(const std::string& inst_id, const s
     return req;
 }
 
+Command::Request Command::makeCancelMultiOrderReq(const std::string& inst_id, const std::deque<std::string>& cliordids) {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    auto id = generateRandomString(10);
+    doc.AddMember("id", id, doc.GetAllocator());
+    doc.AddMember("op", "batch-cancel-orders", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+
+    for (auto& cliordid : cliordids) {
+        rapidjson::Value arg(rapidjson::kObjectType);
+        arg.AddMember("instId", inst_id, doc.GetAllocator());
+        arg.AddMember("clOrdId", rapidjson::StringRef(cliordid), doc.GetAllocator());
+        args.PushBack(arg, doc.GetAllocator());
+    }
+
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    Request req;
+    req.id = id;
+    req.op = "batch-cancel-orders";
+    req.data = toString(doc);
+    return req;
+}
+
 Command::Request Command::makeSubscribeInstrumentsChannel(const std::string& inst_type) {
     rapidjson::Document doc(rapidjson::kObjectType);
     doc.AddMember("op", "subscribe", doc.GetAllocator());

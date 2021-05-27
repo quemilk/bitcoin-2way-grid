@@ -128,6 +128,7 @@ public:
 public:
     void startGrid(float injected_cash, int grid_count, float step_ratio);
     void updateGrid();
+    void clearGrid();
 
 public:
     void lock() {

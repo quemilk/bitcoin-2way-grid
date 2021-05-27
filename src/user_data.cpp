@@ -261,3 +261,9 @@ void UserData::updateGrid() {
     }
 }
 
+void UserData::clearGrid() {
+    {
+        g_user_data.lock();
+        make_scope_exit([] { g_user_data.unlock(); });
+    }
+}
