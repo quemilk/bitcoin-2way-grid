@@ -317,9 +317,8 @@ void UserData::clearGrid() {
                     }
                 }
             }
-
-
         }
+        grid_strategy_.grids.clear();
     }
 
     struct DoneTask {
