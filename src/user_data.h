@@ -92,18 +92,19 @@ public:
 
         friend class std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
             o << "=====Grid=====" << std::endl;
-            for (auto& v : t.grids) {
-                o << "  " << v.px;
+            for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
+                auto& v = *itr;
+                o << "  - " << v.px << std::endl;
 
-                o << " \tlong: " << std::endl;;
+                o << "      long: " << std::endl;
                 for (auto& order : v.long_orders) {
                     auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                    o << long_side << " \t" << order.order_data.amount << std::endl;;
+                    o << long_side << " \t" << order.order_data.amount << std::endl;
                 }
-                o << " \tshort: ";
+                o << "      short: ";
                 for (auto& order : v.short_orders) {
                     auto short_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                    o << short_side << " \t" << order.order_data.amount << std::endl;;
+                    o << short_side << " \t" << order.order_data.amount << std::endl;
                 }
             }
             return o;
