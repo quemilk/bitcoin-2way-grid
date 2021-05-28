@@ -136,8 +136,8 @@ void UserData::startGrid(GridStrategy::Option option) {
         float total_sum = 0;
 
         float a = 0;
-        if (option.step_ratio < 2 && option.grid_count >= 4) {
-            a = sqrt(2.0f - option.step_ratio) / (option.grid_count / 2 - 1);
+        if (option.step_ratio < 0.02f && option.grid_count >= 4) {
+            a = (0.02f - option.step_ratio) / (option.grid_count / 2 - 1) / (option.grid_count / 2 - 1);
         }
 
         for (int i = 0; i < option.grid_count / 2; ++i) {
@@ -185,11 +185,11 @@ void UserData::startGrid(GridStrategy::Option option) {
         for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
             grid.long_orders.order_amount = grid.short_orders.order_amount = amount;
-            if (i < grid_strategy_.grids.size() / 4 || i > grid_strategy_.grids.size() * 3 / 4) {
+            if (i <= grid_strategy_.grids.size() / 4 || i >= grid_strategy_.grids.size() * 3 / 4) {
                 auto n = strtof(amount.c_str(), nullptr) / 2;
                 if (n < min_sz_v)
                     n = min_sz_v;
-                if (i < grid_strategy_.grids.size() / 4)
+                if (i <= grid_strategy_.grids.size() / 4)
                     grid.short_orders.order_amount = floatToString(n, lot_sz);
                 else
                     grid.long_orders.order_amount = floatToString(n, lot_sz);
