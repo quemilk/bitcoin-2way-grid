@@ -191,13 +191,10 @@ void WSSession::read(std::string* out_data) {
 void WSSession::async_read(std::function<void(std::string&)> func) {
     ws_.async_read(
         buffer_,
-        [func, this](beast::error_code ec, size_t) {
+        [func, this](beast::error_code, size_t) {
             std::string str = beast::buffers_to_string(buffer_.data());
             buffer_.clear();
-            if (ec)
-                func(std::string());
-            else if (!str.empty())
-                func(str);
+            func(str);
         });
 }
 

@@ -470,7 +470,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         if (!v.long_orders.empty()) {
             for (auto& order : v.long_orders) {
                 auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                o << " \t" << long_side << " \t" << order.order_data.amount << " \t" << calcDiff(order.fill_px, cur_px_str, t.tick_sz);
+                o << " \t" << long_side << " \t" << order.order_data.amount << " \t" << calcDiff(cur_px_str, order.fill_px, t.tick_sz);
             }
         }
         o << std::endl;
