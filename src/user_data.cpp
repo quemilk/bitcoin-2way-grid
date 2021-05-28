@@ -135,8 +135,14 @@ void UserData::startGrid(GridStrategy::Option option) {
         std::deque<std::string> d0;
         float total_sum = 0;
 
+        float a = 0;
+        if (option.step_ratio < 2 && option.grid_count >= 4) {
+            a = sqrt(2.0f - option.step_ratio) / (option.grid_count / 2 - 1);
+        }
+
         for (int i = 0; i < option.grid_count / 2; ++i) {
-            px = px * (1.0f - option.step_ratio);
+            auto f = option.step_ratio + (option.grid_count / 2 - 1 - i) * (option.grid_count / 2 - 1 - i) * a;
+            px = px * (1.0f - f);
             auto px_str = floatToString(px, tick_sz);
             auto fixed_px = strtof(px_str.c_str(), nullptr);
             total_sum += lot_sz_v * fixed_px;
@@ -157,7 +163,8 @@ void UserData::startGrid(GridStrategy::Option option) {
         grid_strategy_.grids.push_back(grid);
 
         for (int i = option.grid_count / 2; i < option.grid_count; ++i) {
-            px = px * (1.0f + option.step_ratio);
+            auto f = option.step_ratio + (i - option.grid_count / 2) * (i - option.grid_count / 2) * a;
+            px = px * (1.0f + f);
             auto px_str = floatToString(px, tick_sz);
             auto fixed_px = strtof(px_str.c_str(), nullptr);
             total_sum += lot_sz_v * fixed_px;
