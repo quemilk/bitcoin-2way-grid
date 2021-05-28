@@ -141,7 +141,7 @@ void UserData::startGrid(GridStrategy::Option option) {
         }
 
         for (int i = 0; i < option.grid_count / 2; ++i) {
-            auto f = option.step_ratio + (option.grid_count / 2 - 1 - i) * (option.grid_count / 2 - 1 - i) * a;
+            auto f = option.step_ratio + i * i * a;
             px = px * (1.0f - f);
             auto px_str = floatToString(px, tick_sz);
             auto fixed_px = strtof(px_str.c_str(), nullptr);
