@@ -115,6 +115,8 @@ public:
     void updateGrid();
     void clearGrid();
 
+    std::string currentPrice();
+
 public:
     void lock() {
         mutex_.lock();

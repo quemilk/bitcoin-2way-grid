@@ -400,6 +400,16 @@ void UserData::clearGrid() {
     }
 }
 
+std::string UserData::currentPrice() {
+    g_user_data.lock();
+    auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+
+    auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
+    if (itrtrades != public_trades_info_.trades_data.end())
+        return itrtrades->second.px;
+    return std::string();
+}
+
 std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
     o << "=====Grid=====" << std::endl;
     o << g_ticket;
