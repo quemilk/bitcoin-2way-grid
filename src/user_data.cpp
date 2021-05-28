@@ -178,10 +178,14 @@ void UserData::startGrid(GridStrategy::Option option) {
         for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
             grid.long_orders.order_amount = grid.short_orders.order_amount = amount;
-            if (i < grid_strategy_.grids.size() / 4) {
-                
-            } else if (i > grid_strategy_.grids.size() * 3 / 4) {
-                // TODO
+            if (i < grid_strategy_.grids.size() / 4 || i > grid_strategy_.grids.size() * 3 / 4) {
+                auto n = strtof(amount.c_str(), nullptr) / 2;
+                if (n < min_sz_v)
+                    n = min_sz_v;
+                if (i < grid_strategy_.grids.size() / 4)
+                    grid.short_orders.order_amount = floatToString(n, lot_sz);
+                else
+                    grid.long_orders.order_amount = floatToString(n, lot_sz);
             }
         }
 
