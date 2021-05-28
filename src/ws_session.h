@@ -34,7 +34,7 @@ public:
 
     void send(const std::string& data);
     void read(std::string* out_data);
-    void async_read(std::function<void(std::string&)> func);
+    bool async_read(std::function<void(std::string&)> func);
     void ping();
 
 private:
@@ -65,8 +65,10 @@ private:
     socks::uri socks_url_;
     int socks_version_;
 
-    std::mutex cond_mutex_;
+    std::mutex mutex_;
     beast::error_code ec_;
     bool connected_ = false;
     std::condition_variable conn_condition_;
+
+    bool async_read_called_ = false;
 };

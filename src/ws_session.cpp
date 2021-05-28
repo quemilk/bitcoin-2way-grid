@@ -166,13 +166,13 @@ void WSSession::on_handshake(beast::error_code ec) {
     if (ec)
         return on_fail(ec, "handshake");
 
-    std::unique_lock lock(cond_mutex_);
+    std::unique_lock lock(mutex_);
     connected_ = true;
     conn_condition_.notify_one();
 }
 
 bool WSSession::waitUtilConnected(std::chrono::seconds sec) {
-    std::unique_lock lock(cond_mutex_);
+    std::unique_lock lock(mutex_);
     if (ec_)
         return false;
     conn_condition_.wait_for(lock, sec);
@@ -184,14 +184,27 @@ void WSSession::send(const std::string& data) {
 }
 
 void WSSession::read(std::string* out_data) {
-    ws_.read(buffer_);
-    *out_data = beast::buffers_to_string(buffer_.data());
+    beast::flat_buffer buffer;
+    ws_.read(buffer);
+    *out_data = beast::buffers_to_string(buffer.data());
 }
 
-void WSSession::async_read(std::function<void(std::string&)> func) {
+bool WSSession::async_read(std::function<void(std::string&)> func) {
+    {
+        std::unique_lock lock(mutex_);
+        if (async_read_called_)
+            return false;
+        async_read_called_ = true;
+    }
+
     ws_.async_read(
         buffer_,
         [func, this](beast::error_code ec, size_t) {
+            {
+                std::unique_lock lock(mutex_);
+                async_read_called_ = false;
+            }
+
             std::string str = beast::buffers_to_string(buffer_.data());
             buffer_.clear();
             if (ec)
@@ -205,7 +218,7 @@ void WSSession::on_fail(beast::error_code ec, char const* what) {
     auto msg = ec.message();
     LOG(error) << what << ": " << msg;
 
-    std::unique_lock lock(cond_mutex_);
+    std::unique_lock lock(mutex_);
     ec_ = ec;
     conn_condition_.notify_one();
 }

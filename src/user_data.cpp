@@ -497,7 +497,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
 
     auto cur_px_str = g_user_data.currentPrice();
     if (!cur_px_str.empty())
-        o << "current: " << cur_px_str << " \t" << t.option.lever << "x" << std::endl;
+        o << "lever: " << t.option.lever << "x \tcurrent: " << cur_px_str << std::endl;
 
     o << "  long:" << std::endl;
     for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {

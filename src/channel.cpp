@@ -29,36 +29,32 @@ void Channel::run() {
             if (ws_session_->waitUtilConnected(std::chrono::seconds(10))) {
                 this->onConnected();
 
-                ws_session_->async_read(
-                    [&](std::string& data) {
-                        inq_.push(std::move(data));
-                    }
-                );
-
                 auto last_read = std::chrono::steady_clock::now();
                 for (;;) {
+                    ws_session_->async_read(
+                        [&](std::string& data) {
+                            inq_.push(std::move(data));
+                        }
+                    );
+
                     Cmd cmd;
-                    while (outq_.pop(&cmd, std::chrono::milliseconds(100))) {
+                    while (outq_.pop(&cmd, std::chrono::milliseconds(10))) {
                         ws_session_->send(cmd.req.data);
                         waiting_resp_q_.emplace_back(std::move(cmd));
                     }
 
                     std::string indata;
-                    if (inq_.tryPop(&indata)) {
+                    while (inq_.tryPop(&indata)) {
                         last_read = std::chrono::steady_clock::now();
                         if (indata.empty())
                             throw std::runtime_error("connection closed!");
 
                         parseIncomeData(indata);
-
-                        ws_session_->async_read(
-                            [&](std::string& data) {
-                                inq_.push(std::move(data));
-                            }
-                        );
                     }
 
-                    if (std::chrono::steady_clock::now() - last_read > std::chrono::seconds(15)) {
+                    auto now = std::chrono::steady_clock::now();
+                    if (now - last_read > std::chrono::seconds(15)) {
+                        last_read = now;
                         ws_session_->ping();
                         // TODO check pong
                     }
