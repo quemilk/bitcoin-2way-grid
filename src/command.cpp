@@ -421,7 +421,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
 
                         if (itr->HasMember("balData")) {
                             g_user_data.lock();
-                            make_scope_exit([] { g_user_data.unlock(); });
+                            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
                             
                             auto& bal_data = (*itr)["balData"];
                             for (auto balitr = bal_data.Begin(); balitr != bal_data.End(); ++balitr) {
@@ -433,7 +433,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
 
                         if (itr->HasMember("posData")) {
                             g_user_data.lock();
-                            make_scope_exit([] { g_user_data.unlock(); });
+                            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
                             auto& pos_data = (*itr)["posData"];
                             for (auto positr = pos_data.Begin(); positr != pos_data.End(); ++positr) {
@@ -487,7 +487,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
 
                         if (!clordid.empty()) {
                             g_user_data.lock();
-                            make_scope_exit([] { g_user_data.unlock(); });
+                            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
                             for (auto& grid : g_user_data.grid_strategy_.grids) {
                                 auto orders_arr = { &grid.long_orders, &grid.short_orders };
@@ -524,7 +524,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                     LOG(debug) << o.str();
                 } else if (channel == "trades") {
                     g_user_data.lock();
-                    make_scope_exit([] { g_user_data.unlock(); });
+                    auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
                     for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
                         UserData::PublicTradesInfo::Info info;
@@ -543,7 +543,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                     }
                 } else if (channel == "instruments") {
                     g_user_data.lock();
-                    make_scope_exit([] { g_user_data.unlock(); });
+                    auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
                     for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
                         UserData::ProductInfo::Info info;

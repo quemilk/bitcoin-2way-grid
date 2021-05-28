@@ -52,7 +52,7 @@ void UserData::startGrid(GridStrategy::Option option) {
     std::deque<OrderData> grid_orders;
     {
         g_user_data.lock();
-        make_scope_exit([] { g_user_data.unlock(); });
+        auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
         if (!grid_strategy_.grids.empty()) {
             LOG(error, "grid already running");
@@ -214,15 +214,17 @@ void UserData::updateGrid() {
     int sell_count = 0, buy_count = 0;
     {
         g_user_data.lock();
-        make_scope_exit([] { g_user_data.unlock(); });
+        auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
-        if (grid_strategy_.grids.empty())
+        if (grid_strategy_.grids.empty()) {
             sell_count = buy_count = -1;
+            return;
+        }
 
-        for (size_t i=0; i < grid_strategy_.grids.size(); ++i) {
-            auto& grid = grid_strategy_.grids[i];
-            auto grid_next = (i < grid_strategy_.grids.size() - 1) ? &grid_strategy_.grids[i + 1] : nullptr;
-            auto grid_pre = (i > 0) ? &grid_strategy_.grids[i - 1] : nullptr;
+        for (size_t igrid=0; igrid < grid_strategy_.grids.size(); ++igrid) {
+            auto& grid = grid_strategy_.grids[igrid];
+            auto grid_next = (igrid < grid_strategy_.grids.size() - 1) ? &grid_strategy_.grids[igrid + 1] : nullptr;
+            auto grid_pre = (igrid > 0) ? &grid_strategy_.grids[igrid - 1] : nullptr;
 
             std::deque<GridStrategy::Grid::Order>* orders_arr[] = { &grid.long_orders, &grid.short_orders };
             std::deque<GridStrategy::Grid::Order>* next_orders_arr[] = { grid_next ? &grid_next->long_orders : nullptr,  grid_next ? &grid_next->short_orders : nullptr };
@@ -236,10 +238,6 @@ void UserData::updateGrid() {
 
                 for (auto itr = orders.begin(); itr != orders.end(); ) {
                     auto& order_data = itr->order_data;
-                    if (order_data.side == OrderSide::Buy)
-                        ++buy_count;
-                    else if (order_data.side == OrderSide::Sell)
-                        ++sell_count;
 
                     if (itr->order_status == OrderStatus::Filled) {
                         itr->order_status = OrderStatus::Empty;
@@ -279,13 +277,29 @@ void UserData::updateGrid() {
             }
         }
 
+        for (size_t igrid = 0; igrid < grid_strategy_.grids.size(); ++igrid) {
+            auto& grid = grid_strategy_.grids[igrid];
+            std::deque<GridStrategy::Grid::Order>* orders_arr[] = { &grid.long_orders, &grid.short_orders };
+
+            for (int i = 0; i < 2; ++i) {
+                auto& orders = *orders_arr[i];
+                for (auto itr = orders.begin(); itr != orders.end(); ) {
+                    auto& order_data = itr->order_data;
+                    if (order_data.side == OrderSide::Buy)
+                        ++buy_count;
+                    else if (order_data.side == OrderSide::Sell)
+                        ++sell_count;
+                }
+            }
+        }
+
         auto itrbal = balance_.balval.find(grid_strategy_.ccy);
         if (itrbal != balance_.balval.end()) {
             grid_strategy_.current_cash = strtof(itrbal->second.c_str(), nullptr);
         }
     }
 
-    if (buy_count == 0 && sell_count == 0) {
+    if (buy_count == 0 || sell_count == 0) {
         LOG(warning) << "WARNING!!! exeed to grid limit. closeout the grid.";
         clearGrid();
         std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -317,7 +331,7 @@ void UserData::clearGrid() {
     std::deque<OrderData> to_clear_orders;
     {
         g_user_data.lock();
-        make_scope_exit([] { g_user_data.unlock(); });
+        auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
         for (auto& grid : grid_strategy_.grids) {
             auto orders_arr = { &grid.long_orders, &grid.short_orders };

@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
    
     {
         g_user_data.lock();
-        make_scope_exit([] { g_user_data.unlock(); });
+        auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
         LOG(info) << g_ticket;
         LOG(info) << g_user_data.balance_;
@@ -122,11 +122,11 @@ int main(int argc, char** argv) {
             g_show_trades = false;
         } else if (op == "show position") {
             g_user_data.lock();
-            make_scope_exit([] { g_user_data.unlock(); });
+            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
             std::cout << g_user_data.position_;
         } else if (op == "show balance") {
             g_user_data.lock();
-            make_scope_exit([] { g_user_data.unlock(); });
+            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
             std::cout << g_user_data.balance_;
         } else if (op == "start grid") {
             std::cout << "inject cash: ";
@@ -154,11 +154,11 @@ int main(int argc, char** argv) {
             option.step_ratio = strtof(grid_step.c_str(), nullptr);
 
             g_user_data.startGrid(option);
-        } else if (op == "clear grid") {
+        } else if (op == "stop grid") {
             g_user_data.clearGrid();
         } else if (op == "show grid") {
             g_user_data.lock();
-            make_scope_exit([] { g_user_data.unlock(); });
+            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
             std::cout << g_user_data.grid_strategy_;
         } else {
             std::cout << "commands:" << std::endl;
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
             std::cout << "\thide trades" << std::endl;
             std::cout << "\tshow grid" << std::endl;
             std::cout << "\tstart grid %cash% %grid_count% %grid_step_ratio%" << std::endl;
-            std::cout << "\tclear grid" << std::endl;
+            std::cout << "\stop grid" << std::endl;
         }
     }
 
