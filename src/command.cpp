@@ -425,6 +425,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                             g_user_data.lock();
                             auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
                             
+                            g_user_data.balance_.inited = true;
                             auto& bal_data = (*itr)["balData"];
                             for (auto balitr = bal_data.Begin(); balitr != bal_data.End(); ++balitr) {
                                 std::string ccy = (*balitr)["ccy"].GetString();

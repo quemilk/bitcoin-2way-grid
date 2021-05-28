@@ -15,6 +15,7 @@ class UserData {
 public:
     struct Balance {
         std::map<std::string, std::string> balval;
+        bool inited = false;
 
         friend class std::ostream& operator << (std::ostream& o, const Balance& t) {
             o << "=====Balance=====" << std::endl;

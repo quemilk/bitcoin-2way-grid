@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
 
     g_private_channel->waitLogined();
 
-    while (g_user_data.balance_.balval.empty() || g_user_data.public_product_info_.data.empty() || g_user_data.public_trades_info_.trades_data.empty())
+    while (!g_user_data.balance_.inited || g_user_data.public_product_info_.data.empty() || g_user_data.public_trades_info_.trades_data.empty())
         std::this_thread::sleep_for(std::chrono::seconds(1));
    
     {
