@@ -41,12 +41,11 @@ static std::string floatToString(float f, const std::string& tick_sz) {
     return std::string();
 }
 
-static std::string calcDiff(const std::string& px1, const std::string& px2, const std::string& tick_sz, const string& amount) {
+static std::string calcDiff(const std::string& px1, const std::string& px2, const std::string& tick_sz, float amount) {
     if (px1.empty() || px2.empty())
         return std::string();
-    float a = strtof(amount.c_str(), nullptr);
-    float f1 = strtof(px1.c_str(), nullptr) * a;
-    float f2 = strtof(px2.c_str(), nullptr) * a;
+    float f1 = strtof(px1.c_str(), nullptr) * amount;
+    float f2 = strtof(px2.c_str(), nullptr) * amount;
     return (f1 > f2 ? "+" : "") + floatToString(f1 - f2, tick_sz);
 }
 
@@ -57,10 +56,11 @@ void UserData::startGrid(GridStrategy::Option option) {
         LOG(error) << "invalid param!";
         return;
     }
-
+    
     LOG(info) << "grid starting: injected_cash=" << option.injected_cash
-        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio << " " << g_ticket;
+        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio << " lever=" << option.lever << "x " << g_ticket;
 
+    
     std::deque<OrderData> grid_orders;
     {
         g_user_data.lock();
@@ -168,8 +168,8 @@ void UserData::startGrid(GridStrategy::Option option) {
 
 
         auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
-        auto requred_cash = ct_val * total_sum * 2;
-        auto amount = floatToString(option.injected_cash / requred_cash, lot_sz);
+        auto requred_cash = total_sum * 2 / option.lever;
+        auto amount = floatToString(option.injected_cash / requred_cash / ct_val, lot_sz);
         if (requred_cash >= option.injected_cash || strtof(amount.c_str(), nullptr) < min_sz_v) {
             LOG(error) << "no enough cash. require at least! " << floatToString(requred_cash, tick_sz);
             return;
@@ -507,7 +507,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         if (!v.long_orders.orders.empty()) {
             for (auto& order : v.long_orders.orders) {
                 auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                o << " \t" << long_side << " \t" << order.order_data.amount << " \t" << calcDiff(cur_px_str, order.fill_px, t.tick_sz, order.order_data.amount);
+                o << " \t" << long_side << " \t" << order.order_data.amount 
+                    << " \t" << calcDiff(cur_px_str, order.fill_px, t.tick_sz, strtof(order.order_data.amount.c_str(), nullptr) * strtof(t.ct_val.c_str(), nullptr));
             }
         }
         o << std::endl;
@@ -521,7 +522,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         if (!v.short_orders.orders.empty()) {
             for (auto& order : v.short_orders.orders) {
                 auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                o << " \t" << long_side << " \t" << order.order_data.amount << " \t" << calcDiff(order.fill_px, cur_px_str, t.tick_sz, order.order_data.amount);
+                o << " \t" << long_side << " \t" << order.order_data.amount
+                    << " \t" << calcDiff(order.fill_px, cur_px_str, t.tick_sz, strtof(order.order_data.amount.c_str(), nullptr) * strtof(t.ct_val.c_str(), nullptr));
             }
         }
         o << std::endl;
