@@ -283,11 +283,10 @@ void UserData::updateGrid() {
 
             for (int i = 0; i < 2; ++i) {
                 auto& orders = *orders_arr[i];
-                for (auto itr = orders.begin(); itr != orders.end(); ) {
-                    auto& order_data = itr->order_data;
-                    if (order_data.side == OrderSide::Buy)
+                for (auto& order : orders) {
+                    if (order.order_data.side == OrderSide::Buy)
                         ++buy_count;
-                    else if (order_data.side == OrderSide::Sell)
+                    else if (order.order_data.side == OrderSide::Sell)
                         ++sell_count;
                 }
             }
