@@ -494,13 +494,13 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 for (auto orders : orders_arr) {
                                     for (auto& order : *orders) {
                                         if (order.order_data.clordid == clordid) {
-                                            order.avg_px = avg_px;
                                             if (state == "canceled") {
                                                 order.order_status = OrderStatus::Canceled;
                                                 order.order_data.amount.clear();
                                                 order.order_data.clordid.clear();
                                             } else if (state == "filled") {
                                                 order.order_status = OrderStatus::Filled;
+                                                order.avg_px = avg_px;
                                             } else if (state == "partially_filled") {
                                                 order.order_status = OrderStatus::PartiallyFilled;
                                             } else if (state == "live") {
