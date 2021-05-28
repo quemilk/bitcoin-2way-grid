@@ -77,6 +77,17 @@ public:
             std::string ct_multi;
         };
         std::map<std::string, Info> data;
+
+        friend class std::ostream& operator << (std::ostream& o, const ProductInfo& t) {
+            o << "=====Instruments=====" << std::endl;
+
+            for (auto& product : t.data) {
+                auto& v = product.second;
+                o << "  - " << product.first << " " << v.inst_type << " " << v.settle_ccy << std::endl;
+                o << "    lot_sz:" << v.lot_sz << " min_sz:" << v.min_sz << " tick_siz:" << v.tick_sz << " ct_val:" << v.ct_val << std::endl;
+            }
+            return o;
+        }
     };
 
 

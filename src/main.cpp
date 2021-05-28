@@ -121,6 +121,10 @@ int main(int argc, char** argv) {
             g_show_trades = true;
         } else if (op == "hide trades") {
             g_show_trades = false;
+        } else if (op == "show instruments") {
+            g_user_data.lock();
+            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+            std::cout << g_user_data.public_product_info_;
         } else if (op == "show position") {
             g_user_data.lock();
             auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
@@ -173,6 +177,7 @@ int main(int argc, char** argv) {
             std::cout << "commands:" << std::endl;
             std::cout << "\tshow position" << std::endl;
             std::cout << "\tshow balance" << std::endl;
+            std::cout << "\tshow instruments" << std::endl;
             std::cout << "\tshow trades" << std::endl;
             std::cout << "\thide trades" << std::endl;
             std::cout << "\tshow grid" << std::endl;
