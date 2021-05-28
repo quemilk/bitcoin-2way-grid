@@ -11,9 +11,6 @@
 #include <iomanip>
 
 
-extern std::string g_ticket;
-
-
 class UserData {
 public:
     struct Balance {
@@ -110,61 +107,7 @@ public:
         float start_cash = 0;
         float current_cash = 0;
 
-        friend std::ostream& operator << (std::ostream& o, const GridStrategy& t) {
-            o << "=====Grid=====" << std::endl;
-            o << g_ticket;
-            if (t.current_cash) {
-                if (t.current_cash >= t.start_cash) {
-                    o << " +" << t.current_cash - t.start_cash;
-                } else {
-                    o << " -" << t.start_cash - t.current_cash;
-                }
-                o << " " << t.ccy;
-
-                if (t.start_cash != t.origin_cash) {
-                    o << " " << t.ccy << " \ttotal: ";
-                    if (t.current_cash >= t.origin_cash) {
-                        o << " +" << t.current_cash - t.origin_cash;
-                    } else {
-                        o << " -" << t.origin_cash - t.current_cash;
-                    }
-                    o << " " << t.ccy;
-                }
-            }
-            o << std::endl;
-            o << "inject cash: " << t.option.injected_cash 
-                << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio
-                << ", origin: " << t.origin_cash << std::endl;
-           
-            o << "  long:" << std::endl;
-            for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
-                auto& v = *itr;
-                o << "    * " << v.px;
-
-                if (!v.long_orders.empty()) {
-                    for (auto& order : v.long_orders) {
-                        auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                        o << " \t" << long_side << " \t" << order.order_data.amount;
-                    }
-                }
-                o << std::endl;
-            }
-
-            o << "  short:" << std::endl;
-            for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
-                auto& v = *itr;
-                o << "    * " << v.px;
-
-                if (!v.short_orders.empty()) {
-                    for (auto& order : v.short_orders) {
-                        auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                        o << " \t" << long_side << " \t" << order.order_data.amount;
-                    }
-                }
-                o << std::endl;
-            }
-            return o;
-        }
+        friend std::ostream& operator << (std::ostream& o, const GridStrategy& t);
     };
 
 public:
@@ -189,7 +132,8 @@ public:
     GridStrategy grid_strategy_;
 
 private:
-    std::mutex mutex_;
+    std::recursive_mutex mutex_;
 };
 
 extern UserData g_user_data;
+

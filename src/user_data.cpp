@@ -4,8 +4,9 @@
 #include "command.h"
 #include <deque>
 
-
 UserData g_user_data;
+extern std::string g_ticket;
+
 
 static std::string floatToString(float f, const std::string& tick_sz) {
     std::vector<std::string> v;
@@ -55,7 +56,7 @@ void UserData::startGrid(GridStrategy::Option option) {
         auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
         if (!grid_strategy_.grids.empty()) {
-            LOG(error, "grid already running");
+            LOG(error) << "grid already running";
             return;
         }
         grid_strategy_.option = option;
@@ -397,6 +398,60 @@ void UserData::clearGrid() {
         );
 
     }
+}
 
+std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
+    o << "=====Grid=====" << std::endl;
+    o << g_ticket;
+    if (t.current_cash) {
+        if (t.current_cash >= t.start_cash) {
+            o << " +" << t.current_cash - t.start_cash;
+        } else {
+            o << " -" << t.start_cash - t.current_cash;
+        }
+        o << " " << t.ccy;
 
+        if (t.start_cash != t.origin_cash) {
+            o << " " << t.ccy << " \ttotal: ";
+            if (t.current_cash >= t.origin_cash) {
+                o << " +" << t.current_cash - t.origin_cash;
+            } else {
+                o << " -" << t.origin_cash - t.current_cash;
+            }
+            o << " " << t.ccy;
+        }
+    }
+    o << std::endl;
+    o << "inject cash: " << t.option.injected_cash
+        << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio
+        << ", origin: " << t.origin_cash << std::endl;
+
+    o << "  long:" << std::endl;
+    for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
+        auto& v = *itr;
+        o << "    * " << v.px;
+
+        if (!v.long_orders.empty()) {
+            for (auto& order : v.long_orders) {
+                auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
+                o << " \t" << long_side << " \t" << order.order_data.amount;
+            }
+        }
+        o << std::endl;
+    }
+
+    o << "  short:" << std::endl;
+    for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
+        auto& v = *itr;
+        o << "    * " << v.px;
+
+        if (!v.short_orders.empty()) {
+            for (auto& order : v.short_orders) {
+                auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
+                o << " \t" << long_side << " \t" << order.order_data.amount;
+            }
+        }
+        o << std::endl;
+    }
+    return o;
 }
