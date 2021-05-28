@@ -166,8 +166,8 @@ void UserData::startGrid(GridStrategy::Option option) {
             grid_strategy_.grids.push_back(grid);
         }
 
-
-        auto ct_val = strtof(itrproduct->second.ct_val.c_str(), nullptr);
+        grid_strategy_.ct_val = itrproduct->second.ct_val;
+        auto ct_val = strtof(grid_strategy_.ct_val.c_str(), nullptr);
         auto requred_cash = total_sum * 2 / option.lever;
         auto amount = floatToString(option.injected_cash / requred_cash / ct_val, lot_sz);
         if (requred_cash >= option.injected_cash || strtof(amount.c_str(), nullptr) < min_sz_v) {
@@ -497,7 +497,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
 
     auto cur_px_str = g_user_data.currentPrice();
     if (!cur_px_str.empty())
-        o << "current: " << cur_px_str << std::endl;
+        o << "current: " << cur_px_str << " \t" << t.option.lever << "x" << std::endl;
 
     o << "  long:" << std::endl;
     for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
