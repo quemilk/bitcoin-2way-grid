@@ -507,9 +507,11 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         o << "lever: " << t.option.lever << "x \tcurrent: " << cur_px_str << std::endl;
 
     o << "  long:" << std::endl;
-    for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
-        auto& v = *itr;
-        o << "    * " << v.px;
+    for (int i = 0; i < t.grids.size(); ++i) {
+        auto& v = t.grids[i];
+
+        o << ((i == t.grids.size() / 2) ? "    - " : "    * ");
+        o << v.px;
 
         if (!v.long_orders.orders.empty()) {
             for (auto& order : v.long_orders.orders) {
