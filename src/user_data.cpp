@@ -17,16 +17,17 @@ static std::string floatToString(float f, const std::string& tick_sz) {
         if (l)
             return std::to_string((int)(f / l * l));
     } else if (v.size() == 2) {
+        auto absf = abs(f);
         auto l = strtol(v[0].c_str(), nullptr, 0);
         auto d = strtol(v[1].c_str(), nullptr, 0);
         int power = 1;
         int digit = v[1].size();
         for (int i = 0; i < digit; ++i)
             power *= 10;
-        int r = (int)(f * power / (l * power + d));
+        int r = (int)(absf * power / (l * power + d));
         auto ipart = std::to_string((int)(r / power));
         auto fpart = std::to_string((int)(r % power));
-        std::string o = ipart;
+        std::string o = (f < 0 ? "-" : "") + ipart;
         if (digit > 0) {
             o += ".";
             for (int i = 0; i < digit - (int)fpart.size(); ++i)
@@ -35,9 +36,17 @@ static std::string floatToString(float f, const std::string& tick_sz) {
         }
         return o;
     } else {
-        assert(false);
+        return std::to_string(f);
     }
     return std::string();
+}
+
+static std::string calcDiff(const std::string& px1, const std::string& px2, const std::string& tick_sz) {
+    if (px1.empty() || px2.empty())
+        return std::string();
+    float f1 = strtof(px1.c_str(), nullptr);
+    float f2 = strtof(px2.c_str(), nullptr);
+    return (f1 > f2 ? "+" : "") + floatToString(f1 - f2, tick_sz);
 }
 
 
@@ -59,6 +68,12 @@ void UserData::startGrid(GridStrategy::Option option) {
             LOG(error) << "grid already running";
             return;
         }
+
+        auto failed_sp = make_scope_exit([&] {
+            grid_strategy_.grids.clear(); 
+            }
+        );
+
         grid_strategy_.option = option;
 
         auto itrproduct = public_product_info_.data.find(g_ticket);
@@ -72,6 +87,7 @@ void UserData::startGrid(GridStrategy::Option option) {
             return;
         }
 
+        grid_strategy_.tick_sz = itrproduct->second.tick_sz;
         auto ccy = itrproduct->second.settle_ccy;
 
         auto itrbal = balance_.balval.find(ccy);
@@ -195,6 +211,8 @@ void UserData::startGrid(GridStrategy::Option option) {
                 }
             }
         }
+
+        failed_sp.cancel();
      }
 
     while (!grid_orders.empty()) {
@@ -252,6 +270,8 @@ void UserData::updateGrid() {
                                 new_order.order_data.side = OrderSide::Sell;
                                 new_order.order_data.pos_side = pos_side;
                                 new_order.order_status = OrderStatus::Live;
+                                if (pos_side == OrderPosSide::Long)
+                                    new_order.fill_px = itr->fill_px;
                                 next_orders_arr[i]->push_back(new_order);
                                 grid_orders.push_back(new_order.order_data);
                             }
@@ -264,6 +284,8 @@ void UserData::updateGrid() {
                                 new_order.order_data.side = OrderSide::Buy;
                                 new_order.order_data.pos_side = pos_side;
                                 new_order.order_status = OrderStatus::Live;
+                                if (pos_side == OrderPosSide::Short)
+                                    new_order.fill_px = itr->fill_px;
                                 pre_orders_arr[i]->push_back(new_order);
                                 grid_orders.push_back(new_order.order_data);
                             }
@@ -436,6 +458,10 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio
         << ", origin: " << t.origin_cash << std::endl;
 
+    auto cur_px_str = g_user_data.currentPrice();
+    if (!cur_px_str.empty())
+        o << "current: " << cur_px_str << std::endl;
+
     o << "  long:" << std::endl;
     for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
         auto& v = *itr;
@@ -444,7 +470,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         if (!v.long_orders.empty()) {
             for (auto& order : v.long_orders) {
                 auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                o << " \t" << long_side << " \t" << order.order_data.amount;
+                o << " \t" << long_side << " \t" << order.order_data.amount << " \t" << calcDiff(order.fill_px, cur_px_str, t.tick_sz);
             }
         }
         o << std::endl;
@@ -458,7 +484,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         if (!v.short_orders.empty()) {
             for (auto& order : v.short_orders) {
                 auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
-                o << " \t" << long_side << " \t" << order.order_data.amount;
+                o << " \t" << long_side << " \t" << order.order_data.amount << " \t" << calcDiff(order.fill_px, cur_px_str, t.tick_sz);
             }
         }
         o << std::endl;

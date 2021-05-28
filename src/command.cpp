@@ -179,7 +179,8 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, TradeMode tra
     args.PushBack(arg, doc.GetAllocator());
     doc.AddMember("args", args, doc.GetAllocator());
 
-    LOG(info) << "\b\b! order \t" << side_str << " \t" << pos_side_str << " \t" << order_data.px << " \t" << order_data.amount;
+    LOG(info) << "\b\b! order \t" << side_str << " \t" << pos_side_str << " \t"
+        << std::left << std::setw(10) << order_data.px << " \t" << order_data.amount;
 
     Request req;
     req.id = id;
@@ -242,7 +243,8 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, TradeMod
 
         args.PushBack(arg, doc.GetAllocator());
 
-        LOG(info) << "\b\b! order \t" << side_str << " \t" << pos_side_str << " \t" << order.px << " \t" << order.amount;
+        LOG(info) << "\b\b! order \t" << side_str << " \t" << pos_side_str
+            << " \t" << std::left << std::setw(10) << order.px << " \t" << order.amount;
     }
 
     doc.AddMember("args", args, doc.GetAllocator());
@@ -500,7 +502,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                                 order.order_data.clordid.clear();
                                             } else if (state == "filled") {
                                                 order.order_status = OrderStatus::Filled;
-                                                order.avg_px = avg_px;
+                                                order.fill_px = fill_px;
                                             } else if (state == "partially_filled") {
                                                 order.order_status = OrderStatus::PartiallyFilled;
                                             } else if (state == "live") {
@@ -515,10 +517,11 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
 
                         o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << "\t" << toTimeStr(utime) << std::endl;
                         if (state == "live")
-                            o << "    order: \t" << sz << " \t" << px << " \t" << lever << "x" << std::endl;
+                            o << "    order: \t" << sz << " \t" << std::left << std::setw(10) << px << " \t" << lever << "x" << std::endl;
                         else if (state == "filled" || state == "partially_filled") {
                             o << "    filled: \t" << fill_sz << " \t" << fill_px << " \t" << lever << "x" << std::endl;
-                            std::cout << "\b\b! " << state << " \t" << side << " \t" << pos_side << " \t" << px << " \t" << fill_sz << " \tearn:" << pnl << std::endl;
+                            std::cout << "\b\b! " << state << " \t" << side << " \t" << pos_side
+                                << " \t" << std::left << std::setw(10) << px << " \t" << fill_sz << " \tearn:" << pnl << std::endl;
                         }
                         o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
                     }
@@ -553,8 +556,8 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         info.lot_sz = (*itr)["lotSz"].GetString(); // 下单数量精度
                         info.min_sz = (*itr)["minSz"].GetString(); // 最小下单数量
                         info.tick_sz = (*itr)["tickSz"].GetString(); // 最小下单价格
-                        info.ct_val = (*itr)["ctVal"].GetString(); // 最小下单价格
-                        info.ct_multi = (*itr)["ctMult"].GetString(); // 最小下单价格
+                        info.ct_val = (*itr)["ctVal"].GetString(); // 合约面值
+                        info.ct_multi = (*itr)["ctMult"].GetString(); // 合约乘数
                         info.settle_ccy = (*itr)["settleCcy"].GetString();
 
                         g_user_data.public_product_info_.data[info.inst_id] = std::move(info);

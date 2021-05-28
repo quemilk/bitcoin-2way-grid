@@ -85,7 +85,7 @@ public:
             struct Order {
                 OrderData order_data;
                 OrderStatus order_status = OrderStatus::Empty;
-                std::string avg_px;
+                std::string fill_px;
             };
             std::deque<Order> long_orders;
             std::deque<Order> short_orders;
@@ -103,6 +103,7 @@ public:
         std::vector<Grid> grids;
 
         std::string ccy;
+        std::string tick_sz;
         float origin_cash = 0;
         float start_cash = 0;
         float current_cash = 0;

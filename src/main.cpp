@@ -176,7 +176,7 @@ int main(int argc, char** argv) {
             std::cout << "\tshow trades" << std::endl;
             std::cout << "\thide trades" << std::endl;
             std::cout << "\tshow grid" << std::endl;
-            std::cout << "\tstart grid %cash% %grid_count% %grid_step_ratio%" << std::endl;
+            std::cout << "\tstart grid" << std::endl;
             std::cout << "\tstop grid" << std::endl;
         }
     }
