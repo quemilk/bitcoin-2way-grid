@@ -91,9 +91,9 @@ public:
             struct OrdersQueue {
                 bool init_ordered = false;
                 std::deque<Order> orders;
-                std::string order_amount;
             };
             OrdersQueue long_orders, short_orders;
+            std::string order_amount;
         };
 
         struct Option {
@@ -143,3 +143,4 @@ private:
 };
 
 extern UserData g_user_data;
+

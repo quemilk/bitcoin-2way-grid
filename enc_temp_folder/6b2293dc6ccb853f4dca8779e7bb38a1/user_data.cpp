@@ -177,12 +177,7 @@ void UserData::startGrid(GridStrategy::Option option) {
 
         for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
-            grid.long_orders.order_amount = grid.short_orders.order_amount = amount;
-            if (i < grid_strategy_.grids.size() / 4) {
-                
-            } else if (i > grid_strategy_.grids.size() * 3 / 4) {
-                // TODO
-            }
+            grid.order_amount = amount;
         }
 
         for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
@@ -190,8 +185,8 @@ void UserData::startGrid(GridStrategy::Option option) {
 
             GridStrategy::Grid::Order grid_order;
             grid_order.order_data.px = grid.px;
+            grid_order.order_data.amount = grid.order_amount;
             if (i <= grid_strategy_.grids.size() / 2) {
-                grid_order.order_data.amount = grid.long_orders.order_amount;
                 grid_order.order_data.clordid = genCliOrdId();
                 grid_order.order_data.side = OrderSide::Buy;
                 grid_order.order_data.pos_side = OrderPosSide::Long;
@@ -205,7 +200,6 @@ void UserData::startGrid(GridStrategy::Option option) {
                 grid_orders.push_back(new_order);
             }
             if (i >= grid_strategy_.grids.size() / 2) {
-                grid_order.order_data.amount = grid.short_orders.order_amount;
                 grid_order.order_data.clordid = genCliOrdId();
                 grid_order.order_data.side = OrderSide::Sell;
                 grid_order.order_data.pos_side = OrderPosSide::Short;
@@ -312,7 +306,7 @@ void UserData::updateGrid() {
                     GridStrategy::Grid::Order new_order;
                     new_order.order_data.clordid = genCliOrdId();
                     new_order.order_data.px = grid.px;
-                    new_order.order_data.amount = orders_arr[i]->order_amount;
+                    new_order.order_data.amount = grid.order_amount;
                     if (pos_side == OrderPosSide::Long)
                         new_order.order_data.side = OrderSide::Buy;
                     else if (pos_side == OrderPosSide::Short)
