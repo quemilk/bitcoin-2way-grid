@@ -51,6 +51,7 @@ static std::string calcDiff(const std::string& px1, const std::string& px2, cons
 
 
 void UserData::startGrid(GridStrategy::Option option) {
+    option.grid_count &= ~1;
     if (option.grid_count <= 0 || option.step_ratio <= 0 || option.step_ratio >= 1.0f) {
         LOG(error) << "invalid param!";
         return;
@@ -106,7 +107,6 @@ void UserData::startGrid(GridStrategy::Option option) {
         if (0 == grid_strategy_.origin_cash)
             grid_strategy_.origin_cash = cashval;
         grid_strategy_.start_cash = cashval;
-        grid_strategy_.current_cash = 0;
 
         auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
         if (itrtrades == public_trades_info_.trades_data.end()) {
@@ -176,39 +176,31 @@ void UserData::startGrid(GridStrategy::Option option) {
             GridStrategy::Grid::Order grid_order;
             grid_order.order_data.px = grid.px;
             grid_order.order_data.amount = grid_strategy_.order_amount;
-            if (i < grid_strategy_.grids.size() - 1) {
+            if (i <= grid_strategy_.grids.size() / 2) {
                 grid_order.order_data.clordid = genCliOrdId();
                 grid_order.order_data.side = OrderSide::Buy;
                 grid_order.order_data.pos_side = OrderPosSide::Long;
-                grid_order.order_status = OrderStatus::Live;   
-                grid.long_orders.push_back(grid_order);
+                grid_order.order_status = OrderStatus::Live;
+                grid.long_orders.orders.push_back(grid_order);
+                grid.long_orders.init_ordered = true;
+
+                auto new_order = grid_order.order_data;
+                if (i == grid_strategy_.grids.size() / 2)
+                    new_order.order_type = OrderType::Market;
+                grid_orders.push_back(new_order);
             }
-            if (i > 0) {
+            if (i >= grid_strategy_.grids.size() / 2) {
                 grid_order.order_data.clordid = genCliOrdId();
                 grid_order.order_data.side = OrderSide::Sell;
                 grid_order.order_data.pos_side = OrderPosSide::Short;
                 grid_order.order_status = OrderStatus::Live;
-                grid.short_orders.push_back(grid_order);
-            }
-        }
+                grid.short_orders.orders.push_back(grid_order);
+                grid.short_orders.init_ordered = true;
 
-        for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
-            auto& grid = grid_strategy_.grids[i];
-            for (auto& order : grid.long_orders) {
-                if (!order.order_data.amount.empty()) {
-                    auto new_order = order.order_data;
-                    if (i >= grid_strategy_.grids.size() / 2)
-                        new_order.order_type = OrderType::Market;
-                    grid_orders.push_back(new_order);
-                }
-            }
-            for (auto& order : grid.short_orders) {
-                if (!order.order_data.amount.empty()) {
-                    auto new_order = order.order_data;
-                    if (i <= grid_strategy_.grids.size() / 2)
-                        new_order.order_type = OrderType::Market;
-                    grid_orders.push_back(new_order);
-                }
+                auto new_order = grid_order.order_data;
+                if (i == grid_strategy_.grids.size() / 2)
+                    new_order.order_type = OrderType::Market;
+                grid_orders.push_back(new_order);
             }
         }
 
@@ -245,14 +237,14 @@ void UserData::updateGrid() {
             auto grid_next = (igrid < grid_strategy_.grids.size() - 1) ? &grid_strategy_.grids[igrid + 1] : nullptr;
             auto grid_pre = (igrid > 0) ? &grid_strategy_.grids[igrid - 1] : nullptr;
 
-            std::deque<GridStrategy::Grid::Order>* orders_arr[] = { &grid.long_orders, &grid.short_orders };
-            std::deque<GridStrategy::Grid::Order>* next_orders_arr[] = { grid_next ? &grid_next->long_orders : nullptr,  grid_next ? &grid_next->short_orders : nullptr };
-            std::deque<GridStrategy::Grid::Order>* pre_orders_arr[] = { grid_pre ? &grid_pre->long_orders : nullptr,  grid_pre ? &grid_pre->short_orders : nullptr };
+            GridStrategy::Grid::OrdersQueue* orders_arr[] = { &grid.long_orders, &grid.short_orders };
+            GridStrategy::Grid::OrdersQueue* next_orders_arr[] = { grid_next ? &grid_next->long_orders : nullptr,  grid_next ? &grid_next->short_orders : nullptr };
+            GridStrategy::Grid::OrdersQueue* pre_orders_arr[] = { grid_pre ? &grid_pre->long_orders : nullptr,  grid_pre ? &grid_pre->short_orders : nullptr };
             
             OrderPosSide pos_sides[] = { OrderPosSide::Long, OrderPosSide::Short };
 
             for (int i = 0; i < 2; ++i) {
-                auto& orders = *orders_arr[i];
+                auto& orders = orders_arr[i]->orders;
                 auto pos_side = pos_sides[i];
 
                 for (auto itr = orders.begin(); itr != orders.end(); ) {
@@ -272,7 +264,7 @@ void UserData::updateGrid() {
                                 new_order.order_status = OrderStatus::Live;
                                 if (pos_side == OrderPosSide::Long)
                                     new_order.fill_px = itr->fill_px;
-                                next_orders_arr[i]->push_back(new_order);
+                                next_orders_arr[i]->orders.push_back(new_order);
                                 grid_orders.push_back(new_order.order_data);
                             }
                         } else if (order_data.side == OrderSide::Sell) {
@@ -286,9 +278,24 @@ void UserData::updateGrid() {
                                 new_order.order_status = OrderStatus::Live;
                                 if (pos_side == OrderPosSide::Short)
                                     new_order.fill_px = itr->fill_px;
-                                pre_orders_arr[i]->push_back(new_order);
+                                pre_orders_arr[i]->orders.push_back(new_order);
                                 grid_orders.push_back(new_order.order_data);
                             }
+                        }
+
+                        if (!orders_arr[i]->init_ordered) {
+                            orders_arr[i]->init_ordered = true;
+                            GridStrategy::Grid::Order new_order;
+                            new_order.order_data.clordid = genCliOrdId();
+                            new_order.order_data.px = grid.px;
+                            new_order.order_data.amount = grid_strategy_.order_amount;
+                            if (pos_side == OrderPosSide::Long)
+                                new_order.order_data.side = OrderSide::Buy;
+                            else if (pos_side == OrderPosSide::Short)
+                                new_order.order_data.side = OrderSide::Sell;
+                            new_order.order_data.pos_side = pos_side;
+                            new_order.order_status = OrderStatus::Live;
+                            grid_orders.push_back(new_order.order_data);
                         }
                     }
 
@@ -302,22 +309,17 @@ void UserData::updateGrid() {
 
         for (size_t igrid = 0; igrid < grid_strategy_.grids.size(); ++igrid) {
             auto& grid = grid_strategy_.grids[igrid];
-            std::deque<GridStrategy::Grid::Order>* orders_arr[] = { &grid.long_orders, &grid.short_orders };
+            GridStrategy::Grid::OrdersQueue* orders_arr[] = { &grid.long_orders, &grid.short_orders };
 
             for (int i = 0; i < 2; ++i) {
                 auto& orders = *orders_arr[i];
-                for (auto& order : orders) {
+                for (auto& order : orders.orders) {
                     if (order.order_data.side == OrderSide::Buy)
                         ++buy_count;
                     else if (order.order_data.side == OrderSide::Sell)
                         ++sell_count;
                 }
             }
-        }
-
-        auto itrbal = balance_.balval.find(grid_strategy_.ccy);
-        if (itrbal != balance_.balval.end()) {
-            grid_strategy_.current_cash = strtof(itrbal->second.c_str(), nullptr);
         }
     }
 
@@ -357,8 +359,8 @@ void UserData::clearGrid() {
 
         for (auto& grid : grid_strategy_.grids) {
             auto orders_arr = { &grid.long_orders, &grid.short_orders };
-            for (auto orders : orders_arr) {
-                for (auto& order : *orders) {
+            for (auto ordersq : orders_arr) {
+                for (auto& order : ordersq->orders) {
                     if (!order.order_data.amount.empty()) {
                         if (order.order_status == OrderStatus::Live) {
                             to_cancel_cliordids.push_back(order.order_data.clordid);
@@ -432,23 +434,36 @@ std::string UserData::currentPrice() {
     return std::string();
 }
 
+std::string UserData::currentCash(std::string ccy) {
+    g_user_data.lock();
+    auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+
+    auto itrbal = g_user_data.balance_.balval.find(grid_strategy_.ccy);
+    if (itrbal != g_user_data.balance_.balval.end()) {
+        return itrbal->second;
+    }
+    return std::string();
+}
+
 std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
     o << "=====Grid=====" << std::endl;
     o << g_ticket;
-    if (t.current_cash) {
-        if (t.current_cash >= t.start_cash) {
-            o << " +" << t.current_cash - t.start_cash;
+
+    auto current_cash = strtof(g_user_data.currentCash(t.ccy).c_str(), nullptr);
+    if (current_cash) {
+        if (current_cash >= t.start_cash) {
+            o << " +" << current_cash - t.start_cash;
         } else {
-            o << " -" << t.start_cash - t.current_cash;
+            o << " -" << t.start_cash - current_cash;
         }
         o << " " << t.ccy;
 
         if (t.start_cash != t.origin_cash) {
             o << " " << t.ccy << " \ttotal: ";
-            if (t.current_cash >= t.origin_cash) {
-                o << " +" << t.current_cash - t.origin_cash;
+            if (current_cash >= t.origin_cash) {
+                o << " +" << current_cash - t.origin_cash;
             } else {
-                o << " -" << t.origin_cash - t.current_cash;
+                o << " -" << t.origin_cash - current_cash;
             }
             o << " " << t.ccy;
         }
@@ -467,8 +482,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         auto& v = *itr;
         o << "    * " << v.px;
 
-        if (!v.long_orders.empty()) {
-            for (auto& order : v.long_orders) {
+        if (!v.long_orders.orders.empty()) {
+            for (auto& order : v.long_orders.orders) {
                 auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
                 o << " \t" << long_side << " \t" << order.order_data.amount << " \t" << calcDiff(cur_px_str, order.fill_px, t.tick_sz);
             }
@@ -481,8 +496,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         auto& v = *itr;
         o << "    * " << v.px;
 
-        if (!v.short_orders.empty()) {
-            for (auto& order : v.short_orders) {
+        if (!v.short_orders.orders.empty()) {
+            for (auto& order : v.short_orders.orders) {
                 auto long_side = order.order_data.amount.empty() ? "  " : toString(order.order_data.side);
                 o << " \t" << long_side << " \t" << order.order_data.amount << " \t" << calcDiff(order.fill_px, cur_px_str, t.tick_sz);
             }

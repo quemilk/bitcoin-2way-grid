@@ -87,8 +87,12 @@ public:
                 OrderStatus order_status = OrderStatus::Empty;
                 std::string fill_px;
             };
-            std::deque<Order> long_orders;
-            std::deque<Order> short_orders;
+
+            struct OrdersQueue {
+                bool init_ordered = false;
+                std::deque<Order> orders;
+            };
+            OrdersQueue long_orders, short_orders;
         };
 
         struct Option {
@@ -106,7 +110,6 @@ public:
         std::string tick_sz;
         float origin_cash = 0;
         float start_cash = 0;
-        float current_cash = 0;
 
         friend std::ostream& operator << (std::ostream& o, const GridStrategy& t);
     };
@@ -117,6 +120,7 @@ public:
     void clearGrid();
 
     std::string currentPrice();
+    std::string currentCash(std::string ccy);
 
 public:
     void lock() {
