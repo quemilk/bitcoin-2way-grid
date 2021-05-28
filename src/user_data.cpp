@@ -304,6 +304,7 @@ void UserData::updateGrid() {
                         new_order.order_data.side = OrderSide::Sell;
                     new_order.order_data.pos_side = pos_side;
                     new_order.order_status = OrderStatus::Live;
+                    orders_arr[i]->orders.push_back(new_order);
                     grid_orders.push_back(new_order.order_data);
                 }
             }
