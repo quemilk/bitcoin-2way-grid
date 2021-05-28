@@ -246,13 +246,11 @@ void UserData::updateGrid() {
             for (int i = 0; i < 2; ++i) {
                 auto& orders = orders_arr[i]->orders;
                 auto pos_side = pos_sides[i];
-                bool has_filled = false;
 
                 for (auto itr = orders.begin(); itr != orders.end(); ) {
                     auto& order_data = itr->order_data;
 
                     if (itr->order_status == OrderStatus::Filled) {
-                        has_filled = true;
                         itr->order_status = OrderStatus::Empty;
                         order_data.amount.clear();
                         if (order_data.side == OrderSide::Buy) {
@@ -283,28 +281,28 @@ void UserData::updateGrid() {
                                 pre_orders_arr[i]->orders.push_back(new_order);
                                 grid_orders.push_back(new_order.order_data);
                             }
-                        }                        
+                        }
+
+                        if (!orders_arr[i]->init_ordered) {
+                            orders_arr[i]->init_ordered = true;
+                            GridStrategy::Grid::Order new_order;
+                            new_order.order_data.clordid = genCliOrdId();
+                            new_order.order_data.px = grid.px;
+                            new_order.order_data.amount = grid_strategy_.order_amount;
+                            if (pos_side == OrderPosSide::Long)
+                                new_order.order_data.side = OrderSide::Buy;
+                            else if (pos_side == OrderPosSide::Short)
+                                new_order.order_data.side = OrderSide::Sell;
+                            new_order.order_data.pos_side = pos_side;
+                            new_order.order_status = OrderStatus::Live;
+                            grid_orders.push_back(new_order.order_data);
+                        }
                     }
 
                     if (itr->order_status == OrderStatus::Canceled || itr->order_status == OrderStatus::Empty) {
                         itr = orders.erase(itr);
                     } else
                         ++itr;
-                }
-
-                if (has_filled && !orders_arr[i]->init_ordered) {
-                    orders_arr[i]->init_ordered = true;
-                    GridStrategy::Grid::Order new_order;
-                    new_order.order_data.clordid = genCliOrdId();
-                    new_order.order_data.px = grid.px;
-                    new_order.order_data.amount = grid_strategy_.order_amount;
-                    if (pos_side == OrderPosSide::Long)
-                        new_order.order_data.side = OrderSide::Buy;
-                    else if (pos_side == OrderPosSide::Short)
-                        new_order.order_data.side = OrderSide::Sell;
-                    new_order.order_data.pos_side = pos_side;
-                    new_order.order_status = OrderStatus::Live;
-                    grid_orders.push_back(new_order.order_data);
                 }
             }
         }
