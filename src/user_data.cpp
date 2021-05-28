@@ -175,8 +175,8 @@ void UserData::startGrid(GridStrategy::Option option) {
 
         grid_strategy_.ct_val = itrproduct->second.ct_val;
         auto ct_val = strtof(grid_strategy_.ct_val.c_str(), nullptr);
-        auto requred_cash = total_sum * 2 / option.lever;
-        auto amount = floatToString(option.injected_cash / requred_cash / ct_val, lot_sz);
+        auto requred_cash = total_sum * ct_val * 2 / option.lever;
+        auto amount = floatToString(option.injected_cash / requred_cash, lot_sz);
         if (requred_cash >= option.injected_cash || strtof(amount.c_str(), nullptr) < min_sz_v) {
             LOG(error) << "no enough cash. require at least! " << floatToString(requred_cash, tick_sz);
             return;
