@@ -67,6 +67,8 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    LOG(info) << g_ticket;
+
     std::string host, port, private_path, public_path;
     if (enviorment == "simu") {
         host = SIMU_WSS_HOST;
@@ -104,7 +106,6 @@ int main(int argc, char** argv) {
         g_user_data.lock();
         auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
-        LOG(info) << g_ticket;
         LOG(info) << g_user_data.balance_;
         LOG(info) << g_user_data.position_;
     }

@@ -5,6 +5,8 @@
 extern std::string g_ticket;
 
 void PublicChannel::onConnected() {
+    LOG(info) << "public channel connected.";
+
     auto req = Command::makeSubscribeInstrumentsChannel("SWAP");
 
     LOG(debug) << ">> subscribe. " << req.data;

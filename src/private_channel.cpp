@@ -23,6 +23,8 @@ void PrivateChannel::onConnected() {
 }
 
 void PrivateChannel::onLogined() {
+    LOG(info) << "private channel logined.";
+
     auto req = Command::makeSubscriBebalanceAndPositionsChannel();
 
     LOG(debug) << ">> subscribe. " << req.data;
