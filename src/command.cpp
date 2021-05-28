@@ -239,6 +239,7 @@ Command::Request Command::makeMultiOrderReq(const std::string& inst_id, TradeMod
         if (order.order_type == OrderType::Limit)
             arg.AddMember("px", order.px, doc.GetAllocator());
 
+        assert(!order.amount.empty());
         arg.AddMember("sz", order.amount, doc.GetAllocator());
 
         args.PushBack(arg, doc.GetAllocator());

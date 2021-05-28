@@ -175,8 +175,9 @@ void UserData::startGrid(GridStrategy::Option option) {
             return;
         }
 
-        for (int i = 0; i < option.grid_count; ++i) {
-            grid_strategy_.grids[i].order_amount = amount;
+        for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
+            auto& grid = grid_strategy_.grids[i];
+            grid.order_amount = amount;
         }
 
         for (size_t i = 0; i < grid_strategy_.grids.size(); ++i) {
