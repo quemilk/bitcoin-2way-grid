@@ -498,7 +498,6 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                         if (order.order_data.clordid == clordid) {
                                             if (state == "canceled") {
                                                 order.order_status = OrderStatus::Canceled;
-                                                order.order_data.amount.clear();
                                                 order.order_data.clordid.clear();
                                             } else if (state == "filled") {
                                                 order.order_status = OrderStatus::Filled;

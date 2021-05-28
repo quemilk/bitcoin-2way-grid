@@ -93,6 +93,7 @@ public:
                 std::deque<Order> orders;
             };
             OrdersQueue long_orders, short_orders;
+            std::string order_amount;
         };
 
         struct Option {
@@ -103,7 +104,6 @@ public:
 
         Option option;
 
-        std::string order_amount;
         std::vector<Grid> grids;
 
         std::string ccy;
