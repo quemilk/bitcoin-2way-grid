@@ -88,6 +88,7 @@ public:
             struct Order {
                 OrderData order_data;
                 OrderStatus order_status = OrderStatus::Empty;
+                std::string avg_px;
             };
             std::deque<Order> long_orders;
             std::deque<Order> short_orders;
@@ -96,7 +97,7 @@ public:
         struct Option {
             float injected_cash = 0;
             int grid_count = 10;
-            float step_ratio = 0.01;
+            float step_ratio = 0.01f;
         };
 
         Option option;

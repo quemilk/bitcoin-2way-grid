@@ -148,12 +148,20 @@ int main(int argc, char** argv) {
             if (grid_step.empty())
                 grid_step = "0.01";
 
-            UserData::GridStrategy::Option option;
-            option.injected_cash = strtof(inject_cash.c_str(), nullptr);
-            option.grid_count = strtol(grid_level.c_str(), nullptr, 0);
-            option.step_ratio = strtof(grid_step.c_str(), nullptr);
+            std::cout << "run? (Y): ";
+            std::string grid_run;
+            std::getline(std::cin, grid_run);
+            trimString(grid_run);
+            if (grid_run.empty())
+                grid_run = "y";
+            if (grid_run == "Y" || grid_run == "y") {
+                UserData::GridStrategy::Option option;
+                option.injected_cash = strtof(inject_cash.c_str(), nullptr);
+                option.grid_count = strtol(grid_level.c_str(), nullptr, 0);
+                option.step_ratio = strtof(grid_step.c_str(), nullptr);
 
-            g_user_data.startGrid(option);
+                g_user_data.startGrid(option);
+            }
         } else if (op == "stop grid") {
             g_user_data.clearGrid();
         } else if (op == "show grid") {

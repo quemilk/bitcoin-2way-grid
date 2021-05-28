@@ -389,6 +389,8 @@ void UserData::clearGrid() {
             [t] (Command::Response& resp) {
                 if (resp.code == 0) {
                     LOG(debug) << "<< cancel ok.";
+                } else if (resp.code == 1 || resp.code == 2) {
+                    LOG(debug) << "<< cancel partical ok.";
                 } else
                     LOG(error) << "<< cancel failed. " << resp.data;
             }
