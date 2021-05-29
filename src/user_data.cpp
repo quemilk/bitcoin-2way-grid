@@ -563,7 +563,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
                     continue;
                 o << "      ";
             } else
-                o << ((i == t.grids.size() / 2) ? "    - " : "    * ");
+                o << ((i == t.grids.size() / 2) ? "    * " : "    - ");
             o << v.px;
             //o << " (" << v.short_orders.order_amount << ")";
 
