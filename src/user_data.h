@@ -138,7 +138,7 @@ public:
     };
 
 public:
-    void startGrid(GridStrategy::Option option, bool conetinue_last_grid=false);
+    void startGrid(GridStrategy::Option option, bool conetinue_last_grid=false, bool is_test=false);
     void updateGrid();
     void clearGrid();
 

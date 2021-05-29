@@ -50,7 +50,7 @@ static std::string calcDiff(const std::string& px1, const std::string& px2, cons
 }
 
 
-void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) {
+void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, bool is_test) {
     option.grid_count &= ~1;
     if (option.grid_count <= 0 || option.step_ratio <= 0 || option.step_ratio >= 1.0f) {
         LOG(error) << "invalid param!";
@@ -244,16 +244,18 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
         failed_sp.cancel();
      }
 
-     while (!grid_orders.empty()) {
-        auto cmd = Command::makeMultiOrderReq(g_ticket, TradeMode::Cross, grid_orders);
-        g_private_channel->sendCmd(std::move(cmd),
-            [this](Command::Response& resp) {
-                if (resp.code == 0) {
-                    LOG(debug) << "<< order ok.";
-                } else
-                    LOG(error) << "<< order failed. " << resp.data;
-            }
-        );
+    if (!is_test) {
+        while (!grid_orders.empty()) {
+            auto cmd = Command::makeMultiOrderReq(g_ticket, TradeMode::Cross, grid_orders);
+            g_private_channel->sendCmd(std::move(cmd),
+                [this](Command::Response& resp) {
+                    if (resp.code == 0) {
+                        LOG(debug) << "<< order ok.";
+                    } else
+                        LOG(error) << "<< order failed. " << resp.data;
+                }
+            );
+        }
     }
 }
 
