@@ -24,7 +24,10 @@ void init_logger() {
         keywords::file_name = "ibitcoin2waygrid_%N.log",
         keywords::rotation_size = 10 * 1024 * 1024,
         keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
-        keywords::format = "[%TimeStamp%]: %Message%"
+        keywords::format = "[%TimeStamp%]: %Message%",
+        keywords::auto_flush = true
+    )->set_filter(
+        logging::trivial::severity >= logging::trivial::debug
     );
 
     logging::add_console_log
@@ -32,10 +35,7 @@ void init_logger() {
         std::cout,
         boost::log::keywords::format = "%Message%",
         keywords::auto_flush = true
-    );
-
-    logging::core::get()->set_filter
-    (
+    )->set_filter(
         logging::trivial::severity >= logging::trivial::info
     );
 
