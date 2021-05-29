@@ -9,7 +9,7 @@
 #include <vector>
 #include <deque>
 #include <iomanip>
-
+#include <chrono>
 
 class UserData {
 public:
@@ -125,12 +125,14 @@ public:
         float lever = 10;
         float origin_cash = 0;
         float start_cash = 0;
+        std::chrono::steady_clock::time_point start_time;
+        int retry = 0;
 
         friend std::ostream& operator << (std::ostream& o, const GridStrategy& t);
     };
 
 public:
-    void startGrid(GridStrategy::Option option);
+    void startGrid(GridStrategy::Option option, bool conetinue_last_grid=false);
     void updateGrid();
     void clearGrid();
 
