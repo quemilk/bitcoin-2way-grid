@@ -190,7 +190,6 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
 
         auto left_cash = option.injected_cash - strtof(avg_amount.c_str(), nullptr) * requred_cash;
         float leftn = left_cash * option.lever / ct_val / (strtof(grid_strategy_.grids[0].px.c_str(), nullptr) + strtof(grid_strategy_.grids[grid_strategy_.grids.size() - 1].px.c_str(), nullptr));
-        leftn = leftn * 3 / 4;
 
         for (int i = 0; i < side_count; ++i) {
             auto cur_amount = avg_amount;
