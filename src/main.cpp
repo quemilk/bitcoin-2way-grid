@@ -4,6 +4,7 @@
 #include "command.h"
 #include "public_channel.h"
 #include "private_channel.h"
+#include "concurrent_queue.h"
 #include "json.h"
 #include <cstdlib>
 #include <functional>
@@ -11,6 +12,10 @@
 #include <thread>
 #include <fstream>
 #include <boost/dll.hpp>
+
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 std::string g_api_key;
 std::string g_passphrase;
@@ -20,6 +25,19 @@ std::shared_ptr<PublicChannel> g_public_channel;
 std::shared_ptr<PrivateChannel> g_private_channel;
 
 bool g_show_trades = false;
+
+ConcurrentQueueT<bool> g_console_break_noti;
+
+#ifdef _WIN32
+static BOOL WINAPI handle_console_routine(DWORD ctrl_type) {
+    if (ctrl_type == CTRL_C_EVENT) {
+        g_console_break_noti.push(true);
+        return TRUE;
+    }
+    return FALSE;
+}
+#endif
+
 
 int main(int argc, char** argv) {
     init_logger();
@@ -101,7 +119,7 @@ int main(int argc, char** argv) {
 
     while (!g_user_data.balance_.inited || g_user_data.public_product_info_.data.empty() || g_user_data.public_trades_info_.trades_data.empty())
         std::this_thread::sleep_for(std::chrono::seconds(1));
-   
+
     {
         g_user_data.lock();
         auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
@@ -110,11 +128,22 @@ int main(int argc, char** argv) {
         LOG(info) << g_user_data.position_;
     }
 
+#ifdef _WIN32
+    ::SetConsoleCtrlHandler(handle_console_routine, TRUE);
+    HANDLE hout = ::GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
+
     for (;;) {
         std::cout << "> ";
 
         std::string op;
-        std::getline(std::cin, op);
+        for (;;) {
+            std::getline(std::cin, op);
+            if (!std::cin.good())
+                std::cin.clear();
+            else
+                break;
+        }
         trimString(op);
 
         if (op == "show trades") {
@@ -165,17 +194,32 @@ int main(int argc, char** argv) {
                 trimString(grid_run);
                 if (grid_run.empty())
                     grid_run = "y";
-                if (grid_run == "Y" || grid_run == "y")                
+                if (grid_run == "Y" || grid_run == "y")
                     g_user_data.startGrid(option, false);
             } else
                 g_user_data.startGrid(option, false, true);
         } else if (op == "stop grid") {
             g_user_data.clearGrid();
         } else if (op == "show grid") {
-            g_user_data.lock();
-            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
-            std::cout << g_user_data.grid_strategy_;
-        } else {
+            bool notiv;
+            while (g_console_break_noti.tryPop(&notiv)) {}
+            CONSOLE_SCREEN_BUFFER_INFO scr;
+            ::GetConsoleScreenBufferInfo(hout, &scr);
+            do {
+                DWORD written;
+                ::FillConsoleOutputCharacterA(
+                    hout, ' ', scr.dwSize.X * scr.dwSize.Y, scr.dwCursorPosition, &written
+                );
+
+                ::SetConsoleCursorPosition(hout, scr.dwCursorPosition);
+
+                {
+                    g_user_data.lock();
+                    auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+                    std::cout << g_user_data.grid_strategy_ << std::endl;
+                }
+            } while (!g_console_break_noti.pop(&notiv, std::chrono::seconds(5)));
+        } else if (!op.empty()) {
             std::cout << "commands:" << std::endl;
             std::cout << "\tshow position" << std::endl;
             std::cout << "\tshow balance" << std::endl;
@@ -190,5 +234,9 @@ int main(int argc, char** argv) {
     }
 
     t.join();
+
+#ifdef _WIN32
+    ::CloseHandle(hout);
+#endif
     return EXIT_SUCCESS;
 }

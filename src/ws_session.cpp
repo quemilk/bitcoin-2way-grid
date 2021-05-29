@@ -212,6 +212,7 @@ bool WSSession::async_read(std::function<void(std::string&)> func) {
             else if (!str.empty())
                 func(str);
         });
+    return true;
 }
 
 void WSSession::on_fail(beast::error_code ec, char const* what) {
