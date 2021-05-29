@@ -384,11 +384,11 @@ void UserData::updateGrid() {
     if (buy_count == 0 || sell_count == 0) {
         LOG(warning) << "WARNING!!! exeed to grid limit. closeout the grid.";
         clearGrid();
-        std::this_thread::sleep_for(std::chrono::minutes(10));
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         LOG(warning) << "WARNING!!! grid will restart on 10min.";
         std::thread(
             [] {
-                std::this_thread::sleep_for(std::chrono::minutes(5));
+                std::this_thread::sleep_for(std::chrono::minutes(10));
                 g_user_data.startGrid(g_user_data.grid_strategy_.option, true);
             }
         ).detach();
