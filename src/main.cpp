@@ -203,15 +203,18 @@ int main(int argc, char** argv) {
         } else if (op == "show grid") {
             bool notiv;
             while (g_console_break_noti.tryPop(&notiv)) {}
+#ifdef _WIN32
             CONSOLE_SCREEN_BUFFER_INFO scr;
             ::GetConsoleScreenBufferInfo(hout, &scr);
+#endif
             do {
+#ifdef _WIN32
                 DWORD written;
                 ::FillConsoleOutputCharacterA(
                     hout, ' ', scr.dwSize.X * scr.dwSize.Y, scr.dwCursorPosition, &written
                 );
-
                 ::SetConsoleCursorPosition(hout, scr.dwCursorPosition);
+#endif
 
                 {
                     g_user_data.lock();
