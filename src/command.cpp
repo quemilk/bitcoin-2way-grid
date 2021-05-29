@@ -390,7 +390,8 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                 resp.code = -1;
             if (doc.HasMember("msg"))
                 resp.msg = doc["msg"].GetString();
-            
+
+            LOG(debug) << "resp. op=" << resp.op << ", code=" << resp.code << ", msg=" << resp.msg << ", data=" << resp.data;
             *out_resp = std::move(resp);
             return true;
         } else if (doc.HasMember("op")) {
@@ -405,6 +406,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
             if (doc.HasMember("msg"))
                 resp.msg = doc["msg"].GetString();
 
+            LOG(debug) << "resp. id=" << resp.id << ", op=" << resp.op << ", code=" << resp.code << ", msg=" << resp.msg << ", data=" << resp.data;
             *out_resp = std::move(resp);
             return true;
         } else if (doc.HasMember("data")) {

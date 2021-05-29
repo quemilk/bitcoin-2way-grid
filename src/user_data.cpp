@@ -454,7 +454,7 @@ void UserData::clearGrid() {
                         if (resp.code == 0) {
                             LOG(debug) << "<< order ok.";
                         } else if (resp.code == 1 || resp.code == 2) {
-                            LOG(debug) << "<< order partical failed. " << resp.data;
+                            LOG(debug) << "<< order partical failed.";
                         } else
                             LOG(error) << "<< order failed." << resp.data;
                     }
@@ -475,7 +475,7 @@ void UserData::clearGrid() {
                 if (resp.code == 0) {
                     LOG(debug) << "<< cancel ok.";
                 } else if (resp.code == 1 || resp.code == 2) {
-                    LOG(debug) << "<< cancel partical failed. " << resp.data;
+                    LOG(debug) << "<< cancel partical failed.";
                 } else
                     LOG(error) << "<< cancel failed. " << resp.data;
             }

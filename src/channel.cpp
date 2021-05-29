@@ -87,6 +87,7 @@ void Channel::parseIncomeData(const std::string& data) {
 }
 
 void Channel::sendCmd(Command::Request&& req, callback_func_t callback) {
+    LOG(debug) << "sendCmd. id=" << req.id << ", op=" << req.op << ", data=" << req.data;
     Cmd cmd;
     cmd.req = std::move(req);
     cmd.cb = callback;
