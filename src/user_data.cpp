@@ -255,8 +255,11 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
             }
         }
 
-        if (!conetinue_last_grid)
+        if (!conetinue_last_grid) {
+            grid_strategy_.retry = 0;
             grid_strategy_.start_time = std::chrono::steady_clock::now();
+        } else
+            ++grid_strategy_.retry;
         failed_sp.cancel();
      }
 
@@ -530,6 +533,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         auto running_minutes = std::chrono::duration_cast<std::chrono::minutes>(std::chrono::steady_clock::now() - t.start_time).count();
         o << " \trunning " << (running_minutes / 60) << " h " << std::right << std::setfill('0') << std::setw(2) << (running_minutes % 60) << " m";
     }
+    if (t.retry)
+        o << " \tretry: " << t.retry;
     o << std::endl;
 
     o << "inject cash: " << t.option.injected_cash
@@ -573,7 +578,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
                     continue;
                 o << "      ";
             } else
-                o << ((i == t.grids.size() / 2) ? "    - " : "    * ");
+                o << ((i == t.grids.size() / 2) ? "    * " : "    - ");
             o << v.px;
             //o << " (" << v.short_orders.order_amount << ")";
 
