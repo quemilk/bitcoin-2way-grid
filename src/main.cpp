@@ -139,12 +139,12 @@ int main(int argc, char** argv) {
             std::getline(std::cin, inject_cash);
             trimString(inject_cash);
 
-            std::cout << "grid level (10): ";
+            std::cout << "grid level (15): ";
             std::string grid_level;
             std::getline(std::cin, grid_level);
             trimString(grid_level);
             if (grid_level.empty())
-                grid_level = "10";
+                grid_level = "15";
 
             std::cout << "grid step (0.005): ";
             std::string grid_step;
