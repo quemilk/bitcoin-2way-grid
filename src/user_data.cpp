@@ -51,7 +51,6 @@ static std::string calcDiff(const std::string& px1, const std::string& px2, cons
 
 
 void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, bool is_test) {
-    option.grid_count &= ~1;
     if (option.grid_count <= 0 || option.step_ratio <= 0 || option.step_ratio >= 1.0f) {
         LOG(error) << "invalid param!";
         return;
