@@ -412,36 +412,64 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                 std::string channel = doc["arg"]["channel"].GetString();
 
                 if (channel == "account") {
-                    // TODO
+                    g_user_data.lock();
+                    auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+                    g_user_data.balance_.inited = true;
 
+                    for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
+                        auto& bal = (*itr)["details"];
+                        for (auto itrbal = bal.Begin(); itrbal != bal.End(); ++itrbal) {
+                            auto& val = *itrbal;
+                            std::string ccy = val["ccy"].GetString();
+                            UserData::Balance::BalVal balval;
+                            balval.eq = val["eq"].GetString();
+                            balval.upl = val["upl"].GetString();
+                            balval.avail_eq = val["availEq"].GetString();
+                            balval.cash_bal = val["cashBal"].GetString();
+                            g_user_data.balance_.balval[ccy] = balval;
+                        }
+                    }
                 } else if (channel == "positions") {
-                    // TODO
+                    g_user_data.lock();
+                    auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
+                    for (auto positr = doc["data"].Begin(); positr != doc["data"].End(); ++positr) {
+                        UserData::Position::PosData data;
+
+                        data.pos_id = (*positr)["posId"].GetString();
+                        data.inst_id = (*positr)["instId"].GetString();
+                        data.inst_type = (*positr)["instType"].GetString();
+
+                        data.pos_side = (*positr)["posSide"].GetString();
+                        data.avg_px = (*positr)["avgPx"].GetString();
+                        data.pos = (*positr)["pos"].GetString();
+                        data.ccy = (*positr)["ccy"].GetString();
+                        auto utime = (*positr)["uTime"].GetString();
+                        data.utime_msec = std::strtoull(utime, nullptr, 0);
+
+                        if (data.pos == "0")
+                            g_user_data.position_.posval.erase(data.pos_id);
+                        else
+                            g_user_data.position_.posval[data.pos_id] = std::move(data);
+                    }
                 } else if (channel == "balance_and_position") {
+                    g_user_data.lock();
+                    auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
                     for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
                         std::string event_type = (*itr)["eventType"].GetString();
 
                         if (itr->HasMember("balData")) {
-                            g_user_data.lock();
-                            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
-                            
                             g_user_data.balance_.inited = true;
                             auto& bal_data = (*itr)["balData"];
                             for (auto balitr = bal_data.Begin(); balitr != bal_data.End(); ++balitr) {
                                 std::string ccy = (*balitr)["ccy"].GetString();
                                 UserData::Balance::BalVal balval;
-                                balval.eq = (*balitr)["eq"].GetString();
                                 balval.cash_bal = (*balitr)["cashBal"].GetString();
-                                balval.upl = (*balitr)["upl"].GetString();
-                                balval.avail_eq = (*balitr)["availEq"].GetString();
                                 g_user_data.balance_.balval[ccy] = balval;
-                            }                      
+                            }
                         } 
 
                         if (itr->HasMember("posData")) {
-                            g_user_data.lock();
-                            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
-
                             auto& pos_data = (*itr)["posData"];
                             for (auto positr = pos_data.Begin(); positr != pos_data.End(); ++positr) {
                                 UserData::Position::PosData data;

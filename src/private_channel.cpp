@@ -25,10 +25,32 @@ void PrivateChannel::onConnected() {
 void PrivateChannel::onLogined() {
     LOG(info) << "private channel logined.";
 
-    auto req = Command::makeSubscriBebalanceAndPositionsChannel();
+    /*auto req = Command::makeSubscriBebalanceAndPositionsChannel();
 
     LOG(debug) << ">> subscribe. " << req.data;
 
+    this->sendCmd(std::move(req),
+        [this](Command::Response& resp) {
+            if (resp.code == 0)
+                LOG(debug) << "<< subscribe ok. " << resp.data;
+            else
+                throw std::runtime_error("<< subscribe failed! " + resp.msg);
+        }
+    );*/
+
+    auto req = Command::makeSubscribeAccountChannel();
+    LOG(debug) << ">> subscribe. " << req.data;
+    this->sendCmd(std::move(req),
+        [this](Command::Response& resp) {
+            if (resp.code == 0)
+                LOG(debug) << "<< subscribe ok. " << resp.data;
+            else
+                throw std::runtime_error("<< subscribe failed! " + resp.msg);
+        }
+    );
+
+    req = Command::makeSubscribePositionsChannel();
+    LOG(debug) << ">> subscribe. " << req.data;
     this->sendCmd(std::move(req),
         [this](Command::Response& resp) {
             if (resp.code == 0)
@@ -40,7 +62,6 @@ void PrivateChannel::onLogined() {
 
     req = Command::makeSubscribeOrdersChannel();
     LOG(debug) << ">> subscribe. " << req.data;
-
     this->sendCmd(std::move(req),
         [this](Command::Response& resp) {
             if (resp.code == 0)
