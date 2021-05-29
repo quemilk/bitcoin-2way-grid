@@ -510,7 +510,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
 
     if (t.start_time != std::chrono::steady_clock::time_point()) {
         auto running_minutes = std::chrono::duration_cast<std::chrono::minutes>(std::chrono::steady_clock::now() - t.start_time).count();
-        o << " \trunning " << (running_minutes / 60) << " h " << std::setfill('0') << std::setw(2) << (running_minutes % 60) << " m";
+        o << " \trunning " << (running_minutes / 60) << " h " << std::right << std::setfill('0') << std::setw(2) << (running_minutes % 60) << " m";
     }
     o << std::endl;
 
