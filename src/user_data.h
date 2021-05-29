@@ -14,13 +14,19 @@
 class UserData {
 public:
     struct Balance {
-        std::map<std::string, std::string> balval;
+        struct BalVal {
+            std::string eq;
+            std::string cash_bal;
+            std::string upl;
+            std::string avail_eq;
+        };
+        std::map<std::string, BalVal> balval;
         bool inited = false;
 
         friend class std::ostream& operator << (std::ostream& o, const Balance& t) {
             o << "=====Balance=====" << std::endl;
             for (auto& v : t.balval) {
-                o << "  " << v.first << " \tcash: " << v.second << std::endl;
+                o << "  " << v.first << " \teq: " << v.second.eq << ", cash: " << v.second.cash_bal << ", upl: " << v.second.upl << std::endl;
             }
             return o;
         }

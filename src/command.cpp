@@ -429,8 +429,12 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                             auto& bal_data = (*itr)["balData"];
                             for (auto balitr = bal_data.Begin(); balitr != bal_data.End(); ++balitr) {
                                 std::string ccy = (*balitr)["ccy"].GetString();
-                                std::string bal = (*balitr)["cashBal"].GetString();
-                                g_user_data.balance_.balval[ccy] = bal;
+                                UserData::Balance::BalVal balval;
+                                balval.eq = (*balitr)["eq"].GetString();
+                                balval.cash_bal = (*balitr)["cashBal"].GetString();
+                                balval.upl = (*balitr)["upl"].GetString();
+                                balval.avail_eq = (*balitr)["availEq"].GetString();
+                                g_user_data.balance_.balval[ccy] = balval;
                             }                      
                         } 
 

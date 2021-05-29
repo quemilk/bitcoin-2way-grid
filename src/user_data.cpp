@@ -97,9 +97,8 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
             LOG(error) << "cannot fetch balance " << ccy;
             return;
         }
-        auto cash = itrbal->second;
-        auto cashval = strtof(cash.c_str(), nullptr);
-        LOG(info) << "available cash: " << cash << " " << ccy;
+        auto cashval = strtof(itrbal->second.avail_eq.c_str(), nullptr);
+        LOG(info) << "available cash: " << itrbal->second.avail_eq << " " << ccy;
         if (cashval < option.injected_cash) {
             LOG(error) << "no enough cash!";
             return;
@@ -480,7 +479,7 @@ std::string UserData::currentCash(std::string ccy) {
 
     auto itrbal = g_user_data.balance_.balval.find(grid_strategy_.ccy);
     if (itrbal != g_user_data.balance_.balval.end()) {
-        return itrbal->second;
+        return itrbal->second.eq;
     }
     return std::string();
 }
