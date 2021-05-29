@@ -129,7 +129,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
         float min_sz_v = strtof(itrproduct->second.min_sz.c_str(), nullptr);
 
         auto side_count = option.grid_count;
-        auto grid_count = std::max(((side_count - 1) * 4 / 3) | 1, side_count);
+        auto grid_count = std::max(((side_count) * 4 / 3) | 1, side_count);
         auto grid_center = grid_count / 2;
 
         grid_strategy_.grids.clear();
@@ -175,7 +175,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
             auto& gridlong = grid_strategy_.grids[i];
             total_sum += lot_sz_v * strtof(gridlong.px.c_str(), nullptr);
 
-            auto& gridshort = grid_strategy_.grids[side_count - 1 - i];
+            auto& gridshort = grid_strategy_.grids[grid_count - 1 - i];
             total_sum += lot_sz_v * strtof(gridshort.px.c_str(), nullptr);
         }
 
@@ -189,13 +189,17 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
         }
 
         for (int i = 0; i < side_count; ++i) {
+            auto n = strtof(amount.c_str(), nullptr) / 2;
+            if (n < min_sz_v)
+                n = min_sz_v;
+            auto fixedamount = floatToString(n, lot_sz);
+
             auto& gridlong = grid_strategy_.grids[i];
-            gridlong.long_orders.order_amount = amount;
+            gridlong.long_orders.order_amount = i > grid_center + grid_center / 4 ? fixedamount : amount;
 
-            auto& gridshort = grid_strategy_.grids[side_count - 1 - i];
-            gridlong.short_orders.order_amount = amount;
+            auto& gridshort = grid_strategy_.grids[grid_count - 1 - i];
+            gridshort.short_orders.order_amount = i > grid_center + grid_center / 4 ? fixedamount : amount;
         }
-
 
         for (int i = 0; i < (int)grid_strategy_.grids.size(); ++i) {
             auto& grid = grid_strategy_.grids[i];
@@ -241,7 +245,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
         failed_sp.cancel();
      }
 
-    while (!grid_orders.empty()) {
+     while (!grid_orders.empty()) {
         auto cmd = Command::makeMultiOrderReq(g_ticket, TradeMode::Cross, grid_orders);
         g_private_channel->sendCmd(std::move(cmd),
             [this](Command::Response& resp) {
@@ -482,13 +486,7 @@ std::string UserData::currentCash(std::string ccy) {
 }
 
 std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
-    o << "=====Grid===== ";
-
-    if (t.start_time != std::chrono::steady_clock::time_point()) {
-        auto running_minutes = std::chrono::duration_cast<std::chrono::minutes>(std::chrono::steady_clock::now() - t.start_time).count();
-        o << (running_minutes / 60) << "h " << (running_minutes % 60) << "m";
-    }
-    o << std::endl;
+    o << "=====Grid=====" << std::endl;
     o << g_ticket;
 
     auto current_cash = strtof(g_user_data.currentCash(t.ccy).c_str(), nullptr);
@@ -510,7 +508,13 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
             o << " " << t.ccy;
         }
     }
+
+    if (t.start_time != std::chrono::steady_clock::time_point()) {
+        auto running_minutes = std::chrono::duration_cast<std::chrono::minutes>(std::chrono::steady_clock::now() - t.start_time).count();
+        o << " \trunning " << (running_minutes / 60) << " h " << std::setfill('0') << std::setw(2) << (running_minutes % 60) << " m";
+    }
     o << std::endl;
+
     o << "inject cash: " << t.option.injected_cash
         << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio
         << ", origin: " << t.origin_cash << std::endl;
@@ -521,11 +525,17 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
 
     if (!t.grids.empty()) {
         o << "  long:" << std::endl;
-        for (int i = 0; i < (int)t.grids.size(); ++i) {
+        for (int i = (int)t.grids.size() - 1; i >= 0; --i) {
             auto& v = t.grids[i];
 
-            o << ((i == t.grids.size() / 2) ? "    - " : "    * ");
+            if (v.long_orders.order_amount.empty()) {
+                if (v.long_orders.orders.empty())
+                    continue;
+                o << "      ";
+            } else
+                o << ((i == t.grids.size() / 2) ? "    - " : "    * ");
             o << v.px;
+            //o << " (" << v.long_orders.order_amount << ")";
 
             if (!v.long_orders.orders.empty()) {
                 for (auto& order : v.long_orders.orders) {
@@ -538,9 +548,17 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         }
 
         o << "  short:" << std::endl;
-        for (auto itr = t.grids.rbegin(); itr != t.grids.rend(); ++itr) {
-            auto& v = *itr;
-            o << "    * " << v.px;
+        for (int i = (int)t.grids.size() - 1; i >= 0; --i) {
+            auto& v = t.grids[i];
+
+            if (v.short_orders.order_amount.empty()) {
+                if (v.short_orders.orders.empty())
+                    continue;
+                o << "      ";
+            } else
+                o << ((i == t.grids.size() / 2) ? "    - " : "    * ");
+            o << v.px;
+            //o << " (" << v.short_orders.order_amount << ")";
 
             if (!v.short_orders.orders.empty()) {
                 for (auto& order : v.short_orders.orders) {
