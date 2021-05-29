@@ -97,16 +97,17 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
             LOG(error) << "cannot fetch balance " << ccy;
             return;
         }
-        auto cashval = strtof(itrbal->second.avail_eq.c_str(), nullptr);
+        auto casheq = strtof(itrbal->second.eq.c_str(), nullptr);
+        auto cashavailval = strtof(itrbal->second.avail_eq.c_str(), nullptr);
         LOG(info) << "available cash: " << itrbal->second.avail_eq << " " << ccy;
-        if (cashval < option.injected_cash) {
+        if (cashavailval < option.injected_cash) {
             LOG(error) << "no enough cash!";
             return;
         }
         grid_strategy_.ccy = ccy;
         if (!conetinue_last_grid)
-            grid_strategy_.origin_cash = cashval;
-        grid_strategy_.start_cash = cashval;
+            grid_strategy_.origin_cash = casheq;
+        grid_strategy_.start_cash = casheq;
 
         auto itrtrades = public_trades_info_.trades_data.find(g_ticket);
         if (itrtrades == public_trades_info_.trades_data.end()) {
