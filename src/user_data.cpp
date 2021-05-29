@@ -181,7 +181,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
 
         grid_strategy_.ct_val = itrproduct->second.ct_val;
         auto ct_val = strtof(grid_strategy_.ct_val.c_str(), nullptr);
-        auto requred_cash = total_sum * ct_val * 2 / option.lever;
+        auto requred_cash = total_sum * ct_val / option.lever;
         auto amount = floatToString(option.injected_cash / requred_cash, lot_sz);
         if (requred_cash >= option.injected_cash || strtof(amount.c_str(), nullptr) < min_sz_v) {
             LOG(error) << "no enough cash. require at least! " << floatToString(requred_cash, tick_sz);
@@ -245,7 +245,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
         failed_sp.cancel();
      }
 
-     while (!grid_orders.empty()) {
+    /* while (!grid_orders.empty()) {
         auto cmd = Command::makeMultiOrderReq(g_ticket, TradeMode::Cross, grid_orders);
         g_private_channel->sendCmd(std::move(cmd),
             [this](Command::Response& resp) {
@@ -255,7 +255,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid) 
                     LOG(error) << "<< order failed. " << resp.data;
             }
         );
-    }
+    }*/
 }
 
 void UserData::updateGrid() {
