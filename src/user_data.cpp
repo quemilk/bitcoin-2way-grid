@@ -182,23 +182,38 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
         grid_strategy_.ct_val = itrproduct->second.ct_val;
         auto ct_val = strtof(grid_strategy_.ct_val.c_str(), nullptr);
         auto requred_cash = total_sum * ct_val / option.lever;
-        auto amount = floatToString(option.injected_cash / requred_cash, lot_sz);
-        if (requred_cash >= option.injected_cash || strtof(amount.c_str(), nullptr) < min_sz_v) {
+        auto avg_amount = floatToString(option.injected_cash / requred_cash, lot_sz);
+        if (requred_cash >= option.injected_cash || strtof(avg_amount.c_str(), nullptr) < min_sz_v) {
             LOG(error) << "no enough cash. require at least! " << floatToString(requred_cash, tick_sz);
             return;
         }
 
+        auto left_cash = option.injected_cash - strtof(avg_amount.c_str(), nullptr) * requred_cash;
+        float leftn = left_cash * option.lever / ct_val / (strtof(grid_strategy_.grids[0].px.c_str(), nullptr) + strtof(grid_strategy_.grids[grid_strategy_.grids.size() - 1].px.c_str(), nullptr));
+        leftn = leftn * 3 / 4;
+
         for (int i = 0; i < side_count; ++i) {
-            auto n = strtof(amount.c_str(), nullptr) / 2;
+            auto cur_amount = avg_amount;
+            auto n = strtof(cur_amount.c_str(), nullptr) / 2;
             if (n < min_sz_v)
                 n = min_sz_v;
-            auto fixedamount = floatToString(n, lot_sz);
+            auto decamount = floatToString(n, lot_sz);
+
+            auto incamount = cur_amount;
+            if (leftn-- > 0) {
+                incamount = floatToString(strtof(cur_amount.c_str(), nullptr) + 1, lot_sz);
+            }
+
+            if (i > grid_center + grid_center / 4)
+                cur_amount = decamount;
+            else if (i < grid_center)
+                cur_amount = incamount;
 
             auto& gridlong = grid_strategy_.grids[i];
-            gridlong.long_orders.order_amount = i > grid_center + grid_center / 4 ? fixedamount : amount;
+            gridlong.long_orders.order_amount = cur_amount;
 
             auto& gridshort = grid_strategy_.grids[grid_count - 1 - i];
-            gridshort.short_orders.order_amount = i > grid_center + grid_center / 4 ? fixedamount : amount;
+            gridshort.short_orders.order_amount = cur_amount;
         }
 
         for (int i = 0; i < (int)grid_strategy_.grids.size(); ++i) {
