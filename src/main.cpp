@@ -149,7 +149,8 @@ int main(int argc, char** argv) {
         while (!over_noti.pop(nullptr, std::chrono::seconds(30))) {
             g_user_data.lock();
             auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
-         
+
+            // fix the order status when connection broken
             if (!g_user_data.grid_strategy_.grids.empty() && g_user_data.grid_strategy_.dirty) {
                 g_user_data.grid_strategy_.dirty = !g_restapi->checkOrderFilled();
             }
