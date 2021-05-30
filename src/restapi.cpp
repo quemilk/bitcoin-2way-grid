@@ -154,6 +154,7 @@ bool RestApi::checkOrderFilled() {
                         }
                     }
                 }
+                g_user_data.grid_strategy_.dirty = false;
                 g_user_data.updateGrid();
                 return true;
             } catch (...) {
