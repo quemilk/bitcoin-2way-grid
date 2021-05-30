@@ -260,12 +260,13 @@ int main(int argc, char** argv) {
 
                     std::cout << g_user_data.grid_strategy_;
                     std::cout << "________________________________________________________________" << std::endl;
-                    int i = 0;
-                    for (auto& v : g_user_data.grid_strategy_.filled_history_log_) {
-                        if (++i > 5)
-                            break;
-                        std::cout << v << std::endl;
-                    }
+                    
+                    auto itr = g_user_data.grid_strategy_.filled_history_log_.begin();
+                    if (g_user_data.grid_strategy_.filled_history_log_.size() > 10)
+                        std::advance(itr, g_user_data.grid_strategy_.filled_history_log_.size() - 10);
+                    
+                    for (; itr != g_user_data.grid_strategy_.filled_history_log_.end(); ++itr)
+                        std::cout << *itr << std::endl;
                 }
             } while (!g_console_break_noti.pop(&notiv, std::chrono::seconds(5)));
         } else if (!op.empty()) {

@@ -589,9 +589,9 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                             std::ostringstream ofilledlog;
                             ofilledlog << "\b\b! " << state << " \t" << side << " \t" << pos_side
                                 << " \t" << std::left << std::setw(10) << px << " \t" << fill_sz << " \t" << lever << "x" << " \t" << toTimeStr(utime);
-                            g_user_data.grid_strategy_.filled_history_log_.push_front(ofilledlog.str());
+                            g_user_data.grid_strategy_.filled_history_log_.push_back(ofilledlog.str());
                             if (g_user_data.grid_strategy_.filled_history_log_.size() > 100)
-                                g_user_data.grid_strategy_.filled_history_log_.pop_back();
+                                g_user_data.grid_strategy_.filled_history_log_.pop_front();
                             std::cout << ofilledlog.str() << std::endl;
                         }
                         o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
