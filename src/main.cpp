@@ -178,6 +178,10 @@ int main(int argc, char** argv) {
             std::string inject_cash;
             std::getline(std::cin, inject_cash);
             trimString(inject_cash);
+            if (inject_cash.empty()) {
+                std::cout << "invalid input!" << std::endl;
+                continue;
+            }
 
             std::cout << "grid number (20): ";
             std::string grid_level;
