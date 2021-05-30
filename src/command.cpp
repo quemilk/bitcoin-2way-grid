@@ -190,6 +190,12 @@ Command::Request Command::makeOrderReq(const std::string& inst_id, TradeMode tra
 }
 
 Command::Request Command::makeMultiOrderReq(const std::string& inst_id, TradeMode trade_mode, std::deque<OrderData>& orders) {
+    if (orders.size() == 1) {
+        auto order = orders.front();
+        orders.pop_front();
+        return makeOrderReq(inst_id, trade_mode, order);
+    }
+
     rapidjson::Document doc(rapidjson::kObjectType);
     auto id = generateRandomString(10);
     doc.AddMember("id", id, doc.GetAllocator());
@@ -282,6 +288,12 @@ Command::Request Command::makeCancelOrderReq(const std::string& inst_id, const s
 }
 
 Command::Request Command::makeCancelMultiOrderReq(const std::string& inst_id, std::deque<std::string>& cliordids) {
+    if (cliordids.size() == 1) {
+        auto cliordid = cliordids.front();
+        cliordids.pop_front();
+        return makeCancelOrderReq(inst_id, cliordid, "");
+    }
+
     rapidjson::Document doc(rapidjson::kObjectType);
     auto id = generateRandomString(10);
     doc.AddMember("id", id, doc.GetAllocator());
