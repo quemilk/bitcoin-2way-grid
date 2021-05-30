@@ -179,12 +179,12 @@ int main(int argc, char** argv) {
             std::getline(std::cin, inject_cash);
             trimString(inject_cash);
 
-            std::cout << "grid number (15): ";
+            std::cout << "grid number (20): ";
             std::string grid_level;
             std::getline(std::cin, grid_level);
             trimString(grid_level);
             if (grid_level.empty())
-                grid_level = "15";
+                grid_level = "20";
 
             std::cout << "grid step (0.005): ";
             std::string grid_step;
@@ -197,6 +197,8 @@ int main(int argc, char** argv) {
             std::string leverage;
             std::getline(std::cin, leverage);
             trimString(leverage);
+            if (leverage.empty())
+                leverage = "10";
 
             UserData::GridStrategy::Option option;
             option.injected_cash = strtof(inject_cash.c_str(), nullptr);
