@@ -124,8 +124,9 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
 
         auto tick_sz = itrproduct->second.tick_sz;
         auto lot_sz = itrproduct->second.lot_sz;
+        auto min_sz = itrproduct->second.min_sz;
         float lot_sz_v = strtof(lot_sz.c_str(), nullptr);
-        float min_sz_v = strtof(itrproduct->second.min_sz.c_str(), nullptr);
+        float min_sz_v = strtof(min_sz.c_str(), nullptr);
 
         auto side_count = option.grid_count;
         auto grid_count = std::max(((side_count) * 4 / 3) | 1, side_count);
@@ -202,7 +203,9 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
                 incamount = floatToString(strtof(cur_amount.c_str(), nullptr) + 1, lot_sz);
             }
 
-            if (i > grid_center + grid_center / 4)
+            if (i == 0)
+                cur_amount = min_sz;
+            else if (i > grid_center + grid_center / 4)
                 cur_amount = decamount;
             else if (i < grid_center)
                 cur_amount = incamount;
@@ -254,10 +257,10 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
         }
 
         if (!conetinue_last_grid) {
-            grid_strategy_.retry = 0;
+            grid_strategy_.rebuild = 0;
             grid_strategy_.start_time = std::chrono::steady_clock::now();
         } else
-            ++grid_strategy_.retry;
+            ++grid_strategy_.rebuild;
         failed_sp.cancel();
      }
 
