@@ -1,5 +1,6 @@
 ﻿#include "restapi.h"
 #include "global.h"
+#include "user_data.h"
 #include "crypto/base64.h"
 #include "util.h"
 #include "json.h"
@@ -8,6 +9,7 @@
 
 #define SET_LEVERAGE_PATH   "/api/v5/account/set-leverage"
 #define GET_LEVERAGE_PATH   "/api/v5/account/leverage-info"
+#define GET_ORDER_FILLED    "/api/v5/trade/fills"
 
 static std::string url_encode(const string& value) {
     std::ostringstream escaped;
@@ -79,15 +81,17 @@ bool RestApi::setLeverage(int lever) {
         if (scode == 200) {
             auto& body = resp.body();
             LOG(debug) << "rest api resp. body=" << resp.body();
-
-            rapidjson::Document respdoc;
-            respdoc.Parse<0>(body);
-            if (respdoc.HasMember("code")) {
-                int code = std::strtol(respdoc["code"].GetString(), nullptr, 0);
-                if (0 != code)
-                    return false;
+            try {
+                rapidjson::Document respdoc;
+                respdoc.Parse<0>(body);
+                if (respdoc.HasMember("code")) {
+                    int code = std::strtol(respdoc["code"].GetString(), nullptr, 0);
+                    if (0 != code)
+                        return false;
+                }
+                return true;
+            } catch (...) {
             }
-            return true;
         } else {
             LOG(warning) << "rest api failed! scode=" << scode << ", body=" << resp.body();
         }
@@ -111,6 +115,53 @@ bool RestApi::setLeverage(int lever) {
 //    }
 //    return false;
 //}
+
+bool RestApi::checkOrderFilled() {
+    std::deque<std::pair<std::string, std::string> > params;
+    params.emplace_back("instType", "SWAP");
+    params.emplace_back("instId", g_ticket);
+    params.emplace_back("limit", "50");
+    
+    resp_type resp;
+    if (sendCmd("GET", makePath(GET_ORDER_FILLED, params), "", &resp)) {
+        if (resp.result_int() == 200) {
+            auto& body = resp.body();
+            try {
+                rapidjson::Document doc;
+                doc.Parse<0>(body);
+
+                for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
+                    std::string clordid = (*itr)["clOrdId"].GetString();
+                    if (!clordid.empty()) {
+                        std::string side = (*itr)["side"].GetString();
+                        std::string pos_side = (*itr)["posSide"].GetString();
+                        std::string fill_px = (*itr)["fillPx"].GetString();
+                        std::string fill_sz = (*itr)["fillSz"].GetString();
+
+                        g_user_data.lock();
+                        auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+
+                        for (auto& grid : g_user_data.grid_strategy_.grids) {
+                            auto orders_arr = { &grid.long_orders, &grid.short_orders };
+                            for (auto ordersq : orders_arr) {
+                                for (auto& order : ordersq->orders) {
+                                    if (order.order_data.clordid == clordid) {
+                                        order.order_status = OrderStatus::Filled;
+                                        order.fill_px = fill_px;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                g_user_data.updateGrid();
+                return true;
+            } catch (...) {
+            }
+        }
+    }
+    return false;    
+}
 
 bool RestApi::sendCmd(const string& verbstr, const std::string& path, const std::string& reqdata, resp_type* resp) {
     LOG(debug) << "rest api req. path=" << path << ", body=" << reqdata;

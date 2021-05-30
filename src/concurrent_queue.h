@@ -36,7 +36,8 @@ public:
 				return false;
 			available_cond_.wait(lock);
 		}
-		*v = std::move(q_.front());
+		if (v)
+			*v = std::move(q_.front());
 		q_.pop_front();
 		return true;
 	}
@@ -50,7 +51,8 @@ public:
 				&& q_.empty())
 				return false;
 		}
-		*v = std::move(q_.front());
+		if (v)
+			*v = std::move(q_.front());
 		q_.pop_front();
 		return true;
 	}

@@ -20,6 +20,7 @@ public:
 
 
     bool setLeverage(int lever);
+    bool checkOrderFilled();
 
 private:
     bool sendCmd(const string& verbstr, const std::string& path, const std::string& reqdata, resp_type* resp);

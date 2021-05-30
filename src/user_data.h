@@ -132,6 +132,7 @@ public:
         float start_cash = 0;
         std::chrono::steady_clock::time_point start_time;
         int rebuild = 0;
+        bool dirty = false;
 
         friend std::ostream& operator << (std::ostream& o, const GridStrategy& t);
     };

@@ -144,6 +144,18 @@ int main(int argc, char** argv) {
     HANDLE hout = ::GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
 
+    ConcurrentQueueT<bool> over_noti;
+    std::thread checkgrid([&] {
+        while (!over_noti.pop(nullptr, std::chrono::seconds(30))) {
+            g_user_data.lock();
+            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+         
+            if (!g_user_data.grid_strategy_.grids.empty() && g_user_data.grid_strategy_.dirty) {
+                g_user_data.grid_strategy_.dirty = !g_restapi->checkOrderFilled();
+            }
+        }
+    });
+
     for (;;) {
         std::cout << "> ";
 
@@ -260,6 +272,10 @@ int main(int argc, char** argv) {
     }
 
     t.join();
+
+    over_noti.push(true);
+    checkgrid.join();
+
 
 #ifdef _WIN32
     ::CloseHandle(hout);

@@ -1,6 +1,8 @@
 ﻿#include "private_channel.h"
 #include "Command.h"
 #include "logger.h"
+#include "restapi.h"
+#include "user_data.h"
 
 extern std::string g_api_key;
 extern std::string g_passphrase;
@@ -70,6 +72,14 @@ void PrivateChannel::onLogined() {
                 throw std::runtime_error("<< subscribe failed! " + resp.msg);
         }
     );
+
+    {
+        g_user_data.lock();
+        auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+        if (!g_user_data.grid_strategy_.grids.empty()) {
+            g_user_data.grid_strategy_.dirty = true;
+        }
+    }
 
     std::unique_lock lock(cond_mutex_);
     logined_ = true;
