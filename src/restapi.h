@@ -1,16 +1,19 @@
 ﻿#pragma once
 
+#include "http_session.h"
+
 class RestApi {
 public:
-    RestApi(const std::string& host);
+    RestApi(net::io_context& ioc,
+        const std::string& host, const std::string& port,
+        const std::string socks_proxy = "");
 
-    void setLeverage(int lever);
+public:
+    bool setLeverage(int lever);
 
-    void getLeverage();
+    int getLeverage();
 
 private:
-    std::string call(const std::string& verb, const std::string& reqdata);
-
-private:
-    const std::string host_;
 };
+
+extern std::shared_ptr<RestApi> g_restapi;

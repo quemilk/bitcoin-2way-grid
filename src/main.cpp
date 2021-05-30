@@ -4,6 +4,7 @@
 #include "command.h"
 #include "public_channel.h"
 #include "private_channel.h"
+#include "restapi.h"
 #include "concurrent_queue.h"
 #include "json.h"
 #include <cstdlib>
@@ -23,6 +24,7 @@ std::string g_secret;
 std::string g_ticket;
 std::shared_ptr<PublicChannel> g_public_channel;
 std::shared_ptr<PrivateChannel> g_private_channel;
+std::shared_ptr<RestApi> g_restapi;
 
 bool g_show_trades = false;
 
@@ -88,21 +90,25 @@ int main(int argc, char** argv) {
     LOG(info) << g_ticket;
 
     std::string host, port, private_path, public_path;
+    std::string restapi_host;
     if (enviorment == "simu") {
         host = SIMU_WSS_HOST;
         port = SIMU_WSS_PORT;
         private_path = SIMU_WSS_PRIVATE_CHANNEL;
         public_path = SIMU_WSS_PUBLIC_CHANNEL;
+        restapi_host = SIMU_REST_API_HOST;
     } else if (enviorment == "product") {
         host = WSS_HOST;
         port = WSS_PORT;
         private_path = WSS_PRIVATE_CHANNEL;
         public_path = WSS_PUBLIC_CHANNEL;
+        restapi_host = REST_API_HOST;
     } else if (enviorment == "aws") {
         host = AWS_WSS_HOST;
         port = AWS_WSS_PORT;
         private_path = AWS_WSS_PRIVATE_CHANNEL;
         public_path = AWS_WSS_PUBLIC_CHANNEL;
+        restapi_host = AWS_REST_API_HOST;
     } else {
         LOG(error) << "invalid enviorenment setting! " << enviorment << ". (simu, product, aws)";
         return -1;
@@ -114,6 +120,7 @@ int main(int argc, char** argv) {
 
     g_public_channel = std::make_shared<PublicChannel>(ioc, host, port, public_path, socks_proxy);
     g_private_channel = std::make_shared<PrivateChannel>(ioc, host, port, private_path, socks_proxy);
+    g_restapi = std::make_shared<RestApi>(ioc, restapi_host, "443");
 
     g_private_channel->waitLogined();
 

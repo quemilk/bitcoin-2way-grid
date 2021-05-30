@@ -7,13 +7,6 @@
 
 extern bool g_show_trades;
 
-static std::string toString(rapidjson::Value& v) {
-    rapidjson::StringBuffer strbuf;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
-    v.Accept(writer);
-    return strbuf.GetString();
-}
-
 
 /*{
  "op": "login",

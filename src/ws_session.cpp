@@ -1,6 +1,8 @@
 ﻿#include "ws_session.h"
 #include "logger.h"
 #include "socks/handshake.hpp"
+#include <boost/asio/strand.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 #include <iostream>
 
 

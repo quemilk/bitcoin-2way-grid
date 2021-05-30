@@ -42,3 +42,10 @@ struct JsonParseException : JsonException, rapidjson::ParseResult {
 #include "third-party/rapidjson/writer.h"
 #include "third-party/rapidjson/stringbuffer.h"
 #include "third-party/rapidjson/error/en.h"
+
+inline std::string toString(rapidjson::Value& v) {
+    rapidjson::StringBuffer strbuf;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
+    v.Accept(writer);
+    return strbuf.GetString();
+}

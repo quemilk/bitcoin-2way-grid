@@ -1,13 +1,10 @@
 ﻿#pragma once
 
+#include "type.h"
 #include <boost/beast/core.hpp>
-#include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/ssl.hpp>
-#include <boost/asio/strand.hpp>
+#include <boost/beast/ssl.hpp>
 #include "socks/uri.hpp"
-#include <string>
-#include <memory>
 #include <condition_variable>
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
@@ -55,15 +52,16 @@ private:
     void on_fail(beast::error_code ec, char const* what);
 
 private:
-    tcp::resolver resolver_;
-    websocket::stream<beast::ssl_stream<beast::tcp_stream>> ws_;
-    beast::flat_buffer buffer_;
     std::string host_;
     std::string port_;
     std::string path_;
     std::string socks_server_;
     socks::uri socks_url_;
     int socks_version_;
+
+    tcp::resolver resolver_;
+    websocket::stream<beast::ssl_stream<beast::tcp_stream>> ws_;
+    beast::flat_buffer buffer_;
 
     std::mutex mutex_;
     beast::error_code ec_;
