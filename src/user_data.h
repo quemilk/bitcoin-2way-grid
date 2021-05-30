@@ -134,6 +134,8 @@ public:
         int rebuild = 0;
         bool dirty = false;
 
+        std::deque<std::string> filled_history_log_;
+
         friend std::ostream& operator << (std::ostream& o, const GridStrategy& t);
     };
 

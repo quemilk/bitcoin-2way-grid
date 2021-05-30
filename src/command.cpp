@@ -551,8 +551,8 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         std::string fee = (*itr)["fee"].GetString(); // 订单交易手续费
                         std::string pnl = (*itr)["pnl"].GetString(); // 收益
 
-                        uint64_t utime = std::strtoull((*itr)["uTime"].GetString(), nullptr, 0); // 订单更新时间
-                        uint64_t ctime = std::strtoull((*itr)["cTime"].GetString(), nullptr, 0); // 订单更新时间
+                        uint64_t utime = std::strtoull((*itr)["uTime"].GetString(), nullptr, 0);
+                        uint64_t ctime = std::strtoull((*itr)["cTime"].GetString(), nullptr, 0);
 
                         if (!clordid.empty()) {
                             g_user_data.lock();
@@ -580,13 +580,19 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                             }
                         }
 
-                        o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << "\t" << toTimeStr(utime) << std::endl;
+                        o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << " \t" << toTimeStr(utime) << std::endl;
                         if (state == "live")
                             o << "    order: \t" << sz << " \t" << std::left << std::setw(10) << px << " \t" << lever << "x" << std::endl;
                         else if (state == "filled" || state == "partially_filled") {
                             o << "    filled: \t" << fill_sz << " \t" << fill_px << " \t" << lever << "x" << std::endl;
-                            std::cout << "\b\b! " << state << " \t" << side << " \t" << pos_side
-                                << " \t" << std::left << std::setw(10) << px << " \t" << fill_sz << " \tlever:" << lever << "x" << std::endl;
+
+                            std::ostringstream ofilledlog;
+                            ofilledlog << "\b\b! " << state << " \t" << side << " \t" << pos_side
+                                << " \t" << std::left << std::setw(10) << px << " \t" << fill_sz << " \t" << lever << "x" << " \t" << toTimeStr(utime);
+                            g_user_data.grid_strategy_.filled_history_log_.push_front(ofilledlog.str());
+                            if (g_user_data.grid_strategy_.filled_history_log_.size() > 100)
+                                g_user_data.grid_strategy_.filled_history_log_.pop_back();
+                            std::cout << ofilledlog.str() << std::endl;
                         }
                         o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
                     }
