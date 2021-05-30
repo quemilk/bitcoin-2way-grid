@@ -1,5 +1,6 @@
 ﻿#include "user_data.h"
 #include "private_channel.h"
+#include "restapi.h"
 #include "logger.h"
 #include "command.h"
 #include <deque>
@@ -57,8 +58,12 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
     }
     
     LOG(info) << "grid starting: injected_cash=" << option.injected_cash
-        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio << " lever=" << option.lever << "x " << g_ticket;
+        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio << " lever=" << option.leverage << "x " << g_ticket;
 
+    if (g_restapi->setLeverage(option.leverage)) {
+        LOG(error) << "set leverage failed!";
+        return;
+    }
     
     std::deque<OrderData> grid_orders;
     {
@@ -181,7 +186,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
 
         grid_strategy_.ct_val = itrproduct->second.ct_val;
         auto ct_val = strtof(grid_strategy_.ct_val.c_str(), nullptr);
-        auto requred_cash = total_sum * ct_val / option.lever;
+        auto requred_cash = total_sum * ct_val / option.leverage;
         auto avg_amount = floatToString(option.injected_cash / requred_cash, lot_sz);
         if (requred_cash >= option.injected_cash || strtof(avg_amount.c_str(), nullptr) < min_sz_v) {
             LOG(error) << "no enough cash. require at least! " << floatToString(requred_cash, tick_sz);
@@ -189,7 +194,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
         }
 
         auto left_cash = option.injected_cash - strtof(avg_amount.c_str(), nullptr) * requred_cash;
-        float leftn = left_cash * option.lever / ct_val / (strtof(grid_strategy_.grids[0].px.c_str(), nullptr) + strtof(grid_strategy_.grids[grid_strategy_.grids.size() - 1].px.c_str(), nullptr));
+        float leftn = left_cash * option.leverage / ct_val / (strtof(grid_strategy_.grids[0].px.c_str(), nullptr) + strtof(grid_strategy_.grids[grid_strategy_.grids.size() - 1].px.c_str(), nullptr));
 
         for (int i = 0; i < side_count; ++i) {
             auto cur_amount = avg_amount;
@@ -553,7 +558,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
 
     auto cur_px_str = g_user_data.currentPrice();
     if (!cur_px_str.empty())
-        o << "lever: " << t.option.lever << "x \tcurrent: " << cur_px_str << std::endl;
+        o << "lever: " << t.option.leverage << "x \tcurrent: " << cur_px_str << std::endl;
 
     if (!t.grids.empty()) {
         o << "  long:" << std::endl;

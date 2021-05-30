@@ -20,7 +20,6 @@ public:
 
 
     bool setLeverage(int lever);
-    bool getLeverage(int* lever);
 
 private:
     bool sendCmd(const string& verbstr, const std::string& path, const std::string& reqdata, resp_type* resp);

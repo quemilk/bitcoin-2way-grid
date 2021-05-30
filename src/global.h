@@ -27,3 +27,4 @@ extern std::string g_api_key;
 extern std::string g_passphrase;
 extern std::string g_secret;
 extern std::string g_ticket;
+extern bool g_is_simu;

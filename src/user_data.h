@@ -118,7 +118,7 @@ public:
             float injected_cash = 0;
             int grid_count = 10;
             float step_ratio = 0.01f;
-            float lever = 10;
+            int leverage = 10;
         };
 
         Option option;
@@ -128,7 +128,6 @@ public:
         std::string ccy;
         std::string tick_sz;
         std::string ct_val;
-        float lever = 10;
         float origin_cash = 0;
         float start_cash = 0;
         std::chrono::steady_clock::time_point start_time;

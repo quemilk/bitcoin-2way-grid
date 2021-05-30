@@ -25,6 +25,7 @@ std::string g_ticket;
 std::shared_ptr<PublicChannel> g_public_channel;
 std::shared_ptr<PrivateChannel> g_private_channel;
 std::shared_ptr<RestApi> g_restapi;
+bool g_is_simu = true;
 
 bool g_show_trades = false;
 
@@ -92,18 +93,21 @@ int main(int argc, char** argv) {
     std::string host, port, private_path, public_path;
     std::string restapi_host;
     if (enviorment == "simu") {
+        g_is_simu = true;
         host = SIMU_WSS_HOST;
         port = SIMU_WSS_PORT;
         private_path = SIMU_WSS_PRIVATE_CHANNEL;
         public_path = SIMU_WSS_PUBLIC_CHANNEL;
         restapi_host = SIMU_REST_API_HOST;
     } else if (enviorment == "product") {
+        g_is_simu = false;
         host = WSS_HOST;
         port = WSS_PORT;
         private_path = WSS_PRIVATE_CHANNEL;
         public_path = WSS_PUBLIC_CHANNEL;
         restapi_host = REST_API_HOST;
     } else if (enviorment == "aws") {
+        g_is_simu = false;
         host = AWS_WSS_HOST;
         port = AWS_WSS_PORT;
         private_path = AWS_WSS_PRIVATE_CHANNEL;
@@ -120,7 +124,7 @@ int main(int argc, char** argv) {
 
     g_public_channel = std::make_shared<PublicChannel>(ioc, host, port, public_path, socks_proxy);
     g_private_channel = std::make_shared<PrivateChannel>(ioc, host, port, private_path, socks_proxy);
-    g_restapi = std::make_shared<RestApi>(ioc, restapi_host, "443");
+    g_restapi = std::make_shared<RestApi>(ioc, restapi_host, "443", socks_proxy);
 
     g_private_channel->waitLogined();
 
@@ -175,7 +179,7 @@ int main(int argc, char** argv) {
             std::getline(std::cin, inject_cash);
             trimString(inject_cash);
 
-            std::cout << "grid level (15): ";
+            std::cout << "grid number (15): ";
             std::string grid_level;
             std::getline(std::cin, grid_level);
             trimString(grid_level);
@@ -189,10 +193,16 @@ int main(int argc, char** argv) {
             if (grid_step.empty())
                 grid_step = "0.005";
 
+            std::cout << "leverage (10x): ";
+            std::string leverage;
+            std::getline(std::cin, leverage);
+            trimString(leverage);
+
             UserData::GridStrategy::Option option;
             option.injected_cash = strtof(inject_cash.c_str(), nullptr);
             option.grid_count = strtol(grid_level.c_str(), nullptr, 0);
             option.step_ratio = strtof(grid_step.c_str(), nullptr);
+            option.leverage = strtol(leverage.c_str(), nullptr, 0);
 
             if (op == "start grid") {
                 std::cout << "run? (Y): ";

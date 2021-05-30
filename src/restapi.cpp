@@ -73,26 +73,40 @@ bool RestApi::setLeverage(int lever) {
     doc.AddMember("mgnMode", "cross", doc.GetAllocator());
     std::string reqdata = toString(doc);
 
-
-    //auto respdata = call("POST", SET_LEVERAGE_PATH, reqdata);
-
-
-    return true;
-}
-
-bool RestApi::getLeverage(int* lever) {
-    std::deque<std::pair<std::string, std::string> > params;
-    params.emplace_back("instId", g_ticket);
-    params.emplace_back("mgnMode", "cross");
-
     resp_type resp;
-    if (sendCmd("GET", makePath(GET_LEVERAGE_PATH, params), "", &resp)) {
+    if (sendCmd("POST", SET_LEVERAGE_PATH, reqdata, &resp)) {
+        if (resp.result_int() == 200) {
+            auto& body = resp.body();
 
-
-        return true;
+            rapidjson::Document respdoc;
+            respdoc.Parse<0>(body);
+            if (respdoc.HasMember("code")) {
+                int code = std::strtol(respdoc["code"].GetString(), nullptr, 0);
+                if (0 != code)
+                    return false;
+            }
+            return true;
+        }
     }
     return false;
 }
+
+//bool RestApi::getLeverage(int* lever) {
+//    std::deque<std::pair<std::string, std::string> > params;
+//    params.emplace_back("instId", g_ticket);
+//    params.emplace_back("mgnMode", "cross");
+//
+//    resp_type resp;
+//    if (sendCmd("GET", makePath(GET_LEVERAGE_PATH, params), "", &resp)) {
+//        if (resp.result_int() == 200) {
+//            auto& body = resp.body();
+//
+//            // TODO
+//            return true;
+//        }
+//    }
+//    return false;
+//}
 
 bool RestApi::sendCmd(const string& verbstr, const std::string& path, const std::string& reqdata, resp_type* resp) {
     try {
@@ -113,7 +127,7 @@ bool RestApi::sendCmd(const string& verbstr, const std::string& path, const std:
         req.set("OK-ACCESS-KEY", g_api_key);
         req.set("OK-ACCESS-PASSPHRASE", g_passphrase);
 
-        if (host_ == SIMU_REST_API_HOST)
+        if (g_is_simu)
             req.set("x-simulated-trading", std::to_string(1));
 
         time_t now;
@@ -128,6 +142,10 @@ bool RestApi::sendCmd(const string& verbstr, const std::string& path, const std:
 
         ssl::context ctx{ ssl::context::tlsv12_client };
         auto http_session = std::make_shared<HttpSession>(ioc_, ctx, host_, port_);
+        http_session->setSocksProxy(socks_proxy_.c_str());
+        http_session->start();
+        if (!http_session->waitUtilConnected(std::chrono::seconds(1000)))
+            return false;
         http_session->send(req);
         return http_session->read(*resp);
     } catch (const std::exception& e) {
