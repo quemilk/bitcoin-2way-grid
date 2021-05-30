@@ -75,8 +75,10 @@ bool RestApi::setLeverage(int lever) {
 
     resp_type resp;
     if (sendCmd("POST", SET_LEVERAGE_PATH, reqdata, &resp)) {
-        if (resp.result_int() == 200) {
+        auto scode = resp.result_int();
+        if (scode == 200) {
             auto& body = resp.body();
+            LOG(debug) << "rest api resp. body=" << resp.body();
 
             rapidjson::Document respdoc;
             respdoc.Parse<0>(body);
@@ -86,6 +88,8 @@ bool RestApi::setLeverage(int lever) {
                     return false;
             }
             return true;
+        } else {
+            LOG(warning) << "rest api failed! scode=" << scode << ", body=" << resp.body();
         }
     }
     return false;
@@ -109,6 +113,7 @@ bool RestApi::setLeverage(int lever) {
 //}
 
 bool RestApi::sendCmd(const string& verbstr, const std::string& path, const std::string& reqdata, resp_type* resp) {
+    LOG(debug) << "rest api req. path=" << path << ", body=" << reqdata;
     try {
         http::verb httpverb = http::verb::get;
         if (verbstr == "POST")
@@ -119,7 +124,7 @@ bool RestApi::sendCmd(const string& verbstr, const std::string& path, const std:
             httpverb = http::verb::delete_;
         int version = 11;
 
-        http::request<http::string_body> req{ httpverb, path, version, reqdata };
+        http::request<http::string_body> req{ httpverb, path, version};
         req.set(http::field::host, host_);
         req.set(http::field::user_agent, "ibitcoin2waygrid");
 
@@ -139,6 +144,9 @@ bool RestApi::sendCmd(const string& verbstr, const std::string& path, const std:
 
         req.set("OK-ACCESS-SIGN", sign);
         req.set("OK-ACCESS-TIMESTAMP", timestamp);
+
+        req.content_length(reqdata.size());
+        req.body() = reqdata;
 
         ssl::context ctx{ ssl::context::tlsv12_client };
         auto http_session = std::make_shared<HttpSession>(ioc_, ctx, host_, port_);

@@ -586,7 +586,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         else if (state == "filled" || state == "partially_filled") {
                             o << "    filled: \t" << fill_sz << " \t" << fill_px << " \t" << lever << "x" << std::endl;
                             std::cout << "\b\b! " << state << " \t" << side << " \t" << pos_side
-                                << " \t" << std::left << std::setw(10) << px << " \t" << fill_sz << " \tearn:" << pnl << std::endl;
+                                << " \t" << std::left << std::setw(10) << px << " \t" << fill_sz << " \tlever:" << lever << "x" << std::endl;
                         }
                         o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
                     }
