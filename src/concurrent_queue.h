@@ -70,6 +70,11 @@ public:
 		available_cond_.notify_all();
 	}
 
+	void clear() {
+		std::unique_lock lock(mutex_);
+		q_.clear();
+	}
+
 	bool isAborted() const {
 		std::unique_lock lock(mutex_);
 		return over_;

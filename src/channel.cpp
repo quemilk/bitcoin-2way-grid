@@ -30,6 +30,12 @@ void Channel::run() {
                 this->onConnected();
 
                 auto last_read = std::chrono::steady_clock::now();
+
+                inq_.clear();
+                for (auto& v : waiting_resp_q_) {
+                    ws_session_->send(v.req.data);
+                }
+
                 for (;;) {
                     ws_session_->async_read(
                         [&](std::string& data) {
@@ -39,8 +45,8 @@ void Channel::run() {
 
                     Cmd cmd;
                     while (outq_.pop(&cmd, std::chrono::milliseconds(10))) {
+                        waiting_resp_q_.push_back(cmd);
                         ws_session_->send(cmd.req.data);
-                        waiting_resp_q_.emplace_back(std::move(cmd));
                     }
 
                     std::string indata;
