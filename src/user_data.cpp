@@ -540,8 +540,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         auto running_minutes = std::chrono::duration_cast<std::chrono::minutes>(std::chrono::steady_clock::now() - t.start_time).count();
         o << " \trunning " << (running_minutes / 60) << " h " << std::right << std::setfill('0') << std::setw(2) << (running_minutes % 60) << " m";
     }
-    if (t.retry)
-        o << " \tretry: " << t.retry;
+    if (t.rebuild)
+        o << " \trebuild: " << t.rebuild;
     o << std::endl;
 
     o << "inject cash: " << t.option.injected_cash

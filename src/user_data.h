@@ -132,7 +132,7 @@ public:
         float origin_cash = 0;
         float start_cash = 0;
         std::chrono::steady_clock::time_point start_time;
-        int retry = 0;
+        int rebuild = 0;
 
         friend std::ostream& operator << (std::ostream& o, const GridStrategy& t);
     };
