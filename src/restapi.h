@@ -9,7 +9,7 @@ public:
     void getLeverage();
 
 private:
-    std::string call(const std::string& verb, const std::string& req);
+    std::string call(const std::string& verb, const std::string& reqdata);
 
 private:
     const std::string host_;

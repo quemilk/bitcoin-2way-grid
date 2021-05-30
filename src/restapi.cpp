@@ -28,7 +28,7 @@ int RestApi::getLeverage() {
 
 }
 
-std::string RestApi::call(const std::string& verb,const std::string& req) {
+std::string RestApi::call(const std::string& verb,const std::string& reqdata) {
     try {
         net::io_context ioc;
         ssl::context ctx(ssl::context::tlsv12_client);
@@ -61,7 +61,7 @@ std::string RestApi::call(const std::string& verb,const std::string& req) {
         else if (verb == "DELETE")
             httpverb = http:verb::delete_;
 
-        http::request<http::string_body> req{ httpverb, target, version };
+        http::request<http::string_body> req{ httpverb, target, version, reqdata };
         req.set(http::field::host, host);
         req.set(http::field::user_agent, ibitcoin2waygrid);
 
