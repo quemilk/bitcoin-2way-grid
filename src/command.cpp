@@ -419,6 +419,33 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                 resp.msg = doc["msg"].GetString();
 
             LOG(debug) << "resp. id=" << resp.id << ", op=" << resp.op << ", code=" << resp.code << ", msg=" << resp.msg << ", data=" << resp.data;
+
+            if (resp.op == "order" || resp.op == "batch-orders") {
+                if (resp.code == 1 || resp.code == 2) {
+                   for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
+                        std::string clordid = (*itr)["clOrdId"].GetString();
+                        auto scode = strtol((*itr)["sCode"].GetString(), nullptr, 0);
+                        if (!clordid.empty() && scode != 0) {
+                            g_user_data.lock();
+                            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+
+                            for (auto& grid : g_user_data.grid_strategy_.grids) {
+                                auto orders_arr = { &grid.long_orders, &grid.short_orders };
+                                for (auto ordersq : orders_arr) {
+                                    for (auto& order : ordersq->orders) {
+                                        if (order.order_data.clordid == clordid) {
+                                            order.order_status = OrderStatus::Canceled;
+                                            order.order_data.clordid.clear();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    g_user_data.updateGrid();
+                }
+            }
+
             *out_resp = std::move(resp);
             return true;
         } else if (doc.HasMember("data")) {
@@ -559,7 +586,6 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 }
                             }
                         }
-                        g_user_data.updateGrid();
 
                         o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << "\t" << toTimeStr(utime) << std::endl;
                         if (state == "live")
@@ -572,6 +598,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
                     }
                     LOG(debug) << o.str();
+                    g_user_data.updateGrid();
                 } else if (channel == "trades") {
                     g_user_data.lock();
                     auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
