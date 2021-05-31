@@ -227,7 +227,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
 
             GridStrategy::Grid::Order grid_order;
             grid_order.order_data.px = grid.px;
-            if (i <= grid_center) {
+            if (i <= grid_center && i >= grid_center / 2) {
                 grid.long_orders.init_ordered = true;
                 if (!grid.long_orders.order_amount.empty()) {
                     grid_order.order_data.amount = grid.long_orders.order_amount;
@@ -243,7 +243,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
                     grid_orders.push_back(new_order);
                 }
             }
-            if (i >= grid_center) {
+            if (i >= grid_center && i <= grid_center * 3 / 2) {
                 grid.short_orders.init_ordered = true;
                 if (!grid.short_orders.order_amount.empty()) {
                     grid_order.order_data.amount = grid.short_orders.order_amount;
