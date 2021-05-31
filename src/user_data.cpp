@@ -565,12 +565,17 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         for (int i = (int)t.grids.size() - 1; i >= 0; --i) {
             auto& v = t.grids[i];
 
-            if (v.long_orders.order_amount.empty()) {
+            if (i == 0 || i == t.grids.size() - 1) {
+                o << "    = ";
+            } else if (i == t.grids.size() / 2) {
+                o << "    * ";
+            } else if (v.long_orders.order_amount.empty()) {
                 if (v.long_orders.orders.empty())
                     continue;
                 o << "      ";
-            } else
-                o << ((i == t.grids.size() / 2) ? "    * " : "    - ");
+            } else {
+                o << "    - ";
+            }
             o << v.px;
             //o << " (" << v.long_orders.order_amount << ")";
 
@@ -588,12 +593,17 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
         for (int i = (int)t.grids.size() - 1; i >= 0; --i) {
             auto& v = t.grids[i];
 
-            if (v.short_orders.order_amount.empty()) {
+            if (i == 0 || i == t.grids.size() - 1) {
+                o << "    = ";
+            } else if (i == t.grids.size() / 2) {
+                o << "    * ";
+            } else if (v.short_orders.order_amount.empty()) {
                 if (v.short_orders.orders.empty())
                     continue;
                 o << "      ";
-            } else
-                o << ((i == t.grids.size() / 2) ? "    * " : "    - ");
+            } else {
+                o << "    - ";
+            }
             o << v.px;
             //o << " (" << v.short_orders.order_amount << ")";
 
