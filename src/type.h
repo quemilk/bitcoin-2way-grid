@@ -87,4 +87,21 @@ enum class OrderStatus {
 };
 
 
+inline std::string toString(OrderStatus status) {
+    switch (status) {
+    case OrderStatus::Empty:
+        return "empty";
+    case OrderStatus::Canceled:
+        return "canceled";
+    case OrderStatus::Live:
+        return "live";
+    case OrderStatus::PartiallyFilled:
+        return "partfilled";
+    case OrderStatus::Filled:
+        return "filled";
+    default:
+        return "";
+    }
+}
+
 #endif

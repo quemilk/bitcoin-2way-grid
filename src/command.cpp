@@ -554,6 +554,17 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         uint64_t utime = std::strtoull((*itr)["uTime"].GetString(), nullptr, 0);
                         uint64_t ctime = std::strtoull((*itr)["cTime"].GetString(), nullptr, 0);
 
+                        OrderStatus order_state = OrderStatus::Empty;
+                        if (state == "canceled") {
+                            order_state = OrderStatus::Canceled;
+                        } else if (state == "filled") {
+                            order_state = OrderStatus::Filled;
+                        } else if (state == "partially_filled") {
+                            order_state = OrderStatus::PartiallyFilled;
+                        } else if (state == "live") {
+                            order_state = OrderStatus::Live;
+                        }
+
                         if (!clordid.empty()) {
                             g_user_data.lock();
                             auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
@@ -563,16 +574,11 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 for (auto ordersq : orders_arr) {
                                     for (auto& order : ordersq->orders) {
                                         if (order.order_data.clordid == clordid) {
-                                            if (state == "canceled") {
-                                                order.order_status = OrderStatus::Canceled;
+                                            order.order_status = order_state;
+                                            if (order_state == OrderStatus::Canceled) {
                                                 order.order_data.clordid.clear();
-                                            } else if (state == "filled") {
-                                                order.order_status = OrderStatus::Filled;
+                                            } else if (order_state == OrderStatus::Filled) {
                                                 order.fill_px = fill_px;
-                                            } else if (state == "partially_filled") {
-                                                order.order_status = OrderStatus::PartiallyFilled;
-                                            } else if (state == "live") {
-                                                order.order_status = OrderStatus::Live;
                                             }
                                         }
                                     }
@@ -581,13 +587,13 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                         }
 
                         o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << " \t" << toTimeStr(utime) << std::endl;
-                        if (state == "live")
+                        if (order_state == OrderStatus::Live)
                             o << "    order: \t" << sz << " \t" << std::left << std::setw(10) << px << " \t" << lever << "x" << std::endl;
-                        else if (state == "filled" || state == "partially_filled") {
+                        else if (order_state == OrderStatus::Filled || order_state == OrderStatus::PartiallyFilled) {
                             o << "    filled: \t" << fill_sz << " \t" << fill_px << " \t" << lever << "x" << std::endl;
 
                             std::ostringstream ofilledlog;
-                            ofilledlog << "\b\b! " << state << " \t" << side << " \t" << pos_side
+                            ofilledlog << "\b\b! " << toString(order_state) << " \t" << side << " \t" << pos_side
                                 << " \t" << std::left << std::setw(10) << px << " \t" << fill_sz << " \t" << lever << "x" << " \t" << toTimeStr(utime);
                             g_user_data.grid_strategy_.filled_history_log_.push_back(ofilledlog.str());
                             if (g_user_data.grid_strategy_.filled_history_log_.size() > 100)
