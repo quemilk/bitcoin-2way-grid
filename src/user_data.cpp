@@ -412,7 +412,7 @@ void UserData::updateGrid() {
 
     auto current_cash = strtof(g_user_data.currentCash(grid_strategy_.ccy).c_str(), nullptr);
     if (current_cash) {
-        if (current_cash >= grid_strategy_.start_cash * 1.1f) {
+        if (current_cash >= grid_strategy_.start_cash * 1.2f) {
             LOG(warning) << "WARNING!!! reach the take profit point. closeout the grid.";
             clearGrid();
             std::this_thread::sleep_for(std::chrono::seconds(5));
