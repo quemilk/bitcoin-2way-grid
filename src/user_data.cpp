@@ -357,24 +357,30 @@ void UserData::updateGrid() {
             }
 
             if (has_filled) {
-                for (int i = 0; i < 2; ++i) {
-                    auto& orders = orders_arr[i]->orders;
-                    auto pos_side = pos_sides[i];
+                auto to_init_orders_arrs = { orders_arr, pre_orders_arr, next_orders_arr };
+                for (auto to_init_arr : to_init_orders_arrs) {
+                    for (int i = 0; i < 2; ++i) {
+                        auto ordersq = to_init_arr[i];
+                        if (ordersq) {
+                            auto& orders = ordersq->orders;
+                            auto pos_side = pos_sides[i];
 
-                    if (!orders_arr[i]->init_ordered && !orders_arr[i]->order_amount.empty()) {
-                        orders_arr[i]->init_ordered = true;
-                        GridStrategy::Grid::Order new_order;
-                        new_order.order_data.clordid = genCliOrdId();
-                        new_order.order_data.px = grid.px;
-                        new_order.order_data.amount = orders_arr[i]->order_amount;
-                        if (pos_side == OrderPosSide::Long)
-                            new_order.order_data.side = OrderSide::Buy;
-                        else if (pos_side == OrderPosSide::Short)
-                            new_order.order_data.side = OrderSide::Sell;
-                        new_order.order_data.pos_side = pos_side;
-                        new_order.order_status = OrderStatus::Live;
-                        orders_arr[i]->orders.push_back(new_order);
-                        grid_orders.push_back(new_order.order_data);
+                            if (!ordersq->init_ordered && !ordersq->order_amount.empty()) {
+                                ordersq->init_ordered = true;
+                                GridStrategy::Grid::Order new_order;
+                                new_order.order_data.clordid = genCliOrdId();
+                                new_order.order_data.px = grid.px;
+                                new_order.order_data.amount = ordersq->order_amount;
+                                if (pos_side == OrderPosSide::Long)
+                                    new_order.order_data.side = OrderSide::Buy;
+                                else if (pos_side == OrderPosSide::Short)
+                                    new_order.order_data.side = OrderSide::Sell;
+                                new_order.order_data.pos_side = pos_side;
+                                new_order.order_status = OrderStatus::Live;
+                                ordersq->orders.push_back(new_order);
+                                grid_orders.push_back(new_order.order_data);
+                            }
+                        }
                     }
                 }
             }
