@@ -520,7 +520,7 @@ void UserData::checkLongUnfilledOrder() {
         auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
 
         bool found = false;
-        for (int igrid = grid_strategy_.grids.size() - 1; !found && igrid > 0; --igrid) {
+        for (int igrid = (int)grid_strategy_.grids.size() - 1; !found && igrid > 0; --igrid) {
             auto& grid = grid_strategy_.grids[igrid];
             auto& ordersq = grid.long_orders;
 
@@ -545,7 +545,7 @@ void UserData::checkLongUnfilledOrder() {
             }
         }
         found = false;
-        for (int igrid = 0; !found && igrid < grid_strategy_.grids.size() - 1; ++igrid) {
+        for (int igrid = 0; !found && igrid < (int)grid_strategy_.grids.size() - 1; ++igrid) {
             auto& grid = grid_strategy_.grids[igrid];
             auto& ordersq = grid.short_orders;
 
