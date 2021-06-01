@@ -326,10 +326,10 @@ void UserData::updateGrid() {
                     auto& order_data = itr->order_data;
 
                     if (itr->order_status == OrderStatus::Filled) {
-                        has_filled = true;
                         itr->order_status = OrderStatus::Empty;
 
                         if (itr->auto_put_order_if_filled) {
+                            has_filled = true;
                             if (order_data.side == OrderSide::Buy) {
                                 if (grid_next && next_orders_arr[i]) {
                                     GridStrategy::Grid::Order new_order;
