@@ -600,7 +600,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                                 g_user_data.grid_strategy_.filled_history_log_.pop_front();
                             std::cout << ofilledlog.str() << std::endl;
                         }
-                        o << "    total: \t" << acc_fill_sz << " \t" << avg_px << std::endl;
+                        o << "    total: \t" << acc_fill_sz << " \t" << avg_px << " \tfee: " << fee << std::endl;
                     }
                     LOG(debug) << o.str();
                     g_user_data.updateGrid();
