@@ -196,6 +196,8 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
         auto left_cash = option.injected_cash - strtof(avg_amount.c_str(), nullptr) * requred_cash;
         float leftn = left_cash * option.leverage / ct_val / (strtof(grid_strategy_.grids[0].px.c_str(), nullptr) + strtof(grid_strategy_.grids[grid_strategy_.grids.size() - 1].px.c_str(), nullptr));
 
+        auto now = std::chrono::steady_clock::now();
+
         for (int i = 0; i < side_count; ++i) {
             auto cur_amount = avg_amount;
             auto n = strtof(cur_amount.c_str(), nullptr) / 2;
@@ -235,6 +237,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
                     grid_order.order_data.side = OrderSide::Buy;
                     grid_order.order_data.pos_side = OrderPosSide::Long;
                     grid_order.order_status = OrderStatus::Live;
+                    grid_order.tp = now;
                     grid.long_orders.orders.push_back(grid_order);
 
                     auto new_order = grid_order.order_data;
@@ -251,6 +254,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
                     grid_order.order_data.side = OrderSide::Sell;
                     grid_order.order_data.pos_side = OrderPosSide::Short;
                     grid_order.order_status = OrderStatus::Live;
+                    grid_order.tp = now;
                     grid.short_orders.orders.push_back(grid_order);
 
                     auto new_order = grid_order.order_data;
@@ -290,6 +294,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
 
 void UserData::updateGrid() {
     std::deque<OrderData> grid_orders;
+    auto now = std::chrono::steady_clock::now();
     int sell_count = 0, buy_count = 0;
     {
         g_user_data.lock();
@@ -331,6 +336,7 @@ void UserData::updateGrid() {
                                 new_order.order_data.side = OrderSide::Sell;
                                 new_order.order_data.pos_side = pos_side;
                                 new_order.order_status = OrderStatus::Live;
+                                new_order.tp = now;
                                 if (pos_side == OrderPosSide::Long)
                                     new_order.fill_px = itr->fill_px;
                                 next_orders_arr[i]->orders.push_back(new_order);
@@ -345,6 +351,7 @@ void UserData::updateGrid() {
                                 new_order.order_data.side = OrderSide::Buy;
                                 new_order.order_data.pos_side = pos_side;
                                 new_order.order_status = OrderStatus::Live;
+                                new_order.tp = now;
                                 if (pos_side == OrderPosSide::Short)
                                     new_order.fill_px = itr->fill_px;
                                 pre_orders_arr[i]->orders.push_back(new_order);
@@ -382,6 +389,7 @@ void UserData::updateGrid() {
                                 new_order.order_data.side = OrderSide::Sell;
                             new_order.order_data.pos_side = pos_side;
                             new_order.order_status = OrderStatus::Live;
+                            new_order.tp = now;
                             ordersq->orders.push_back(new_order);
                             grid_orders.push_back(new_order.order_data);
                         }
@@ -401,6 +409,7 @@ void UserData::updateGrid() {
                         new_order.order_data.side = OrderSide::Buy;
                         new_order.order_data.pos_side = OrderPosSide::Long;
                         new_order.order_status = OrderStatus::Live;
+                        new_order.tp = now;
                         ordersq.orders.push_back(new_order);
                         grid_orders.push_back(new_order.order_data);
                     }
@@ -419,6 +428,7 @@ void UserData::updateGrid() {
                         new_order.order_data.side = OrderSide::Sell;
                         new_order.order_data.pos_side = OrderPosSide::Short;
                         new_order.order_status = OrderStatus::Live;
+                        new_order.tp = now;
                         ordersq.orders.push_back(new_order);
                         grid_orders.push_back(new_order.order_data);
                     }

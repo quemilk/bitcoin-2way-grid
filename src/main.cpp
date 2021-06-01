@@ -205,7 +205,7 @@ int main(int argc, char** argv) {
             if (grid_level.empty())
                 grid_level = "50";
 
-            std::cout << "grid step (0.002-0.005): ";
+            std::cout << "grid step (0.003-0.005): ";
             std::string grid_step;
             std::getline(std::cin, grid_step);
             trimString(grid_step);
@@ -213,7 +213,7 @@ int main(int argc, char** argv) {
             if (!grid_step.empty())
                 splitString(grid_step, step_ratios, '-');
             if (step_ratios.empty()) {
-                step_ratios.push_back("0.002");
+                step_ratios.push_back("0.003");
                 step_ratios.push_back("0.005");
             }
 

@@ -104,6 +104,7 @@ public:
                 OrderData order_data;
                 OrderStatus order_status = OrderStatus::Empty;
                 std::string fill_px;
+                std::chrono::steady_clock::time_point tp;
             };
 
             struct OrdersQueue {
