@@ -1,5 +1,6 @@
 ﻿#include "channel.h"
 #include "logger.h"
+#include "util.h"
 #include <chrono>
 
 
@@ -89,9 +90,22 @@ void Channel::run() {
 void Channel::parseIncomeData(const std::string& data) {
     Command::Response resp;
     if (Command::parseReceivedData(data, &resp)) {
+        bool is_busy = false;
         for (auto itr = waiting_resp_q_.begin(); itr != waiting_resp_q_.end();) {
             auto& req = itr->req;
             if (resp.id == req.id && (resp.op == req.op || resp.op == "error")) {
+                if (resp.code == 50013) {
+                    // system busy
+                    is_busy = true;
+                    Command::Request newreq = req;
+                    newreq.id = generateRandomString(10);
+                    sendCmd(std::move(req), itr->cb);
+                    itr->cb = nullptr;
+                } else if (resp.code == 60011) {
+                    // require relogin
+                    reconnect();
+                    return;
+                }
                 if (itr->cb)
                     itr->cb(resp);
                 itr = waiting_resp_q_.erase(itr);
@@ -99,6 +113,9 @@ void Channel::parseIncomeData(const std::string& data) {
             }
             ++itr;
         }
+
+        if (is_busy)
+            std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
