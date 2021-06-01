@@ -198,12 +198,12 @@ int main(int argc, char** argv) {
                 continue;
             }
 
-            std::cout << "grid number (20): ";
+            std::cout << "grid number (50): ";
             std::string grid_level;
             std::getline(std::cin, grid_level);
             trimString(grid_level);
             if (grid_level.empty())
-                grid_level = "20";
+                grid_level = "50";
 
             std::cout << "grid step (0.002-0.005): ";
             std::string grid_step;
