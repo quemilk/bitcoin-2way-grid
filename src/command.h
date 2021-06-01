@@ -36,6 +36,7 @@ public:
 
     static Request makeMultiOrderReq(const std::string& inst_id, TradeMode trade_mode, std::deque<OrderData>& orders);
 
+    // 改单
     struct AmendInfo {
         std::string cliordid;
         std::string new_px;

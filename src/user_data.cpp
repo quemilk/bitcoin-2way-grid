@@ -287,13 +287,15 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
                         LOG(error) << "<< order failed. " << resp.data;
                 }
             );
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            if (!grid_orders.empty())
+                std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 }
 
 void UserData::updateGrid() {
     std::deque<OrderData> grid_orders;
+    std::deque<Command::AmendInfo> amend_orders;
     auto now = std::chrono::steady_clock::now();
     int sell_count = 0, buy_count = 0;
     {
@@ -359,9 +361,21 @@ void UserData::updateGrid() {
                             }
                         }
                     } else if (itr->order_status == OrderStatus::Live) {
-                        // TODO
-
-
+                        if (now - itr->tp > std::chrono::minutes(30)) {
+                            Command::AmendInfo amend_info;
+                            amend_info.cliordid = order_data.clordid;
+                            if (pos_side == OrderPosSide::Long) {
+                                if (grid_pre) {
+                                    amend_info.new_px = grid_pre->px;
+                                    amend_orders.push_back(amend_info);
+                                }
+                            } else if (pos_side == OrderPosSide::Short) {
+                                if (grid_next) {
+                                    amend_info.new_px = grid_next->px;
+                                    amend_orders.push_back(amend_info);
+                                }
+                            }
+                        }
                     }
 
                     if (itr->order_status == OrderStatus::Canceled || itr->order_status == OrderStatus::Empty) {
@@ -501,6 +515,25 @@ void UserData::updateGrid() {
                     LOG(error) << "<< order failed. " << resp.data;
             }
         );
+        if (!grid_orders.empty())
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    while (!amend_orders.empty()) {
+        auto cmd = Command::makeAmendOrderReq(g_ticket, amend_orders);
+        g_private_channel->sendCmd(std::move(cmd),
+            [this](Command::Response& resp) {
+                if (resp.code == 0) {
+                    LOG(debug) << "<< amend order ok.";
+                } else if (resp.code == 60011) {
+                    // require relogin
+                    g_private_channel->reconnect();
+                } else
+                    LOG(error) << "<< amend order failed. " << resp.data;
+            }
+        );
+        if (!amend_orders.empty())
+            std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
@@ -582,7 +615,8 @@ void UserData::clearGrid() {
                     LOG(error) << "<< cancel failed. " << resp.data;
             }
         );
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        if (!to_cancel_cliordids.empty())
+            std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
