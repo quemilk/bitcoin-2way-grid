@@ -525,8 +525,10 @@ void UserData::checkLongUnfilledOrder() {
                     if (now - order.tp > std::chrono::minutes(60)) {
                         auto px = strtof(order_data.px.c_str(), nullptr);
                         if (cur_px && abs(cur_px - px) / cur_px >= 0.02f) {
-                            grid_strategy_.grids[igrid - 1].long_orders.init_ordered = false;
-                            order.auto_put_order_if_filled = false;
+                            if (order.auto_put_order_if_filled) {
+                                grid_strategy_.grids[igrid - 1].long_orders.init_ordered = false;
+                                order.auto_put_order_if_filled = false;
+                            }
 
                             Command::AmendInfo amend_info;
                             amend_info.cliordid = order_data.clordid;
@@ -550,8 +552,10 @@ void UserData::checkLongUnfilledOrder() {
                     if (now - order.tp > std::chrono::minutes(60)) {
                         auto px = strtof(order_data.px.c_str(), nullptr);
                         if (cur_px && abs(cur_px - px) / cur_px >= 0.02f) {
-                            grid_strategy_.grids[igrid + 1].short_orders.init_ordered = false;
-                            order.auto_put_order_if_filled = false;
+                            if (order.auto_put_order_if_filled) {
+                                grid_strategy_.grids[igrid + 1].short_orders.init_ordered = false;
+                                order.auto_put_order_if_filled = false;
+                            }
 
                             Command::AmendInfo amend_info;
                             amend_info.cliordid = order_data.clordid;
