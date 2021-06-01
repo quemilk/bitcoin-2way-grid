@@ -33,6 +33,9 @@ void Channel::run() {
                 ws_session_->setSocksProxy(socks_proxy_.c_str());
 
             ws_session_->start();
+
+            LOG(debug) << "connect to " << host_;
+
             if (ws_session_->waitUtilConnected(std::chrono::seconds(10))) {
                 try {
                     this->onConnected();
