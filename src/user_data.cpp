@@ -278,7 +278,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
                         LOG(debug) << "<< order ok.";
                     } else if (resp.code == 60011) {
                         // require relogin
-                        g_private_channel->relogin();
+                        g_private_channel->reconnect();
                     } else
                         LOG(error) << "<< order failed. " << resp.data;
                 }
@@ -456,7 +456,7 @@ void UserData::updateGrid() {
                     LOG(debug) << "<< order ok.";
                 } else if (resp.code == 60011) {
                     // require relogin
-                    g_private_channel->relogin();
+                    g_private_channel->reconnect();
                 } else
                     LOG(error) << "<< order failed. " << resp.data;
             }
@@ -513,7 +513,7 @@ void UserData::clearGrid() {
                             LOG(debug) << "<< order partical failed.";
                         } else if (resp.code == 60011) {
                             // require relogin
-                            g_private_channel->relogin();
+                            g_private_channel->reconnect();
                         } else
                             LOG(error) << "<< order failed." << resp.data;
                     }
@@ -537,7 +537,7 @@ void UserData::clearGrid() {
                     LOG(debug) << "<< cancel partical failed.";
                 } else if (resp.code == 60011) {
                     // require relogin
-                    g_private_channel->relogin();
+                    g_private_channel->reconnect();
                 } else
                     LOG(error) << "<< cancel failed. " << resp.data;
             }
