@@ -94,7 +94,7 @@ void Channel::parseIncomeData(const std::string& data) {
         for (auto itr = waiting_resp_q_.begin(); itr != waiting_resp_q_.end();) {
             auto& req = itr->req;
             if (resp.id == req.id && (resp.op == req.op || resp.op == "error")) {
-                if (resp.code == 50013) {
+                if (resp.code == 50013 || resp.code == 50011 || resp.code == 50001) {
                     // system busy
                     is_busy = true;
                     Command::Request newreq = req;
