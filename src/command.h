@@ -56,8 +56,8 @@ public:
     // 交易频道
     static Request makeSubscribeTradesChannel(const std::string& inst_id);
 
-    
-    static bool parseReceivedData(const std::string& data, Response* out_resp);
+    // -1: require relogin, -2: require retry, 0: ok, 1: response
+    static int parseReceivedData(const std::string& data, Response* out_resp);
 
 
 

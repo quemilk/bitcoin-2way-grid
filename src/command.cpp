@@ -406,7 +406,7 @@ Command::Request Command::makeSubscribeTradesChannel(const std::string& inst_id)
     return req;
 }
 
-bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
+int Command::parseReceivedData(const std::string& data, Response* out_resp) {
     try {
         rapidjson::Document doc(rapidjson::kObjectType);
         doc.Parse<0>(data);
@@ -429,8 +429,14 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                 resp.msg = doc["msg"].GetString();
 
             LOG(debug) << "resp. op=" << resp.op << ", code=" << resp.code << ", msg=" << resp.msg << ", data=" << resp.data;
-            *out_resp = std::move(resp);
-            return true;
+            *out_resp = resp;
+
+            if (resp.code == 60011)
+                return -1;
+            else if (resp.code == 50013 || resp.code == 50011 || resp.code == 50001)
+                return -2;
+
+            return 1;
         } else if (doc.HasMember("op")) {
             Response resp;
             resp.data = data;
@@ -444,23 +450,34 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                 resp.msg = doc["msg"].GetString();
 
             LOG(debug) << "resp. id=" << resp.id << ", op=" << resp.op << ", code=" << resp.code << ", msg=" << resp.msg << ", data=" << resp.data;
+            *out_resp = resp;
+
+            if (resp.code == 60011)
+                return -1;
+            else if (resp.code == 50013 || resp.code == 50011 || resp.code == 50001)
+                return -2;
 
             if (resp.op == "order" || resp.op == "batch-orders") {
                 if (resp.code == 1 || resp.code == 2) {
                    for (auto itr = doc["data"].Begin(); itr != doc["data"].End(); ++itr) {
                         std::string clordid = (*itr)["clOrdId"].GetString();
                         auto scode = strtol((*itr)["sCode"].GetString(), nullptr, 0);
-                        if (!clordid.empty() && scode != 0) {
-                            g_user_data.lock();
-                            auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+                        if (scode == 50013 || scode == 50011 || scode == 50001)
+                            return -2;
 
-                            for (auto& grid : g_user_data.grid_strategy_.grids) {
-                                auto orders_arr = { &grid.long_orders, &grid.short_orders };
-                                for (auto ordersq : orders_arr) {
-                                    for (auto& order : ordersq->orders) {
-                                        if (order.order_data.clordid == clordid) {
-                                            order.order_status = OrderStatus::Canceled;
-                                            order.order_data.clordid.clear();
+                        if (!clordid.empty() && scode != 0) {
+                            if (51016 != scode) { // 51016:clOrdId重复
+                                g_user_data.lock();
+                                auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+
+                                for (auto& grid : g_user_data.grid_strategy_.grids) {
+                                    auto orders_arr = { &grid.long_orders, &grid.short_orders };
+                                    for (auto ordersq : orders_arr) {
+                                        for (auto& order : ordersq->orders) {
+                                            if (order.order_data.clordid == clordid) {
+                                                order.order_status = OrderStatus::Canceled;
+                                                order.order_data.clordid.clear();
+                                            }
                                         }
                                     }
                                 }
@@ -470,9 +487,7 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
                     g_user_data.updateGrid();
                 }
             }
-
-            *out_resp = std::move(resp);
-            return true;
+            return 1;
         } else if (doc.HasMember("data")) {
             if (doc.HasMember("arg")) {
                 std::string channel = doc["arg"]["channel"].GetString();
@@ -678,5 +693,5 @@ bool Command::parseReceivedData(const std::string& data, Response* out_resp) {
     } catch (const std::exception& e) {
         LOG(error) << "pase failed! " << e.what() << "\ndata=" << data;
     }
-    return false;    
+    return 0;    
 }
