@@ -317,6 +317,38 @@ Command::Request Command::makeCancelMultiOrderReq(const std::string& inst_id, st
     return req;
 }
 
+Command::Request Command::makeAmendOrderReq(const std::string& inst_id, std::deque<AmendInfo>& amend_data) {
+    rapidjson::Document doc(rapidjson::kObjectType);
+    auto id = generateRandomString(10);
+    doc.AddMember("id", id, doc.GetAllocator());
+    doc.AddMember("op", "batch-amend-orders", doc.GetAllocator());
+
+    rapidjson::Value args(rapidjson::kArrayType);
+
+    int i = 0;
+    while (!amend_data.empty()) {
+        if (++i > 20)
+            break;
+
+        auto data = std::move(amend_data.front());
+        amend_data.pop_front();
+
+        rapidjson::Value arg(rapidjson::kObjectType);
+        arg.AddMember("instId", inst_id, doc.GetAllocator());
+        arg.AddMember("clOrdId", data.cliordid, doc.GetAllocator());
+        arg.AddMember("newPx", data.new_px, doc.GetAllocator());
+        args.PushBack(arg, doc.GetAllocator());
+    }
+
+    doc.AddMember("args", args, doc.GetAllocator());
+
+    Request req;
+    req.id = id;
+    req.op = "batch-amend-orders";
+    req.data = toString(doc);
+    return req;
+}
+
 Command::Request Command::makeSubscribeInstrumentsChannel(const std::string& inst_type) {
     rapidjson::Document doc(rapidjson::kObjectType);
     doc.AddMember("op", "subscribe", doc.GetAllocator());

@@ -36,6 +36,12 @@ public:
 
     static Request makeMultiOrderReq(const std::string& inst_id, TradeMode trade_mode, std::deque<OrderData>& orders);
 
+    struct AmendInfo {
+        std::string cliordid;
+        std::string new_px;
+    };
+    static Request makeAmendOrderReq(const std::string& inst_id, std::deque<AmendInfo>& amend_data);
+
     // 撤单
     static Request makeCancelOrderReq(const std::string& inst_id, const std::string& cliordid, const std::string& ordid);
     static Request makeCancelMultiOrderReq(const std::string& inst_id, std::deque<std::string>& cliordids);
