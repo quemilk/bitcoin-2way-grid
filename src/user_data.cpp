@@ -283,6 +283,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
                         LOG(error) << "<< order failed. " << resp.data;
                 }
             );
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 }
@@ -542,7 +543,7 @@ void UserData::clearGrid() {
                     LOG(error) << "<< cancel failed. " << resp.data;
             }
         );
-
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
