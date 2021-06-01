@@ -7,6 +7,8 @@ class PrivateChannel : public Channel {
 public:
     using Channel::Channel;
 
+    void relogin();
+
     void waitLogined();
 
 protected:

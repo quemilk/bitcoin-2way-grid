@@ -19,6 +19,8 @@ public:
 
     void sendCmd(Command::Request&& req, callback_func_t callback);
 
+    void reconnect();
+
 private:
     void run();
     void parseIncomeData(const std::string& data);
@@ -37,6 +39,7 @@ private:
     struct Cmd {
         Command::Request req;
         callback_func_t cb;
+        enum class CmdType { Normal, Close } cmd_type = CmdType::Normal;
     };
 
     ConcurrentQueueT<Cmd> outq_;

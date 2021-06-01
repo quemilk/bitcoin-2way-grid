@@ -17,6 +17,12 @@ socks_proxy_(socks_proxy) {
 Channel::~Channel() {
 }
 
+void Channel::reconnect() {
+    Cmd cmd;
+    cmd.cmd_type = Cmd::CmdType::Close;
+    outq_.push(std::move(cmd));
+}
+
 void Channel::run() {
     for (;;) {
         try {
@@ -45,6 +51,8 @@ void Channel::run() {
 
                     Cmd cmd;
                     while (outq_.pop(&cmd, std::chrono::milliseconds(10))) {
+                        if (cmd.cmd_type == Cmd::CmdType::Close)
+                            throw std::runtime_error("close command");
                         waiting_resp_q_.push_back(cmd);
                         ws_session_->send(cmd.req.data);
                     }

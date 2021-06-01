@@ -8,6 +8,10 @@ extern std::string g_api_key;
 extern std::string g_passphrase;
 extern std::string g_secret;
 
+void PrivateChannel::relogin() {
+    reconnect();
+}
+
 void PrivateChannel::onConnected() {
     auto req = Command::makeLoginReq(g_api_key, g_passphrase, g_secret);
 
