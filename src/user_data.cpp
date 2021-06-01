@@ -522,7 +522,7 @@ void UserData::checkLongUnfilledOrder() {
                 auto& order_data = order.order_data;
                 if (order.order_status == OrderStatus::Live && order_data.side == OrderSide::Sell) {
                     found = true;
-                    if (now - order.tp > std::chrono::minutes(30)) {
+                    if (now - order.tp > std::chrono::minutes(60)) {
                         auto px = strtof(order_data.px.c_str(), nullptr);
                         if (cur_px && abs(cur_px - px) / cur_px >= 0.02f) {
                             grid_strategy_.grids[igrid - 1].long_orders.init_ordered = false;
@@ -547,7 +547,7 @@ void UserData::checkLongUnfilledOrder() {
                 auto& order_data = order.order_data;
                 if (order.order_status == OrderStatus::Live && order_data.side == OrderSide::Buy) {
                     found = true;
-                    if (now - order.tp > std::chrono::minutes(30)) {
+                    if (now - order.tp > std::chrono::minutes(60)) {
                         auto px = strtof(order_data.px.c_str(), nullptr);
                         if (cur_px && abs(cur_px - px) / cur_px >= 0.02f) {
                             grid_strategy_.grids[igrid + 1].short_orders.init_ordered = false;
