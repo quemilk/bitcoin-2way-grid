@@ -288,36 +288,6 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
     }
 }
 
-static void initGridOrder(UserData::GridStrategy::Grid& grid, std::deque<OrderData>& grid_orders) {
-    UserData::GridStrategy::Grid::OrdersQueue* orders_arr[] = { &grid.long_orders, &grid.short_orders };
-    OrderPosSide pos_sides[] = { OrderPosSide::Long, OrderPosSide::Short };
-
-    for (int i = 0; i < 2; ++i) {
-        auto ordersq = orders_arr[i];
-        if (ordersq) {
-            auto& orders = ordersq->orders;
-            auto pos_side = pos_sides[i];
-
-            if (!ordersq->init_ordered && !ordersq->order_amount.empty()) {
-                ordersq->init_ordered = true;
-                UserData::GridStrategy::Grid::Order new_order;
-                new_order.order_data.clordid = genCliOrdId();
-                new_order.order_data.px = grid.px;
-                new_order.order_data.amount = ordersq->order_amount;
-                if (pos_side == OrderPosSide::Long)
-                    new_order.order_data.side = OrderSide::Buy;
-                else if (pos_side == OrderPosSide::Short)
-                    new_order.order_data.side = OrderSide::Sell;
-                new_order.order_data.pos_side = pos_side;
-                new_order.order_status = OrderStatus::Live;
-                ordersq->orders.push_back(new_order);
-                grid_orders.push_back(new_order.order_data);
-            }
-        }
-    }
-
-}
-
 void UserData::updateGrid() {
     std::deque<OrderData> grid_orders;
     int sell_count = 0, buy_count = 0;
@@ -391,13 +361,68 @@ void UserData::updateGrid() {
             }
 
             if (has_filled) {
-                initGridOrder(grid, grid_orders);
+                UserData::GridStrategy::Grid::OrdersQueue* orders_arr[] = { &grid.long_orders, &grid.short_orders };
+                OrderPosSide pos_sides[] = { OrderPosSide::Long, OrderPosSide::Short };
 
-                if (grid_pre)
-                    initGridOrder(*grid_pre, grid_orders);
+                for (int i = 0; i < 2; ++i) {
+                    auto ordersq = orders_arr[i];
+                    if (ordersq) {
+                        auto& orders = ordersq->orders;
+                        auto pos_side = pos_sides[i];
 
-                if (grid_next)
-                    initGridOrder(*grid_next, grid_orders);
+                        if (!ordersq->init_ordered && !ordersq->order_amount.empty()) {
+                            ordersq->init_ordered = true;
+                            UserData::GridStrategy::Grid::Order new_order;
+                            new_order.order_data.clordid = genCliOrdId();
+                            new_order.order_data.px = grid.px;
+                            new_order.order_data.amount = ordersq->order_amount;
+                            if (pos_side == OrderPosSide::Long)
+                                new_order.order_data.side = OrderSide::Buy;
+                            else if (pos_side == OrderPosSide::Short)
+                                new_order.order_data.side = OrderSide::Sell;
+                            new_order.order_data.pos_side = pos_side;
+                            new_order.order_status = OrderStatus::Live;
+                            ordersq->orders.push_back(new_order);
+                            grid_orders.push_back(new_order.order_data);
+                        }
+                    }
+                }
+
+                if (grid_pre) {
+                    auto& ordersq = grid_pre->long_orders;
+                    auto& orders = ordersq.orders;
+
+                    if (!ordersq.init_ordered && !ordersq.order_amount.empty()) {
+                        ordersq.init_ordered = true;
+                        UserData::GridStrategy::Grid::Order new_order;
+                        new_order.order_data.clordid = genCliOrdId();
+                        new_order.order_data.px = grid.px;
+                        new_order.order_data.amount = ordersq.order_amount;
+                        new_order.order_data.side = OrderSide::Buy;
+                        new_order.order_data.pos_side = OrderPosSide::Long;
+                        new_order.order_status = OrderStatus::Live;
+                        ordersq.orders.push_back(new_order);
+                        grid_orders.push_back(new_order.order_data);
+                    }
+                }
+
+                if (grid_next) {
+                    auto& ordersq = grid_next->short_orders;
+                    auto& orders = ordersq.orders;
+
+                    if (!ordersq.init_ordered && !ordersq.order_amount.empty()) {
+                        ordersq.init_ordered = true;
+                        UserData::GridStrategy::Grid::Order new_order;
+                        new_order.order_data.clordid = genCliOrdId();
+                        new_order.order_data.px = grid.px;
+                        new_order.order_data.amount = ordersq.order_amount;
+                        new_order.order_data.side = OrderSide::Sell;
+                        new_order.order_data.pos_side = OrderPosSide::Short;
+                        new_order.order_status = OrderStatus::Live;
+                        ordersq.orders.push_back(new_order);
+                        grid_orders.push_back(new_order.order_data);
+                    }
+                }
             }
         }
 
