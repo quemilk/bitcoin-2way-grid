@@ -633,7 +633,7 @@ int Command::parseReceivedData(const std::string& data, Response* out_resp) {
                             }
                         }
 
-                        o << "  - " << ord_id << " " << inst_id << "  " << inst_type << " " << state << " \t" << toTimeStr(utime) << std::endl;
+                        o << "  - " << ord_id << " " << clordid << " " << inst_id << "  " << inst_type << " " << state << " \t" << toTimeStr(utime) << std::endl;
                         if (order_state == OrderStatus::Live)
                             o << "    order: \t" << sz << " \t" << std::left << std::setw(10) << px << " \t" << lever << "x" << std::endl;
                         else if (order_state == OrderStatus::Filled || order_state == OrderStatus::PartiallyFilled) {

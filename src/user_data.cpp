@@ -525,7 +525,7 @@ void UserData::checkLongUnfilledOrder() {
                     if (now - order.tp > std::chrono::minutes(30)) {
                         auto px = strtof(order_data.px.c_str(), nullptr);
                         if (cur_px && abs(cur_px - px) / cur_px >= 0.02f) {
-                            ordersq.init_ordered = false;
+                            grid_strategy_.grids[igrid - 1].long_orders.init_ordered = false;
                             order.auto_put_order_if_filled = false;
 
                             Command::AmendInfo amend_info;
@@ -550,7 +550,7 @@ void UserData::checkLongUnfilledOrder() {
                     if (now - order.tp > std::chrono::minutes(30)) {
                         auto px = strtof(order_data.px.c_str(), nullptr);
                         if (cur_px && abs(cur_px - px) / cur_px >= 0.02f) {
-                            ordersq.init_ordered = false;
+                            grid_strategy_.grids[igrid + 1].short_orders.init_ordered = false;
                             order.auto_put_order_if_filled = false;
 
                             Command::AmendInfo amend_info;
