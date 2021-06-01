@@ -358,6 +358,10 @@ void UserData::updateGrid() {
                                 grid_orders.push_back(new_order.order_data);
                             }
                         }
+                    } else if (itr->order_status == OrderStatus::Live) {
+                        // TODO
+
+
                     }
 
                     if (itr->order_status == OrderStatus::Canceled || itr->order_status == OrderStatus::Empty) {
