@@ -294,11 +294,8 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
 }
 
 void UserData::updateGrid() {
-    auto cur_px = strtof(g_user_data.currentPrice().c_str(), nullptr);
-
-    std::deque<OrderData> grid_orders;
-    std::deque<Command::AmendInfo> amend_orders;
     auto now = std::chrono::steady_clock::now();
+    std::deque<OrderData> grid_orders;
     int sell_count = 0, buy_count = 0;
     {
         g_user_data.lock();
@@ -331,61 +328,41 @@ void UserData::updateGrid() {
                     if (itr->order_status == OrderStatus::Filled) {
                         has_filled = true;
                         itr->order_status = OrderStatus::Empty;
-                        if (order_data.side == OrderSide::Buy) {
-                            if (grid_next && next_orders_arr[i]) {
-                                GridStrategy::Grid::Order new_order;
-                                new_order.order_data.clordid = genCliOrdId();
-                                new_order.order_data.px = grid_next->px;
-                                new_order.order_data.amount = order_data.amount;
-                                new_order.order_data.side = OrderSide::Sell;
-                                new_order.order_data.pos_side = pos_side;
-                                new_order.order_status = OrderStatus::Live;
-                                new_order.tp = now;
-                                if (pos_side == OrderPosSide::Long)
-                                    new_order.fill_px = itr->fill_px;
-                                next_orders_arr[i]->orders.push_back(new_order);
-                                grid_orders.push_back(new_order.order_data);
-                            }
-                        } else if (order_data.side == OrderSide::Sell) {
-                            if (grid_pre && pre_orders_arr[i]) {
-                                GridStrategy::Grid::Order new_order;
-                                new_order.order_data.clordid = genCliOrdId();
-                                new_order.order_data.px = grid_pre->px;
-                                new_order.order_data.amount = order_data.amount;
-                                new_order.order_data.side = OrderSide::Buy;
-                                new_order.order_data.pos_side = pos_side;
-                                new_order.order_status = OrderStatus::Live;
-                                new_order.tp = now;
-                                if (pos_side == OrderPosSide::Short)
-                                    new_order.fill_px = itr->fill_px;
-                                pre_orders_arr[i]->orders.push_back(new_order);
-                                grid_orders.push_back(new_order.order_data);
-                            }
-                        }
-                    } else if (itr->order_status == OrderStatus::Live) {
-                        if (now - itr->tp > std::chrono::minutes(30)) {
-                            auto px = strtof(order_data.px.c_str(), nullptr);
-                            if (cur_px && abs(cur_px - px) / cur_px >= 2.0f) {
-                                orders_arr[i]->init_ordered = false;
-                                itr->order_status = OrderStatus::Empty;
-                                itr->tp = now;
 
-                                Command::AmendInfo amend_info;
-                                amend_info.cliordid = order_data.clordid;
-                                if (pos_side == OrderPosSide::Long) {
-                                    if (grid_pre) {
-                                        amend_info.new_px = grid_pre->px;
-                                        amend_orders.push_back(amend_info);
-                                    }
-                                } else if (pos_side == OrderPosSide::Short) {
-                                    if (grid_next) {
-                                        amend_info.new_px = grid_next->px;
-                                        amend_orders.push_back(amend_info);
-                                    }
+                        if (itr->auto_put_order_if_filled) {
+                            if (order_data.side == OrderSide::Buy) {
+                                if (grid_next && next_orders_arr[i]) {
+                                    GridStrategy::Grid::Order new_order;
+                                    new_order.order_data.clordid = genCliOrdId();
+                                    new_order.order_data.px = grid_next->px;
+                                    new_order.order_data.amount = order_data.amount;
+                                    new_order.order_data.side = OrderSide::Sell;
+                                    new_order.order_data.pos_side = pos_side;
+                                    new_order.order_status = OrderStatus::Live;
+                                    new_order.tp = now;
+                                    if (pos_side == OrderPosSide::Long)
+                                        new_order.fill_px = itr->fill_px;
+                                    next_orders_arr[i]->orders.push_back(new_order);
+                                    grid_orders.push_back(new_order.order_data);
+                                }
+                            } else if (order_data.side == OrderSide::Sell) {
+                                if (grid_pre && pre_orders_arr[i]) {
+                                    GridStrategy::Grid::Order new_order;
+                                    new_order.order_data.clordid = genCliOrdId();
+                                    new_order.order_data.px = grid_pre->px;
+                                    new_order.order_data.amount = order_data.amount;
+                                    new_order.order_data.side = OrderSide::Buy;
+                                    new_order.order_data.pos_side = pos_side;
+                                    new_order.order_status = OrderStatus::Live;
+                                    new_order.tp = now;
+                                    if (pos_side == OrderPosSide::Short)
+                                        new_order.fill_px = itr->fill_px;
+                                    pre_orders_arr[i]->orders.push_back(new_order);
+                                    grid_orders.push_back(new_order.order_data);
                                 }
                             }
                         }
-                    }
+                    } 
 
                     if (itr->order_status == OrderStatus::Canceled || itr->order_status == OrderStatus::Empty) {
                         itr = orders.erase(itr);
@@ -406,6 +383,7 @@ void UserData::updateGrid() {
 
                         if (!ordersq->init_ordered && !ordersq->order_amount.empty()) {
                             ordersq->init_ordered = true;
+
                             UserData::GridStrategy::Grid::Order new_order;
                             new_order.order_data.clordid = genCliOrdId();
                             new_order.order_data.px = grid.px;
@@ -429,6 +407,7 @@ void UserData::updateGrid() {
 
                     if (!ordersq.init_ordered && !ordersq.order_amount.empty()) {
                         ordersq.init_ordered = true;
+
                         UserData::GridStrategy::Grid::Order new_order;
                         new_order.order_data.clordid = genCliOrdId();
                         new_order.order_data.px = grid.px;
@@ -526,6 +505,70 @@ void UserData::updateGrid() {
         );
         if (!grid_orders.empty())
             std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+}
+
+void UserData::checkLongUnfilledOrder() {
+    auto cur_px_str = g_user_data.currentPrice();
+    auto cur_px = strtof(cur_px_str.c_str(), nullptr);
+    auto now = std::chrono::steady_clock::now();
+    std::deque<Command::AmendInfo> amend_orders;
+
+    // auto ament the px of the order which was not filled for long time.
+    {
+        g_user_data.lock();
+        auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
+
+        bool found = false;
+        for (int igrid = grid_strategy_.grids.size() - 1; !found && igrid > 0; --igrid) {
+            auto& grid = grid_strategy_.grids[igrid];
+            auto& ordersq = grid.long_orders;
+
+            for (auto& order : ordersq.orders) {
+                auto& order_data = order.order_data;
+                if (order.order_status == OrderStatus::Live && order_data.side == OrderSide::Sell) {
+                    found = true;
+                    if (now - order.tp > std::chrono::minutes(30)) {
+                        auto px = strtof(order_data.px.c_str(), nullptr);
+                        if (cur_px && abs(cur_px - px) / cur_px >= 0.02f) {
+                            ordersq.init_ordered = false;
+                            order.auto_put_order_if_filled = false;
+
+                            Command::AmendInfo amend_info;
+                            amend_info.cliordid = order_data.clordid;
+                            amend_info.new_px = cur_px_str;
+                            amend_orders.push_back(amend_info);                            
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        found = false;
+        for (int igrid = 0; !found && igrid < grid_strategy_.grids.size() - 1; ++igrid) {
+            auto& grid = grid_strategy_.grids[igrid];
+            auto& ordersq = grid.short_orders;
+
+            for (auto& order : ordersq.orders) {
+                auto& order_data = order.order_data;
+                if (order.order_status == OrderStatus::Live && order_data.side == OrderSide::Buy) {
+                    found = true;
+                    if (now - order.tp > std::chrono::minutes(30)) {
+                        auto px = strtof(order_data.px.c_str(), nullptr);
+                        if (cur_px && abs(cur_px - px) / cur_px >= 0.02f) {
+                            ordersq.init_ordered = false;
+                            order.auto_put_order_if_filled = false;
+
+                            Command::AmendInfo amend_info;
+                            amend_info.cliordid = order_data.clordid;
+                            amend_info.new_px = cur_px_str;
+                            amend_orders.push_back(amend_info);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     while (!amend_orders.empty()) {

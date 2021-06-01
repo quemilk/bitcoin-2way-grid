@@ -105,6 +105,7 @@ public:
                 OrderStatus order_status = OrderStatus::Empty;
                 std::string fill_px;
                 std::chrono::steady_clock::time_point tp;
+                bool auto_put_order_if_filled = true;
             };
 
             struct OrdersQueue {
@@ -145,6 +146,8 @@ public:
     void startGrid(GridStrategy::Option option, bool conetinue_last_grid=false, bool is_test=false);
     void updateGrid();
     void clearGrid();
+
+    void checkLongUnfilledOrder();
 
     std::string currentPrice();
     std::string currentCash(std::string ccy);

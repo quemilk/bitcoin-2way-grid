@@ -146,14 +146,20 @@ int main(int argc, char** argv) {
 
     ConcurrentQueueT<bool> over_noti;
     std::thread checkgrid([&] {
+        auto tp = std::chrono::steady_clock::now();
         while (!over_noti.pop(nullptr, std::chrono::seconds(30))) {
+            auto now = std::chrono::steady_clock::now();
+            if (now - tp > std::chrono::minutes(5)) {
+                tp = now;
+                g_user_data.checkLongUnfilledOrder();
+            }
+
             {
                 g_user_data.lock();
                 auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
                 if (g_user_data.grid_strategy_.grids.empty() || !g_user_data.grid_strategy_.dirty)
                     continue;
             }
-
             // fix the order status when connection broken
             g_restapi->checkOrderFilled();
         }
