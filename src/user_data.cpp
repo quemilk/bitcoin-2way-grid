@@ -410,7 +410,7 @@ void UserData::updateGrid() {
 
                         UserData::GridStrategy::Grid::Order new_order;
                         new_order.order_data.clordid = genCliOrdId();
-                        new_order.order_data.px = grid.px;
+                        new_order.order_data.px = grid_pre->px;
                         new_order.order_data.amount = ordersq.order_amount;
                         new_order.order_data.side = OrderSide::Buy;
                         new_order.order_data.pos_side = OrderPosSide::Long;
@@ -429,7 +429,7 @@ void UserData::updateGrid() {
                         ordersq.init_ordered = true;
                         UserData::GridStrategy::Grid::Order new_order;
                         new_order.order_data.clordid = genCliOrdId();
-                        new_order.order_data.px = grid.px;
+                        new_order.order_data.px = grid_next->px;
                         new_order.order_data.amount = ordersq.order_amount;
                         new_order.order_data.side = OrderSide::Sell;
                         new_order.order_data.pos_side = OrderPosSide::Short;
@@ -514,7 +514,7 @@ void UserData::checkLongUnfilledOrder() {
     auto now = std::chrono::steady_clock::now();
     std::deque<Command::AmendInfo> amend_orders;
 
-    // auto ament the px of the order which was not filled for long time.
+    // auto amend the px of the order which was not filled for long time.
     {
         g_user_data.lock();
         auto scoped_exit = make_scope_exit([] { g_user_data.unlock(); });
@@ -537,7 +537,7 @@ void UserData::checkLongUnfilledOrder() {
                             Command::AmendInfo amend_info;
                             amend_info.cliordid = order_data.clordid;
                             amend_info.new_px = cur_px_str;
-                            amend_orders.push_back(amend_info);                            
+                            amend_orders.push_back(amend_info);
                         }
                     }
                     break;
