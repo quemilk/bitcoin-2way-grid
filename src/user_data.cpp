@@ -294,6 +294,8 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
 }
 
 void UserData::updateGrid() {
+    auto cur_px = strtof(g_user_data.currentPrice().c_str(), nullptr);
+
     std::deque<OrderData> grid_orders;
     std::deque<Command::AmendInfo> amend_orders;
     auto now = std::chrono::steady_clock::now();
@@ -362,17 +364,21 @@ void UserData::updateGrid() {
                         }
                     } else if (itr->order_status == OrderStatus::Live) {
                         if (now - itr->tp > std::chrono::minutes(30)) {
-                            Command::AmendInfo amend_info;
-                            amend_info.cliordid = order_data.clordid;
-                            if (pos_side == OrderPosSide::Long) {
-                                if (grid_pre) {
-                                    amend_info.new_px = grid_pre->px;
-                                    amend_orders.push_back(amend_info);
-                                }
-                            } else if (pos_side == OrderPosSide::Short) {
-                                if (grid_next) {
-                                    amend_info.new_px = grid_next->px;
-                                    amend_orders.push_back(amend_info);
+                            auto px = strtof(order_data.px.c_str(), nullptr);
+                            if (cur_px && abs(cur_px - px) / cur_px >= 2.0f) {
+                                itr->tp = now;
+                                Command::AmendInfo amend_info;
+                                amend_info.cliordid = order_data.clordid;
+                                if (pos_side == OrderPosSide::Long) {
+                                    if (grid_pre) {
+                                        amend_info.new_px = grid_pre->px;
+                                        amend_orders.push_back(amend_info);
+                                    }
+                                } else if (pos_side == OrderPosSide::Short) {
+                                    if (grid_next) {
+                                        amend_info.new_px = grid_next->px;
+                                        amend_orders.push_back(amend_info);
+                                    }
                                 }
                             }
                         }
