@@ -212,8 +212,10 @@ int main(int argc, char** argv) {
             std::vector<std::string> step_ratios;
             if (!grid_step.empty())
                 splitString(grid_step, step_ratios, ',');
-            if (step_ratios.empty())
+            if (step_ratios.empty()) {
                 step_ratios.push_back("0.002");
+                step_ratios.push_back("0.005");
+            }
 
             std::cout << "leverage (10x): ";
             std::string leverage;

@@ -58,7 +58,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
     }
     
     LOG(info) << "grid starting: injected_cash=" << option.injected_cash
-        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio_min << "-" << option.step_ratio_max<< " lever=" << option.leverage << "x " << g_ticket;
+        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio_min << "-" << option.step_ratio_max << " lever=" << option.leverage << "x " << g_ticket;
 
     if (!g_restapi->setLeverage(option.leverage)) {
         LOG(error) << "set leverage failed! " << option.leverage;
