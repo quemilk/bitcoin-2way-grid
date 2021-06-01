@@ -366,7 +366,10 @@ void UserData::updateGrid() {
                         if (now - itr->tp > std::chrono::minutes(30)) {
                             auto px = strtof(order_data.px.c_str(), nullptr);
                             if (cur_px && abs(cur_px - px) / cur_px >= 2.0f) {
+                                orders_arr[i]->init_ordered = false;
+                                itr->order_status = OrderStatus::Empty;
                                 itr->tp = now;
+
                                 Command::AmendInfo amend_info;
                                 amend_info.cliordid = order_data.clordid;
                                 if (pos_side == OrderPosSide::Long) {
