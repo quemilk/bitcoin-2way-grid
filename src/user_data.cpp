@@ -52,13 +52,13 @@ static std::string calcDiff(const std::string& px1, const std::string& px2, cons
 
 
 void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, bool is_test) {
-    if (option.grid_count <= 0 || option.step_ratio <= 0 || option.step_ratio >= 1.0f) {
+    if (option.grid_count <= 0 || option.step_ratio_min <= 0 || option.step_ratio_max >= 1.0f || option.step_ratio_min > option.step_ratio_max) {
         LOG(error) << "invalid param!";
         return;
     }
     
     LOG(info) << "grid starting: injected_cash=" << option.injected_cash
-        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio << " lever=" << option.leverage << "x " << g_ticket;
+        << " grid_count=" << option.grid_count << " step_ratio=" << option.step_ratio_min << "-" << option.step_ratio_max<< " lever=" << option.leverage << "x " << g_ticket;
 
     if (!g_restapi->setLeverage(option.leverage)) {
         LOG(error) << "set leverage failed! " << option.leverage;
@@ -143,13 +143,13 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
         // calc each grid's price
         float px = cur_price;
         float a = 0;
-        if (option.step_ratio < 0.01f && grid_count >= 4) {
-            a = (0.01f - option.step_ratio) / (grid_count / 2 - 1) / (grid_count / 2 - 1);
+        if (grid_count >= 4) {
+            a = (option.step_ratio_max - option.step_ratio_min) / (grid_count / 2 - 1) / (grid_count / 2 - 1);
         }
 
         std::deque<std::string> d0;
         for (int i = 0; i < grid_center; ++i) {
-            auto f = option.step_ratio + i * i * a;
+            auto f = option.step_ratio_min + i * i * a;
             px = px * (1.0f - f);
             auto px_str = floatToString(px, tick_sz);
             d0.push_back(px_str);
@@ -166,7 +166,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
         grid_strategy_.grids.push_back(grid);
 
         for (int i = grid_center + 1; i < grid_count; ++i) {
-            auto f = option.step_ratio + (i - grid_center - 1) * (i - grid_center - 1) * a;
+            auto f = option.step_ratio_min + (i - grid_center - 1) * (i - grid_center - 1) * a;
             px = px * (1.0f + f);
             auto px_str = floatToString(px, tick_sz);
             GridStrategy::Grid grid;
@@ -553,7 +553,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
     o << std::endl;
 
     o << "inject cash: " << t.option.injected_cash
-        << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio
+        << ", grid count: " << t.option.grid_count << ", grid step: " << t.option.step_ratio_min << "-" << t.option.step_ratio_max
         << ", origin: " << t.origin_cash << std::endl;
 
     auto cur_px_str = g_user_data.currentPrice();

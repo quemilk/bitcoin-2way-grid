@@ -117,7 +117,8 @@ public:
         struct Option {
             float injected_cash = 0;
             int grid_count = 10;
-            float step_ratio = 0.01f;
+            float step_ratio_min = 0.002f;
+            float step_ratio_max = 0.005f;
             int leverage = 10;
         };
 

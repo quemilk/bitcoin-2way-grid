@@ -205,12 +205,14 @@ int main(int argc, char** argv) {
             if (grid_level.empty())
                 grid_level = "20";
 
-            std::cout << "grid step (0.005): ";
+            std::cout << "grid step (0.002-0.005): ";
             std::string grid_step;
             std::getline(std::cin, grid_step);
             trimString(grid_step);
-            if (grid_step.empty())
-                grid_step = "0.005";
+            std::vector<std::string> step_ratios;
+            splitString(grid_step, step_ratios, ',');
+            if (step_ratios.empty())
+                step_ratios.push_back("0.002");
 
             std::cout << "leverage (10x): ";
             std::string leverage;
@@ -222,7 +224,8 @@ int main(int argc, char** argv) {
             UserData::GridStrategy::Option option;
             option.injected_cash = strtof(inject_cash.c_str(), nullptr);
             option.grid_count = strtol(grid_level.c_str(), nullptr, 0);
-            option.step_ratio = strtof(grid_step.c_str(), nullptr);
+            option.step_ratio_min = strtof(step_ratios[0].c_str(), nullptr);
+            option.step_ratio_max = step_ratios.size() > 1 ? strtof(step_ratios[1].c_str(), nullptr) : option.step_ratio_min;
             option.leverage = strtol(leverage.c_str(), nullptr, 0);
 
             if (op == "start grid") {
