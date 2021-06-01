@@ -736,7 +736,7 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
     if (!t.grids.empty()) {
         o << "  long:" << std::endl;
 
-        int mini = 0, maxi = t.grids.size() - 1;
+        int mini = std::max((int)t.grids.size() / 2 - 4, 0), maxi = std::min((int)t.grids.size() / 2 + 4, (int)t.grids.size() - 1);
         for (int i = 0; i < (int)t.grids.size() / 2 - 4; ++i) {
             auto& v = t.grids[i];
             if (!v.long_orders.orders.empty()) {
@@ -752,8 +752,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
             }
         }
 
-        if (0 != mini)
-            o << "    = " << t.grids[0].px << std::endl;
+        if (t.grids.size() - 1 != maxi)
+            o << "    = " << t.grids[t.grids.size() - 1].px << std::endl;
 
         for (int i = maxi; i >= mini; --i) {
             auto& v = t.grids[i];
@@ -781,31 +781,29 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
             }
             o << std::endl;
         }
-
-        if (t.grids.size() - 1 != maxi)
-            o << "    = " << t.grids[t.grids.size() - 1].px << std::endl;
+        if (0 != mini)
+            o << "    = " << t.grids[0].px << std::endl;
 
         o << "  short:" << std::endl;
 
-        mini = 0;
-        maxi = t.grids.size() - 1;
+        mini = std::max((int)t.grids.size() / 2 - 4, 0), maxi = std::min((int)t.grids.size() / 2 + 4, (int)t.grids.size() - 1);
         for (int i = 0; i < (int)t.grids.size() / 2 - 4; ++i) {
             auto& v = t.grids[i];
-            if (!v.long_orders.orders.empty()) {
+            if (!v.short_orders.orders.empty()) {
                 mini = std::max(0, i - 1);
                 break;
             }
         }
         for (int i = (int)t.grids.size() - 1; i >= (int)t.grids.size() / 2 + 4; --i) {
             auto& v = t.grids[i];
-            if (!v.long_orders.orders.empty()) {
+            if (!v.short_orders.orders.empty()) {
                 maxi = std::min(i + 1, (int)t.grids.size() - 1);
                 break;
             }
         }
 
-        if (0 != mini)
-            o << "    = " << t.grids[0].px << std::endl;
+        if (t.grids.size() - 1 != maxi)
+            o << "    = " << t.grids[t.grids.size() - 1].px << std::endl;
 
         for (int i = maxi; i >= mini; --i) {
             auto& v = t.grids[i];
@@ -832,9 +830,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
             }
             o << std::endl;
         }
-
-        if (t.grids.size() - 1 != maxi)
-            o << "    = " << t.grids[t.grids.size() - 1].px << std::endl;
+        if (0 != mini)
+            o << "    = " << t.grids[0].px << std::endl;
     }
     return o;
 }
