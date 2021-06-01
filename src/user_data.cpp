@@ -229,7 +229,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
 
             GridStrategy::Grid::Order grid_order;
             grid_order.order_data.px = grid.px;
-            if (i <= grid_center && i >= grid_center / 2) {
+            if (i <= grid_center && i >= std::max(grid_center - 4, 0)) {
                 grid.long_orders.init_ordered = true;
                 if (!grid.long_orders.order_amount.empty()) {
                     grid_order.order_data.amount = grid.long_orders.order_amount;
@@ -246,7 +246,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
                     grid_orders.push_back(new_order);
                 }
             }
-            if (i >= grid_center && i <= grid_center * 3 / 2) {
+            if (i >= grid_center && i <= std::min(grid_center + 4, (int)grid_strategy_.grids.size() - 1)) {
                 grid.short_orders.init_ordered = true;
                 if (!grid.short_orders.order_amount.empty()) {
                     grid_order.order_data.amount = grid.short_orders.order_amount;
@@ -271,7 +271,7 @@ void UserData::startGrid(GridStrategy::Option option, bool conetinue_last_grid, 
         } else
             ++grid_strategy_.rebuild;
         failed_sp.cancel();
-     }
+    }
 
     if (!is_test) {
         while (!grid_orders.empty()) {
@@ -736,8 +736,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
     if (!t.grids.empty()) {
         o << "  long:" << std::endl;
 
-        int mini = std::max((int)t.grids.size() / 2 - 4, 0), maxi = std::min((int)t.grids.size() / 2 + 4, (int)t.grids.size() - 1);
-        for (int i = 0; i < (int)t.grids.size() / 2 - 4; ++i) {
+        int mini = std::max((int)t.grids.size() / 2 - 5, 0), maxi = std::min((int)t.grids.size() / 2 + 4, (int)t.grids.size() - 1);
+        for (int i = 0; i < (int)t.grids.size() / 2 - 5; ++i) {
             auto& v = t.grids[i];
             if (!v.long_orders.orders.empty()) {
                 mini = std::max(0, i - 1);
@@ -786,8 +786,8 @@ std::ostream& operator << (std::ostream& o, const UserData::GridStrategy& t) {
 
         o << "  short:" << std::endl;
 
-        mini = std::max((int)t.grids.size() / 2 - 4, 0), maxi = std::min((int)t.grids.size() / 2 + 4, (int)t.grids.size() - 1);
-        for (int i = 0; i < (int)t.grids.size() / 2 - 4; ++i) {
+        mini = std::max((int)t.grids.size() / 2 - 5, 0), maxi = std::min((int)t.grids.size() / 2 + 4, (int)t.grids.size() - 1);
+        for (int i = 0; i < (int)t.grids.size() / 2 - 5; ++i) {
             auto& v = t.grids[i];
             if (!v.short_orders.orders.empty()) {
                 mini = std::max(0, i - 1);
