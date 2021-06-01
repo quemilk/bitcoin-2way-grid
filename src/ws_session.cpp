@@ -224,3 +224,7 @@ void WSSession::on_fail(beast::error_code ec, char const* what) {
 void WSSession::ping() {
     ws_.ping({});
 }
+
+void WSSession::close() {
+    ws_.close(websocket::close_code::normal);
+}

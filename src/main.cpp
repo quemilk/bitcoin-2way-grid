@@ -232,12 +232,12 @@ int main(int argc, char** argv) {
             option.leverage = strtol(leverage.c_str(), nullptr, 0);
 
             if (op == "start grid") {
-                std::cout << "run? (Y): ";
+                std::cout << "run? (N): ";
                 std::string grid_run;
                 std::getline(std::cin, grid_run);
                 trimString(grid_run);
                 if (grid_run.empty())
-                    grid_run = "y";
+                    grid_run = "n";
                 if (grid_run == "Y" || grid_run == "y")
                     g_user_data.startGrid(option, false);
             } else

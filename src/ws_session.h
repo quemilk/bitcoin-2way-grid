@@ -34,6 +34,8 @@ public:
     bool async_read(std::function<void(std::string&)> func);
     void ping();
 
+    void close();
+
 private:
     void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
 

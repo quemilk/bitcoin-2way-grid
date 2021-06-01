@@ -51,8 +51,10 @@ void Channel::run() {
 
                     Cmd cmd;
                     while (outq_.pop(&cmd, std::chrono::milliseconds(10))) {
-                        if (cmd.cmd_type == Cmd::CmdType::Close)
+                        if (cmd.cmd_type == Cmd::CmdType::Close) {
+                            ws_session_->close();
                             throw std::runtime_error("close command");
+                        }
                         waiting_resp_q_.push_back(cmd);
                         ws_session_->send(cmd.req.data);
                     }
