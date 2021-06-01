@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
         auto tp = std::chrono::steady_clock::now();
         while (!over_noti.pop(nullptr, std::chrono::seconds(30))) {
             auto now = std::chrono::steady_clock::now();
-            if (now - tp > std::chrono::minutes(5)) {
+            if (now - tp > std::chrono::minutes(15)) {
                 tp = now;
                 g_user_data.checkLongUnfilledOrder();
             }
