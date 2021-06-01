@@ -397,7 +397,7 @@ void UserData::updateGrid() {
     }
 
     if (buy_count == 0 || sell_count == 0) {
-        LOG(warning) << "WARNING!!! exceed to grid limit. closeout the grid.";
+        LOG(warning) << "WARNING!!! exceed grid limit, stop loss. closeout the grid.";
         clearGrid();
         std::this_thread::sleep_for(std::chrono::seconds(5));
         LOG(warning) << "WARNING!!! grid will rebuild on 30min.";
@@ -409,6 +409,24 @@ void UserData::updateGrid() {
         ).detach();
         return;
     }
+
+    auto current_cash = strtof(g_user_data.currentCash(grid_strategy_.ccy).c_str(), nullptr);
+    if (current_cash) {
+        if (current_cash >= grid_strategy_.start_cash * 1.1f) {
+            LOG(warning) << "WARNING!!! reach the take profit point. closeout the grid.";
+            clearGrid();
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            LOG(warning) << "WARNING!!! grid will rebuild on 30min.";
+            std::thread(
+                [] {
+                    std::this_thread::sleep_for(std::chrono::minutes(30));
+                    g_user_data.startGrid(g_user_data.grid_strategy_.option, true);
+                }
+            ).detach();
+            return;
+        }
+    }
+
 
     while (!grid_orders.empty()) {
         auto cmd = Command::makeMultiOrderReq(g_ticket, TradeMode::Cross, grid_orders);
